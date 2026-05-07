@@ -90,8 +90,17 @@ export function AanConversation() {
       {isGenerating && (
         <div className="flex gap-3">
           {/* Avatar */}
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full aan-gradient text-white">
-            <AanGlyph state="thinking" className="h-4 w-4" />
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center",
+              newBranding ? "text-foreground" : "rounded-full aan-gradient text-white"
+            )}
+          >
+            {newBranding ? (
+              <AanMascot size={26} state="thinking" interactive={false} />
+            ) : (
+              <AanGlyph state="thinking" className="h-4 w-4" />
+            )}
           </div>
 
           {/* Progress Card */}
