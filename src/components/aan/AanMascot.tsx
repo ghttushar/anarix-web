@@ -60,7 +60,7 @@ export function AanMascot({
   }, [interactive, state, reduceMotion, eyeX, eyeY]);
 
   // Body animation per state
-  const bodyAnim = (() => {
+  const bodyAnim: any = (() => {
     if (reduceMotion || state === "anchor") return {};
     if (state === "idle") {
       return { y: [0, -3, 0], transition: { duration: 2.4, ease: "easeInOut", repeat: Infinity } };
