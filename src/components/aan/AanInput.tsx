@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Square, X, Paperclip, ChevronDown, Check, Zap, Brain, Cpu, Gauge } from "lucide-react";
 import { AanGlyph } from "./AanGlyph";
+import { AanMascot, AanMascotState } from "./AanMascot";
+import { useBranding } from "@/contexts/BrandingContext";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -98,9 +100,11 @@ function formatFileSize(bytes: number): string {
 }
 
 export function AanInput() {
-  const { addMessage, setGenerationState, messages, selectedModel, setSelectedModel, pendingPrompt, setPendingPrompt } = useAan();
+  const { addMessage, setGenerationState, messages, selectedModel, setSelectedModel, pendingPrompt, setPendingPrompt, isGenerating, generationType } = useAan();
+  const { newBranding } = useBranding();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [suggestionVisible, setSuggestionVisible] = useState(false);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -110,6 +114,22 @@ export function AanInput() {
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const suggestionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Aan presence state for the mascot above the input
+  const presenceState: AanMascotState = isGenerating || isLoading
+    ? "thinking"
+    : (input.trim().length > 0 || isFocused)
+      ? "listening"
+      : "idle";
+  const presenceLabel = isGenerating && generationType === "report"
+    ? "Working on your report\u2026"
+    : isGenerating && generationType === "audit"
+      ? "Running the audit\u2026"
+      : isLoading
+        ? "Thinking\u2026"
+        : input.trim().length > 0
+          ? "Your prompt is ready."
+          : "Ready when you are.";
 
   useEffect(() => {
     return () => {
@@ -244,6 +264,16 @@ export function AanInput() {
 
   return (
     <div className="shrink-0 bg-background">
+      {/* Persistent Aan presence (new branding only) */}
+      {newBranding && !showSuggestion && (
+        <div
+          key={presenceState + presenceLabel}
+          className="px-4 pt-3 flex flex-col items-center justify-end gap-1 animate-in fade-in slide-in-from-bottom-1 duration-200"
+        >
+          <AanMascot size={30} state={presenceState} interactive floating />
+          <span className="text-[11px] font-medium text-muted-foreground">{presenceLabel}</span>
+        </div>
+      )}
       <div className="px-4 pb-4 pt-2">
         <div className="relative">
           {/* Prompt suggestion notch */}
@@ -315,6 +345,8 @@ export function AanInput() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               placeholder="Ask Aan anything..."
               className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-12 pl-0"
               rows={1}

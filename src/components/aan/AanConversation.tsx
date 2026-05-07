@@ -3,12 +3,15 @@ import { useAan } from "./AanContext";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
 import { AanGlyph } from "./AanGlyph";
+import { AanMascot } from "./AanMascot";
+import { useBranding } from "@/contexts/BrandingContext";
 import { format } from "date-fns";
 import { ArtifactCard } from "./ArtifactCard";
 import { CircularProgress } from "@/components/ui/circular-progress";
 
 export function AanConversation() {
   const { messages, openSplit, isGenerating, generationType, generationProgress } = useAan();
+  const { newBranding } = useBranding();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,14 +33,20 @@ export function AanConversation() {
           {/* Avatar */}
           <div
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+              "flex h-8 w-8 shrink-0 items-center justify-center",
               message.role === "assistant"
-                ? "aan-gradient text-white"
-                : "bg-muted text-muted-foreground"
+                ? newBranding
+                  ? "text-foreground"
+                  : "rounded-full aan-gradient text-white"
+                : "rounded-full bg-muted text-muted-foreground"
             )}
           >
             {message.role === "assistant" ? (
-              <AanGlyph className="h-4 w-4" />
+              newBranding ? (
+                <AanMascot size={26} state="idle" interactive={false} />
+              ) : (
+                <AanGlyph className="h-4 w-4" />
+              )
             ) : (
               <User className="h-4 w-4" />
             )}
@@ -81,8 +90,17 @@ export function AanConversation() {
       {isGenerating && (
         <div className="flex gap-3">
           {/* Avatar */}
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full aan-gradient text-white">
-            <AanGlyph state="thinking" className="h-4 w-4" />
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center",
+              newBranding ? "text-foreground" : "rounded-full aan-gradient text-white"
+            )}
+          >
+            {newBranding ? (
+              <AanMascot size={26} state="thinking" interactive={false} />
+            ) : (
+              <AanGlyph state="thinking" className="h-4 w-4" />
+            )}
           </div>
 
           {/* Progress Card */}
