@@ -1,52 +1,66 @@
-## Phase 3 + Phase 4 — Wire the Aan mascot into every Aan surface
+## What's wrong today
 
-The `BrandingContext`, `AnarixLogo`, `AanMascot`, and `/brand/aan` showcase already exist. Toggle is at **Settings → Preferences → New Branding** (default OFF — that is why nothing visible has changed yet).
+1. The blue "circle" behind the coral diamond comes from `src/components/aan/AanMascot.tsx` — an old gradient/glow version unrelated to the official brand manual. The user's reference (https://anarix-brand-manual.vercel.app/) uses a coral rounded-square mascot that morphs between four shapes (diamond / circle / bar / cube) — no blue ring, no diamond outline icon.
+2. The Design System page (`src/pages/settings/DesignSystem.tsx`) has tabs for Colors, Typography, Spacing, Icons, Components, States, Layout — but **no Aan tab**.
 
-This phase makes the toggle actually swap the icon everywhere the legacy `Sparkles` icon is used as the Aan mark.
+## Source of truth
 
-### 1. New shared swap component
+The brand manual GitHub repo (`ghttushar/anarix-brand-manual-`) ships:
+- `src/components/Aan.tsx` — the mascot (4 shapes, eye tracking, aura blur, sparkle)
+- `src/components/Diamond.tsx` — flat coral diamond reference
+- `src/components/AnarixLoader.tsx` — official Lottie loader (already on disk as `public/animations/aan-loader.json`)
+- Brand hues: Coral `#F26E77`, Blue `#4A62D9`, Ink `#1D252D`
 
-**`src/components/aan/AanGlyph.tsx`** — a drop-in replacement for `<Sparkles className="h-4 w-4 ..." />`:
-- When `newBranding` is OFF → renders the existing `Sparkles` lucide icon, identical to today.
-- When `newBranding` is ON → renders `<AanMascot />` at a pixel size inferred from the `h-3 / h-4 / h-5 / h-6` Tailwind class.
-- Props: `className`, optional `state` (default `"idle"`), optional `size`, optional `interactive`.
+We will port the `Aan.tsx` mascot exactly (radial coral gradient, soft glow, sparkle, eye tracking, shape morph), drop the blue circle, and wire its `state` prop to the existing `AanMascotState` so all current call sites keep working.
 
-### 2. Phase 3 — swap inside Aan-owned surfaces
+## Plan
 
-Replace `Sparkles` with `<AanGlyph />` (and drop the `Sparkles` import where unused) in:
+### 1. Rewrite `src/components/aan/AanMascot.tsx` to the official brand-manual mascot
 
-| File | State to pass |
-|---|---|
-| `src/components/aan/AanLogo.tsx` | `idle` |
-| `src/components/aan/AanBreadcrumb.tsx` | `idle` |
-| `src/components/aan/AanConversation.tsx` (assistant message avatar, both occurrences) | `idle` for past messages, `thinking` for the in-flight one if available; otherwise `idle` |
-| `src/components/aan/AanInput.tsx` (line 262 indicator) | `listening` when input has focus / non-empty value, otherwise `idle` |
-| `src/components/aan/AanWorkspaceSidebar.tsx` (collapsed + expanded headers) | `idle` |
-| `src/components/aan/AskAanTooltip.tsx` | `idle` |
+- 1:1 port of `Aan.tsx` from the brand-manual repo using `framer-motion` (already installed).
+- Coral radial gradient body, soft coral aura (no blue), white sparkle, two ink eyes that track cursor.
+- Map our existing `state` prop to a shape:
+  - `idle` → `diamond` (rotate 45°, gentle bob)
+  - `listening` → `circle`
+  - `thinking` → `cube`
+  - `anchor` → `diamond` static (no bob, no eye tracking)
+- Honor `prefers-reduced-motion` and `VisualEffectsContext` (disable bob/aura pulse).
+- Keep API: `{ state, size, interactive, className }` so `AanGlyph.tsx` and all 10 call sites need zero changes.
+- Inline the small extra CSS (`.aan-character`, `.aan-character-aura`, `.aan-character-sheen`) inside the component using inline styles to keep the file self-contained — no global CSS edits.
 
-No layout, color, or spacing changes.
+### 2. Update `AanMascotShowcase` (`src/pages/brand/AanMascotShowcase.tsx`)
 
-### 3. Phase 4 — swap inside app chrome
+- Refresh the state catalog to label them `Diamond idle`, `Circle listening`, `Bar loading`, `Cube thinking` (matches brand manual copy).
+- Remove any leftover hint about the old blue glow.
+- (No route change.)
 
-| File | What changes |
-|---|---|
-| `src/components/layout/AppSidebar.tsx` (Ask Aan pill — 2 Sparkles usages around lines 234/244) | `<AanGlyph state="idle" className="h-4 w-4" />` |
-| `src/components/layout/AppTaskbar.tsx` (lines 354, 379 — Ask Aan fallback button) | `<AanGlyph state="idle" className="h-3 w-3" />` |
-| `src/features/creative/FloatingActionIsland.tsx` (the "Ask Aan" action icon) | Pass `AanGlyph` instead of `Sparkles` to the action item — the existing `<Icon />` render call needs no change since it just calls the component. |
+### 3. Add an Aan tab to Design System (`src/pages/settings/DesignSystem.tsx`)
 
-### 4. Verification
+- New `AanTab()` section, inserted as a new `TabsTrigger value="aan"` after `layout` (or before `colors` — see below).
+- Add `"aan"` to `validTabs` so `/settings/design-system/aan` deep-links work.
+- Tab content (sectioned, matches brand-manual chapter):
+  1. **Philosophy** — short copy: "Aan is the Anarix diamond made intelligent." + name meaning (Hindi/Sanskrit / English / full-form: Anarix Analytical Nural).
+  2. **Brand hues used by Aan** — Coral `#F26E77`, Blue `#4A62D9`, Ink `#1D252D` swatches.
+  3. **States & morphs** — 4 live mascot tiles: `Diamond idle`, `Circle listening`, `Bar loading` (rendered as the same `<AanMascot>` with a temporary `bar` shape — added as a 5th internal shape but still mapped to `state="listening"` is wrong, so we expose an optional `shape` override prop on `AanMascot` for the showcase only; default behavior unchanged).
+  4. **When Aan appears / stays absent** — two bullet lists (chat dock, copilot, action island, insights vs. static decoration, repeated branding, noisy moments).
+  5. **Tone rule** — "Serious, calm, and helpful."
+  6. **Asset handoff** — links to `/animations/aan-loader.json`, `/anarix-symbol.svg`, full logo SVG (already on disk in `src/assets/branding/`).
+- All copy lifted verbatim from the brand-manual `#aan` section.
 
-After build, with New Branding **ON**, the user should see the coral diamond mascot in:
-- Sidebar (already from Phase 0)
-- Login + 404 + favicon (Phase 1)
-- `/brand/aan` showcase (Phase 2)
-- Sidebar Ask Aan pill, AppTaskbar Ask Aan, Floating Action Island Ask Aan, all chat avatars, breadcrumbs, tooltip, input indicator (Phase 3 + 4)
+### 4. Tiny `AanMascot` API addition
 
-With the toggle **OFF** the app must look identical to today — every swap is gated by `useBranding().newBranding` inside `AanGlyph` / `AnarixLogo`.
+Add an optional `shape?: "diamond" | "circle" | "bar" | "cube"` prop. When present, it overrides the state→shape mapping. Used only by the showcase + Design System tab. All existing call sites (which only pass `state`) are unaffected.
 
-### Files
+## Files touched
 
-- New: `src/components/aan/AanGlyph.tsx`
-- Edited: `AanLogo.tsx`, `AanBreadcrumb.tsx`, `AanConversation.tsx`, `AanInput.tsx`, `AanWorkspaceSidebar.tsx`, `AskAanTooltip.tsx`, `AppSidebar.tsx`, `AppTaskbar.tsx`, `FloatingActionIsland.tsx`
+- Rewrite: `src/components/aan/AanMascot.tsx`
+- Edit: `src/pages/brand/AanMascotShowcase.tsx` (label refresh only)
+- Edit: `src/pages/settings/DesignSystem.tsx` (new Aan tab + validTabs entry)
 
-No other files touched. No new dependencies.
+No new dependencies. No changes to `AanGlyph`, `AnarixLogo`, `BrandingContext`, routes, or any of the 10 existing Sparkles→AanGlyph swaps.
+
+## Acceptance
+
+- The mascot anywhere in the app shows the coral rounded-diamond with eye-tracking and a small white sparkle — **no blue ring, no blue circle behind it**.
+- `/settings/design-system/aan` exists, is reachable from the Design System tab strip, and renders the 6 sections above with live mascots.
+- Toggle "New Branding" OFF in Preferences → all Aan touchpoints fall back to `Sparkles` icon as before (unchanged behavior, gated by `AanGlyph`).

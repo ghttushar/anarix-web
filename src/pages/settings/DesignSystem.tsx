@@ -29,6 +29,7 @@ import {
   Home, Megaphone, Store, Globe, Zap, BookOpen, Hash, SlidersHorizontal,
   ListFilter, Columns3, GripVertical, Moon, Sun, LogOut, User, HelpCircle
 } from "lucide-react";
+import { AanMascot } from "@/components/aan/AanMascot";
 
 const breadcrumbItems = [
   { label: "Settings", href: "/settings" },
@@ -348,6 +349,126 @@ function IconsTab() {
   );
 }
 
+function AanTab() {
+  const morphs = [
+    { shape: "diamond" as const, label: "Diamond idle", desc: "The inherited Anarix form at rest: calm, ready, structurally tied to the brand." },
+    { shape: "circle" as const, label: "Circle listening", desc: "Aan opens into a softer listening state when it receives human intent and context." },
+    { shape: "bar" as const, label: "Bar loading", desc: "The form stretches into a bridge between prompt and output while work is processed." },
+    { shape: "cube" as const, label: "Cube thinking", desc: "Aan condenses into a tighter analytical state when reasoning becomes focused." },
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Hero */}
+      <section className="rounded-lg border border-border bg-card p-6 flex items-center gap-8">
+        <div className="shrink-0 w-32 h-32 flex items-center justify-center">
+          <AanMascot state="idle" size={96} />
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Phase 02 — Meet Aan</p>
+          <h2 className="text-xl font-semibold text-foreground">Aan is the Anarix diamond made intelligent.</h2>
+          <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+            Aan keeps the character but behaves with more seriousness. The mascot is the active intelligence
+            layer across Anarix — watchful at rest, precise in motion, and useful in context.
+          </p>
+        </div>
+      </section>
+
+      {/* Naming */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="p-4 space-y-1">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Hindi / Sanskrit</Label>
+          <div className="text-sm text-foreground font-medium">Self-respect, dignity, grace, and the sun.</div>
+          <p className="text-xs text-muted-foreground">Composed, intelligent, steady under pressure.</p>
+        </Card>
+        <Card className="p-4 space-y-1">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">English reading</Label>
+          <div className="text-sm text-foreground font-medium">Presence, composure, intelligent attention.</div>
+          <p className="text-xs text-muted-foreground">Aan reads as the intelligence on top of every action.</p>
+        </Card>
+        <Card className="p-4 space-y-1">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full form</Label>
+          <div className="text-sm text-foreground font-medium">Anarix Analytical Nural</div>
+          <p className="text-xs text-muted-foreground">Tied directly to the analytical core of the product.</p>
+        </Card>
+      </section>
+
+      {/* Brand hues */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Brand hues used by Aan</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <ColorSwatch name="Primary Coral" token="aan.coral" hsl="354 84% 70%" hex="#F26E77" usage="Mascot body — supplied exactly." />
+          <ColorSwatch name="Primary Blue" token="aan.blue" hsl="229 65% 57%" hex="#4A62D9" usage="Logo + Aan accent. Never recolored." />
+          <ColorSwatch name="Logo Ink" token="aan.ink" hsl="210 22% 14%" hex="#1D252D" usage="Wordmark + mascot eyes only." />
+        </div>
+      </section>
+
+      {/* States & morphs */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">States & morphs</h2>
+        <p className="text-sm text-muted-foreground">Each state is the same inherited Anarix form changing role, not identity.</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {morphs.map((m) => (
+            <div key={m.shape} className="rounded-lg border border-border bg-card p-4 flex flex-col items-center gap-3 text-center">
+              <div className="h-24 flex items-center justify-center">
+                <AanMascot shape={m.shape} size={64} interactive={false} />
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-foreground">{m.label}</div>
+                <p className="text-[11px] text-muted-foreground leading-snug">{m.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Appearance rules */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Card className="p-4 space-y-2">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Aan appears when</Label>
+          <ul className="text-sm text-foreground space-y-1">
+            <li>• Chat dock and prompt entry</li>
+            <li>• Copilot panels and split view</li>
+            <li>• Action island and quick actions</li>
+            <li>• Insight notices and generated artifacts</li>
+          </ul>
+        </Card>
+        <Card className="p-4 space-y-2">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Aan stays absent when</Label>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• Static decoration in empty chrome</li>
+            <li>• Repeated branding where no AI is active</li>
+            <li>• Noisy mascot moments without purpose</li>
+            <li>• Cute filler motion disconnected from work</li>
+          </ul>
+        </Card>
+      </section>
+
+      {/* Tone */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Tone rule — serious, calm, helpful.</h2>
+        <p className="text-sm text-muted-foreground max-w-3xl">
+          Aan should never read as random decoration. The character stays mature, restrained, and useful so
+          the brand keeps authority while still holding a clear personality.
+        </p>
+      </section>
+
+      {/* Asset handoff */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Asset handoff</h2>
+        <p className="text-sm text-muted-foreground">Keep the logo, symbol, and Lottie loader source unchanged.</p>
+        <div className="flex flex-wrap gap-2">
+          <a href="/animations/aan-loader.json" target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">aan-loader.json</a>
+          <span className="text-muted-foreground">·</span>
+          <a href="/favicon-new.svg" target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">anarix-symbol.svg</a>
+          <span className="text-muted-foreground">·</span>
+          <a href="/brand/aan" className="text-sm text-primary hover:underline">Open full mascot showcase →</a>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function ComponentsTab() {
   return (
     <div className="space-y-8">
@@ -598,7 +719,7 @@ export default function DesignSystem() {
   const { hash } = useLocation();
   const { tab } = useParams<{ tab?: string }>();
   const navigate = useNavigate();
-  const validTabs = ["colors", "typography", "spacing", "icons", "components", "states", "layout"];
+  const validTabs = ["colors", "typography", "spacing", "icons", "components", "states", "layout", "aan"];
   const initialTab = (tab && validTabs.includes(tab)) ? tab : "colors";
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -630,6 +751,7 @@ export default function DesignSystem() {
           <TabsTrigger value="components" className="text-xs">Components</TabsTrigger>
           <TabsTrigger value="states" className="text-xs">States</TabsTrigger>
           <TabsTrigger value="layout" className="text-xs">Layout</TabsTrigger>
+          <TabsTrigger value="aan" className="text-xs">Aan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="colors" className="mt-4"><ColorsTab /></TabsContent>
@@ -639,6 +761,7 @@ export default function DesignSystem() {
         <TabsContent value="components" className="mt-4"><ComponentsTab /></TabsContent>
         <TabsContent value="states" className="mt-4"><StatesTab /></TabsContent>
         <TabsContent value="layout" className="mt-4"><LayoutTab /></TabsContent>
+        <TabsContent value="aan" className="mt-4"><AanTab /></TabsContent>
       </Tabs>
     </AppLayout>
   );
