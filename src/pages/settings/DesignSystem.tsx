@@ -468,6 +468,8 @@ function AanTab() {
     </div>
   );
 }
+
+function ComponentsTab() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
