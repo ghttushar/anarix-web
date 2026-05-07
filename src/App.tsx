@@ -13,6 +13,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AccountProvider, useAccounts } from "@/contexts/AccountContext";
 import { VisualEffectsProvider } from "@/contexts/VisualEffectsContext";
 import { FeatureToggleProvider } from "@/contexts/FeatureToggleContext";
+import { BrandingProvider } from "@/contexts/BrandingContext";
 import { ActivePanelProvider } from "@/contexts/ActivePanelContext";
 import { AanProvider, AanPanel } from "@/components/aan";
 import { InsightsProvider } from "@/components/insights";
@@ -226,6 +227,7 @@ const App = () => (
                   <InsightsProvider>
                     <VisualEffectsProvider>
                       <FeatureToggleProvider>
+                        <BrandingProvider>
                         <TooltipProvider>
                           <Toaster />
                           <Sonner position="bottom-left" />
@@ -237,6 +239,7 @@ const App = () => (
                             </CreativeFeatures>
                           </BrowserRouter>
                         </TooltipProvider>
+                        </BrandingProvider>
                       </FeatureToggleProvider>
                     </VisualEffectsProvider>
                   </InsightsProvider>
