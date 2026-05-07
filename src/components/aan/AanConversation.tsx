@@ -33,14 +33,20 @@ export function AanConversation() {
           {/* Avatar */}
           <div
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+              "flex h-8 w-8 shrink-0 items-center justify-center",
               message.role === "assistant"
-                ? "aan-gradient text-white"
-                : "bg-muted text-muted-foreground"
+                ? newBranding
+                  ? "text-foreground"
+                  : "rounded-full aan-gradient text-white"
+                : "rounded-full bg-muted text-muted-foreground"
             )}
           >
             {message.role === "assistant" ? (
-              <AanGlyph className="h-4 w-4" />
+              newBranding ? (
+                <AanMascot size={26} state="idle" interactive={false} />
+              ) : (
+                <AanGlyph className="h-4 w-4" />
+              )
             ) : (
               <User className="h-4 w-4" />
             )}
