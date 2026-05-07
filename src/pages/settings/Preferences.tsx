@@ -374,6 +374,25 @@ export default function Preferences() {
 
         <Separator />
 
+        {/* New Branding */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="font-heading text-lg font-medium text-foreground">New Branding</h2>
+            <p className="text-sm text-muted-foreground">Enable the new Anarix logo system and Aan mascot across the app. Rolls out progressively.</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card">
+            <label className="flex items-center justify-between cursor-pointer p-4">
+              <div>
+                <p className="font-medium text-foreground">Use New Branding</p>
+                <p className="text-xs text-muted-foreground">Swaps the Anarix logo with the new mark. Phase 0 covers the sidebars; later phases extend to Aan mascot, chat, and app chrome.</p>
+              </div>
+              <Switch checked={newBranding} onCheckedChange={toggleNewBranding} />
+            </label>
+          </div>
+        </section>
+
+        <Separator />
+
         {/* Keyboard Shortcuts */}
         <section className="space-y-4">
           <div>
