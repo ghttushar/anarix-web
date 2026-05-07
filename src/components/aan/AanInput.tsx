@@ -264,6 +264,16 @@ export function AanInput() {
 
   return (
     <div className="shrink-0 bg-background">
+      {/* Persistent Aan presence (new branding only) */}
+      {newBranding && !showSuggestion && (
+        <div
+          key={presenceState + presenceLabel}
+          className="px-4 pt-3 flex flex-col items-center justify-end gap-1 animate-in fade-in slide-in-from-bottom-1 duration-200"
+        >
+          <AanMascot size={30} state={presenceState} interactive floating />
+          <span className="text-[11px] font-medium text-muted-foreground">{presenceLabel}</span>
+        </div>
+      )}
       <div className="px-4 pb-4 pt-2">
         <div className="relative">
           {/* Prompt suggestion notch */}
