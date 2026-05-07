@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { SidebarHoverPopup } from "./SidebarHoverPopup";
 import { MarketplaceSelector } from "./MarketplaceSelector";
 import { useAan } from "@/components/aan";
+import { AanGlyph } from "@/components/aan/AanGlyph";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
