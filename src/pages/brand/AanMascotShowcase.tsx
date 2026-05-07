@@ -16,9 +16,9 @@ export default function AanMascotShowcase() {
   }
 
   const states: { state: AanMascotState; label: string; desc: string }[] = [
-    { state: "idle", label: "Idle", desc: "Floating presence. Eyes track the cursor." },
-    { state: "listening", label: "Listening", desc: "User is typing. Soft coral glow, gentle scale pulse." },
-    { state: "thinking", label: "Thinking", desc: "Processing request. Diamond morphs and shifts to Anarix blue." },
+    { state: "idle", label: "Diamond idle", desc: "The inherited Anarix form at rest. Calm, ready, eyes track the cursor." },
+    { state: "listening", label: "Circle listening", desc: "Aan opens into a softer listening state when receiving human intent." },
+    { state: "thinking", label: "Cube thinking", desc: "Aan condenses into a tighter analytical state when reasoning is focused." },
     { state: "anchor", label: "Anchor", desc: "Static. Used inline as an avatar or button glyph." },
   ];
 
