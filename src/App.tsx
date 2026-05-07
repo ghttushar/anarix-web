@@ -85,6 +85,9 @@ import SettingsSystem from "./pages/settings/System";
 import DesignSystem from "./pages/settings/DesignSystem";
 import ComponentLibrary from "./pages/settings/ComponentLibrary";
 
+// Brand
+import AanMascotShowcase from "./pages/brand/AanMascotShowcase";
+
 const queryClient = new QueryClient();
 
 function WelcomeToasts() {
@@ -207,6 +210,8 @@ function AppRoutes() {
       <Route path="/settings/design-system/:tab" element={<DesignSystem />} />
       <Route path="/settings/component-library" element={<ComponentLibrary />} />
       <Route path="/settings/component-library/:section" element={<ComponentLibrary />} />
+
+      <Route path="/brand/aan" element={<AanMascotShowcase />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
