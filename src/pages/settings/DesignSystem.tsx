@@ -719,7 +719,7 @@ export default function DesignSystem() {
   const { hash } = useLocation();
   const { tab } = useParams<{ tab?: string }>();
   const navigate = useNavigate();
-  const validTabs = ["colors", "typography", "spacing", "icons", "components", "states", "layout"];
+  const validTabs = ["colors", "typography", "spacing", "icons", "components", "states", "layout", "aan"];
   const initialTab = (tab && validTabs.includes(tab)) ? tab : "colors";
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -751,6 +751,7 @@ export default function DesignSystem() {
           <TabsTrigger value="components" className="text-xs">Components</TabsTrigger>
           <TabsTrigger value="states" className="text-xs">States</TabsTrigger>
           <TabsTrigger value="layout" className="text-xs">Layout</TabsTrigger>
+          <TabsTrigger value="aan" className="text-xs">Aan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="colors" className="mt-4"><ColorsTab /></TabsContent>
@@ -760,6 +761,7 @@ export default function DesignSystem() {
         <TabsContent value="components" className="mt-4"><ComponentsTab /></TabsContent>
         <TabsContent value="states" className="mt-4"><StatesTab /></TabsContent>
         <TabsContent value="layout" className="mt-4"><LayoutTab /></TabsContent>
+        <TabsContent value="aan" className="mt-4"><AanTab /></TabsContent>
       </Tabs>
     </AppLayout>
   );
