@@ -9,6 +9,7 @@ import { useDensity } from "@/contexts/DensityContext";
 import { useCurrency, CURRENCIES } from "@/contexts/CurrencyContext";
 import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
+import { useBranding } from "@/contexts/BrandingContext";
 import { useColorScheme } from "@/contexts/ColorSchemeContext";
 import { cn } from "@/lib/utils";
 import { Pencil, RotateCcw, Globe, Palette } from "lucide-react";
@@ -153,6 +154,7 @@ export default function Preferences() {
   const { displayCurrency, setDisplayCurrency, exchangeRate, lastUpdated } = useCurrency();
   const { effects, toggle } = useVisualEffects();
   const { newFeaturesVisible, toggleNewFeatures } = useFeatureToggle();
+  const { newBranding, toggleNewBranding } = useBranding();
   const { schemeId, setSchemeId, schemes, currentScheme } = useColorScheme();
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
@@ -366,6 +368,25 @@ export default function Preferences() {
                 <p className="text-xs text-muted-foreground">Includes Workspace, Health Score, Budget Pacing, Search Harvesting, Anomaly Alerts, Creative Analyzer, Rule Builder, Inventory & Ads, Competitor Pricing, Client Portal, Unified P&L</p>
               </div>
               <Switch checked={newFeaturesVisible} onCheckedChange={toggleNewFeatures} />
+            </label>
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* New Branding */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="font-heading text-lg font-medium text-foreground">New Branding</h2>
+            <p className="text-sm text-muted-foreground">Enable the new Anarix logo system and Aan mascot across the app. Rolls out progressively.</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card">
+            <label className="flex items-center justify-between cursor-pointer p-4">
+              <div>
+                <p className="font-medium text-foreground">Use New Branding</p>
+                <p className="text-xs text-muted-foreground">Swaps the Anarix logo with the new mark. Phase 0 covers the sidebars; later phases extend to Aan mascot, chat, and app chrome.</p>
+              </div>
+              <Switch checked={newBranding} onCheckedChange={toggleNewBranding} />
             </label>
           </div>
         </section>

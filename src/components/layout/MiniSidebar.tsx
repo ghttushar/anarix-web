@@ -9,8 +9,7 @@ import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useAan } from "@/components/aan";
 import { SidebarHoverPopup } from "./SidebarHoverPopup";
 import { navigationGroups } from "./AppSidebar";
-import logoLightSymbol from "@/assets/logo-light-symbol.svg";
-import logoDarkSymbol from "@/assets/logo-dark-symbol.svg";
+import { AnarixLogo } from "@/components/branding/AnarixLogo";
 
 export function MiniSidebar() {
   const location = useLocation();
@@ -19,7 +18,7 @@ export function MiniSidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const { newFeaturesVisible } = useFeatureToggle();
   const { closeAan } = useAan();
-  const logoSrc = resolvedTheme === "dark" ? logoDarkSymbol : logoLightSymbol;
+  
 
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
   const [triggerRects, setTriggerRects] = useState<Record<string, DOMRect | null>>({});
@@ -55,7 +54,7 @@ export function MiniSidebar() {
     <div className="w-14 h-full flex flex-col border-r border-border/30 bg-sidebar shrink-0">
       {/* Logo */}
       <div className="flex items-center justify-center h-12 border-b border-border/30 shrink-0">
-        <img src={logoSrc} alt="Anarix" className="h-6 w-6 object-contain" />
+        <AnarixLogo variant="symbol" className="h-6 w-6" />
       </div>
 
       {/* Nav icons */}
