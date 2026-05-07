@@ -26,10 +26,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import logoLightFull from "@/assets/logo-light-full.svg";
-import logoDarkFull from "@/assets/logo-dark-full.svg";
-import logoLightSymbol from "@/assets/logo-light-symbol.svg";
-import logoDarkSymbol from "@/assets/logo-dark-symbol.svg";
+import { AnarixLogo } from "@/components/branding/AnarixLogo";
 
 interface NavItem {
   title: string;
