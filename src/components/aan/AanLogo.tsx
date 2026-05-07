@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
+import { AanGlyph } from "./AanGlyph";
 
 interface AanLogoProps {
   className?: string;
@@ -9,7 +9,7 @@ interface AanLogoProps {
 export function AanLogo({ className, showByAnarix = true }: AanLogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Sparkles className="h-5 w-5 aan-gradient-text" />
+      <AanGlyph className="h-5 w-5 aan-gradient-text" />
       <span className="font-aan text-aan aan-gradient-text font-bold">Aan</span>
       {showByAnarix && (
         <span className="text-sm text-muted-foreground">by Anarix</span>

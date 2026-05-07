@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { useAan } from "./AanContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Square, Sparkles, X, Paperclip, ChevronDown, Check, Zap, Brain, Cpu, Gauge } from "lucide-react";
+import { Send, Square, X, Paperclip, ChevronDown, Check, Zap, Brain, Cpu, Gauge } from "lucide-react";
+import { AanGlyph } from "./AanGlyph";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -259,7 +260,7 @@ export function AanInput() {
                 <div className="w-[3px] shrink-0 bg-gradient-to-b from-primary to-accent" />
                 <div className="flex items-center gap-2.5 px-3 py-2.5 flex-1 min-w-0">
                   <div className="flex items-center justify-center h-6 w-6 rounded-md bg-primary/10 shrink-0">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <AanGlyph state="listening" className="h-3.5 w-3.5 text-primary" />
                   </div>
                   <button onClick={handleSuggestionClick} className="flex-1 text-left min-w-0 cursor-pointer group">
                     <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-0.5">Suggested</span>

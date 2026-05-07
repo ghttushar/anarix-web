@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { FileText, Search, Palette, Bot, Plus, ChevronDown, ChevronRight, PanelLeft, Sparkles } from "lucide-react";
+import { FileText, Search, Palette, Bot, Plus, ChevronDown, ChevronRight, PanelLeft } from "lucide-react";
+import { AanGlyph } from "./AanGlyph";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ export function AanWorkspaceSidebar() {
       <aside className="w-14 border-r border-border bg-card flex flex-col h-full shrink-0">
         {/* Collapsed header — centered symbol logo */}
         <div className="flex items-center justify-center h-12 border-b border-border/30 shrink-0">
-          <Sparkles className="h-5 w-5 aan-gradient-text" />
+          <AanGlyph className="h-5 w-5 aan-gradient-text" />
         </div>
 
         {/* Expand button */}
@@ -118,7 +119,7 @@ export function AanWorkspaceSidebar() {
       {/* Header — Logo left, collapse right (matches AppSidebar) */}
       <div className="flex items-center justify-between h-12 px-3 border-b border-border/30 shrink-0">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 aan-gradient-text" />
+          <AanGlyph className="h-5 w-5 aan-gradient-text" />
           <span className="font-aan text-aan aan-gradient-text font-bold">Aan</span>
         </div>
         <button

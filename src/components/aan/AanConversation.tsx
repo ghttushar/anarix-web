@@ -1,7 +1,8 @@
 import { useRef, useEffect } from "react";
 import { useAan } from "./AanContext";
 import { cn } from "@/lib/utils";
-import { Sparkles, User } from "lucide-react";
+import { User } from "lucide-react";
+import { AanGlyph } from "./AanGlyph";
 import { format } from "date-fns";
 import { ArtifactCard } from "./ArtifactCard";
 import { CircularProgress } from "@/components/ui/circular-progress";
@@ -36,7 +37,7 @@ export function AanConversation() {
             )}
           >
             {message.role === "assistant" ? (
-              <Sparkles className="h-4 w-4" />
+              <AanGlyph className="h-4 w-4" />
             ) : (
               <User className="h-4 w-4" />
             )}
@@ -81,7 +82,7 @@ export function AanConversation() {
         <div className="flex gap-3">
           {/* Avatar */}
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full aan-gradient text-white">
-            <Sparkles className="h-4 w-4" />
+            <AanGlyph state="thinking" className="h-4 w-4" />
           </div>
 
           {/* Progress Card */}

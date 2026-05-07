@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { CalendarIcon, Play, Sparkles, Bell, Lightbulb, RefreshCw, Clock, ChevronRight } from "lucide-react";
+import { CalendarIcon, Play, Bell, Lightbulb, RefreshCw, Clock, ChevronRight } from "lucide-react";
+import { AanGlyph } from "@/components/aan/AanGlyph";
 import { format, subDays, startOfWeek, endOfWeek, subWeeks, startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useFilter } from "@/contexts/FilterContext";
@@ -351,7 +352,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openAan()}>
-                        <Sparkles className="h-3 w-3 text-primary" />
+                        <AanGlyph className="h-3 w-3 text-primary" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom"><p>Ask Aan</p></TooltipContent>
@@ -376,7 +377,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
               ) : (
                 <>
                   <Button variant="ghost" size="sm" className="h-7 px-2 gap-1" onClick={() => openAan()}>
-                    <Sparkles className="h-3 w-3 text-primary" />
+                    <AanGlyph className="h-3 w-3 text-primary" />
                     <span className="text-[11px]">Ask Aan</span>
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 px-2 gap-1" onClick={() => openInsights()}>

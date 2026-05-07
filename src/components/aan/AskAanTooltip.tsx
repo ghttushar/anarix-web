@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { AanGlyph } from "./AanGlyph";
 import { useAan } from "./AanContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 
@@ -79,7 +79,7 @@ export function AskAanTooltip() {
         onClick={handleClick}
         className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg hover:opacity-90 transition-opacity cursor-pointer"
       >
-        <Sparkles className="h-3 w-3" />
+        <AanGlyph className="h-3 w-3" />
         Ask Aan
       </button>
     </div>
