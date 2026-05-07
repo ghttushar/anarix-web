@@ -134,8 +134,6 @@ export function AppSidebar() {
   const [triggerRects, setTriggerRects] = useState<Record<string, DOMRect | null>>({});
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const logoFullSrc = resolvedTheme === "dark" ? logoDarkFull : logoLightFull;
-  const logoSymbolSrc = resolvedTheme === "dark" ? logoDarkSymbol : logoLightSymbol;
 
   const [openSections, setOpenSections] = useState<Set<string>>(() => {
     const initial = new Set<string>();
@@ -207,14 +205,14 @@ export function AppSidebar() {
                   onClick={toggleSidebar}
                   className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-sidebar-accent transition-colors"
                 >
-                  <img src={logoSymbolSrc} alt="Anarix" className="h-6 w-6 object-contain" />
+                  <AnarixLogo variant="symbol" className="h-6 w-6" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">Expand sidebar</TooltipContent>
             </Tooltip>
           ) : (
             <>
-              <img src={logoFullSrc} alt="Anarix" className="h-6 w-auto" />
+              <AnarixLogo variant="full" className="h-6 w-auto" />
               <button
                 onClick={toggleSidebar}
                 className="flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
