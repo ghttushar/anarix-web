@@ -16,14 +16,15 @@ export function AanCopilotPanel() {
   const isOpen = mode === "copilot";
 
   return (
-    <div
-      className={cn(
-        "h-full shrink-0 flex flex-col border-l border-border bg-background transition-all duration-200 ease-out overflow-hidden",
-        isOpen ? "w-[360px] opacity-100" : "w-0 opacity-0 border-l-0"
-      )}
-    >
-      {isOpen && (
-        <>
+    <AanPresenceProvider>
+      <div
+        className={cn(
+          "h-full shrink-0 flex flex-col border-l border-border bg-background transition-all duration-200 ease-out overflow-hidden relative",
+          isOpen ? "w-[360px] opacity-100" : "w-0 opacity-0 border-l-0"
+        )}
+      >
+        {isOpen && (
+          <>
           {/* Header with Aan gradient */}
           <div className="border-b border-border shrink-0">
             <div className="flex items-center justify-between px-4 py-4">
