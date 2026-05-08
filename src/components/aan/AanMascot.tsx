@@ -2,89 +2,56 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export type AanMascotState = "idle" | "listening" | "thinking" | "anchor";
+export type AanMascotState = "idle" | "listening" | "thinking" | "working" | "speaking" | "anchor";
+// Legacy shape prop kept for backwards compatibility; ignored. Diamond is the only shape.
 export type AanMascotShape = "diamond" | "circle" | "bar" | "cube";
 
 interface AanMascotProps {
   state?: AanMascotState;
+  /** Legacy / ignored. Aan is always a diamond. */
   shape?: AanMascotShape;
   size?: number;
   interactive?: boolean;
-  /** Adds a soft ground shadow ellipse beneath the mascot. */
+  /** Soft ground shadow ellipse beneath. Only honored at large sizes. */
   floating?: boolean;
+  /** 0–100, used by `working` state to draw a rim arc. */
+  progress?: number;
+  /** When true, this instance participates in the travelling-presence layout animation. */
+  layoutId?: string;
   className?: string;
 }
 
-type ShapeStyle = {
-  background: string;
-  glow: string;
-  shadow: string;
-  sparkLeft: number;
-  sparkTop: number;
+const CORAL = {
+  base: "#f46d76",
+  light: "#f88a93",
+  deep: "#f05e6a",
 };
 
-const shapeStyles: Record<AanMascotShape, ShapeStyle> = {
-  diamond: {
-    background:
-      "radial-gradient(circle at 50% 38%, #f88a93 0%, #f57780 42%, #f46d76 78%, #f2626d 100%)",
-    glow: "rgba(244, 109, 118, 0.34)",
-    shadow: "0 30px 76px -28px rgba(244, 109, 118, 0.48)",
-    sparkLeft: 91,
-    sparkTop: 50,
-  },
-  circle: {
-    background:
-      "radial-gradient(circle at 50% 38%, #f9939b 0%, #f67d86 42%, #f46d76 78%, #f2606c 100%)",
-    glow: "rgba(244, 109, 118, 0.3)",
-    shadow: "0 28px 70px -28px rgba(244, 109, 118, 0.44)",
-    sparkLeft: 87,
-    sparkTop: 13,
-  },
-  bar: {
-    background:
-      "linear-gradient(180deg, #f88790 0%, #f5737c 48%, #f46d76 78%, #f15f6b 100%)",
-    glow: "rgba(244, 109, 118, 0.28)",
-    shadow: "0 24px 64px -24px rgba(244, 109, 118, 0.42)",
-    sparkLeft: 93,
-    sparkTop: 14,
-  },
-  cube: {
-    background:
-      "radial-gradient(circle at 50% 34%, #f88d96 0%, #f67680 44%, #f46d76 78%, #f05e6a 100%)",
-    glow: "rgba(244, 109, 118, 0.3)",
-    shadow: "0 28px 68px -26px rgba(244, 109, 118, 0.44)",
-    sparkLeft: 86,
-    sparkTop: 13,
-  },
-};
-
-const stateToShape: Record<AanMascotState, AanMascotShape> = {
-  idle: "diamond",
-  listening: "circle",
-  thinking: "cube",
-  anchor: "diamond",
-};
-
+/**
+ * Aan — the coral diamond. One shape, three rendering tiers based on size:
+ *   • <24px  → flat soft-diamond (rounded square), no motion, no aura. Confident brand mark.
+ *   • 24–40px → diamond with subtle breathe only.
+ *   • >40px  → full state behavior: morph, swirl, rim arc, ground shadow.
+ */
 export function AanMascot({
   state = "idle",
-  shape: shapeOverride,
   size = 64,
   interactive = true,
   floating = false,
+  progress = 0,
+  layoutId,
   className,
 }: AanMascotProps) {
   const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
-  const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
   const [bodyLean, setBodyLean] = useState({ x: 0, y: 0, tilt: 0 });
 
-  const shape: AanMascotShape = shapeOverride ?? stateToShape[state];
+  const tier: "micro" | "compact" | "full" = size < 24 ? "micro" : size <= 40 ? "compact" : "full";
   const isStatic = state === "anchor" || reduceMotion;
-  const trackCursor = interactive && !isStatic;
+  const trackCursor = interactive && !isStatic && tier === "full";
 
   useEffect(() => {
     if (!trackCursor) {
-      setEyeOffset({ x: 0, y: 0 });
       setBodyLean({ x: 0, y: 0, tilt: 0 });
       return;
     }
@@ -98,66 +65,91 @@ export function AanMascot({
       const dy = event.clientY - cy;
       const distance = Math.min(1, Math.hypot(dx, dy) / 420);
       const angle = Math.atan2(dy, dx);
-      const eyeTravel = Math.max(1.5, size * 0.02);
-      const bodyTravel = Math.max(2, size * 0.05);
-      setEyeOffset({
-        x: Math.cos(angle) * distance * eyeTravel,
-        y: Math.sin(angle) * distance * eyeTravel,
-      });
+      const bodyTravel = Math.max(2, size * 0.04);
       setBodyLean({
         x: Math.cos(angle) * distance * bodyTravel,
         y: Math.sin(angle) * distance * bodyTravel,
-        tilt: Math.cos(angle) * distance * 6,
+        tilt: Math.cos(angle) * distance * 4,
       });
     };
     window.addEventListener("mousemove", handler);
     return () => window.removeEventListener("mousemove", handler);
   }, [size, trackCursor]);
 
+  // ---------- MICRO TIER (<24px): flat soft-diamond mark ----------
+  if (tier === "micro") {
+    return (
+      <motion.span
+        layoutId={layoutId}
+        className={cn("inline-block shrink-0", className)}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "30%",
+          background: `linear-gradient(140deg, ${CORAL.light} 0%, ${CORAL.base} 60%, ${CORAL.deep} 100%)`,
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+        }}
+      />
+    );
+  }
+
+  // ---------- COMPACT & FULL TIERS ----------
+  const baseRotate = 45; // diamond
+  // listening: corners soften and stretch slightly; thinking/working: tighten back; idle: standard.
   const radius =
-    shape === "circle" ? "50%" : shape === "bar" ? "999px" : shape === "cube" ? "18%" : "16%";
-  const aspect =
-    shape === "bar"
-      ? { width: size * 1.8, height: size * 0.56 }
-      : { width: size, height: size };
-  const baseRotate = shape === "diamond" ? 45 : 0;
-  const style = shapeStyles[shape];
-  const eyeSize = Math.max(4, size * 0.055);
-  const eyeGap = size * 0.145;
-  const sparkSize = Math.max(4, size * 0.048);
+    state === "listening" ? "26%" : state === "thinking" || state === "working" ? "14%" : "18%";
+  const stretchX = state === "listening" ? 1.04 : 1;
+  const stretchY = state === "listening" ? 0.97 : 1;
 
-  // State-driven motion tuning
-  const floatDur = state === "listening" ? 3.2 : state === "thinking" ? 2.4 : 4.6;
-  const floatRange = shape === "bar" ? 0 : state === "thinking" ? 4 : 3;
-  const driftDur = 7.5;
-  const auraScale = state === "thinking" ? [1, 1.08, 1] : state === "listening" ? [1, 1.04, 1] : [1, 1.02, 1];
-  const auraOpacity = state === "thinking" ? 1.1 : state === "listening" ? 1.05 : 0.95;
-  const thinkingSpin = state === "thinking" && !isStatic;
+  const floatDur = state === "listening" ? 3.2 : state === "thinking" || state === "working" ? 2.6 : 4.4;
+  const floatRange = tier === "full" ? (state === "thinking" || state === "working" ? 3 : 2.5) : 0;
+  const auraScale =
+    state === "thinking" || state === "working"
+      ? [1, 1.06, 1]
+      : state === "listening"
+        ? [1, 1.04, 1]
+        : [1, 1.02, 1];
+  const auraOpacity =
+    state === "thinking" || state === "working" ? 1.05 : state === "listening" ? 1.0 : 0.85;
+  const internalSpin = (state === "thinking" || state === "working") && !isStatic && tier === "full";
 
-  const containerSize = floating
-    ? { width: aspect.width + 8, height: aspect.height + 14 }
-    : { width: aspect.width, height: aspect.height };
+  const containerW = size + (floating && tier === "full" ? 8 : 0);
+  const containerH = size + (floating && tier === "full" ? 14 : 0);
+
+  // Rim arc geometry (working state)
+  const arcSize = size * 1.18;
+  const arcR = arcSize / 2 - 2;
+  const arcCircum = 2 * Math.PI * arcR;
+  const arcOffset = arcCircum * (1 - Math.min(100, Math.max(0, progress)) / 100);
 
   return (
-    <span
+    <motion.span
+      layout
+      layoutId={layoutId}
       className={cn("relative inline-flex items-end justify-center select-none", className)}
-      style={{ width: containerSize.width, height: containerSize.height }}
+      style={{ width: containerW, height: containerH }}
+      transition={{ type: "spring", stiffness: 180, damping: 22 }}
     >
-      {/* Ground shadow ellipse */}
-      {floating && (
+      {/* Ground shadow ellipse (full tier + floating only) */}
+      {floating && tier === "full" && (
         <motion.span
           aria-hidden
-          animate={isStatic ? { scaleX: 1, opacity: 0.35 } : { scaleX: [1, 0.88, 1], opacity: [0.35, 0.28, 0.35] }}
+          animate={
+            isStatic
+              ? { scaleX: 1, opacity: 0.3 }
+              : { scaleX: [1, 0.88, 1], opacity: [0.3, 0.22, 0.3] }
+          }
           transition={{ duration: floatDur, repeat: Infinity, ease: "easeInOut" }}
           style={{
             position: "absolute",
             bottom: 2,
             left: "50%",
             transform: "translateX(-50%)",
-            width: aspect.width * 0.7,
+            width: size * 0.7,
             height: Math.max(3, size * 0.07),
             borderRadius: "50%",
-            background: "radial-gradient(ellipse at center, rgba(17,20,31,0.28) 0%, rgba(17,20,31,0) 70%)",
+            background:
+              "radial-gradient(ellipse at center, rgba(17,20,31,0.26) 0%, rgba(17,20,31,0) 70%)",
             pointerEvents: "none",
           }}
         />
@@ -167,121 +159,184 @@ export function AanMascot({
         ref={ref}
         className="relative inline-flex items-center justify-center"
         animate={
-          isStatic
-            ? { y: 0, x: 0 }
-            : {
-                y: [0, -floatRange, 0, -floatRange * 0.6, 0],
-                x: [0, 2, 0, -2, 0],
-              }
+          isStatic || tier === "compact"
+            ? { y: 0 }
+            : { y: [0, -floatRange, 0, -floatRange * 0.6, 0] }
         }
-        transition={{ duration: driftDur, repeat: Infinity, ease: "easeInOut" }}
-        style={{ width: aspect.width, height: aspect.height }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        style={{ width: size, height: size }}
       >
-        {/* Body lean wrapper (cursor reactive) */}
-        <motion.div
-          animate={{ x: bodyLean.x, y: bodyLean.y, rotate: bodyLean.tilt }}
-          transition={{ type: "spring", stiffness: 110, damping: 16 }}
-          style={{ position: "relative", width: aspect.width, height: aspect.height }}
-        >
-          {/* Aura */}
-          <motion.div
+        {/* Rim progress arc (working state, full tier) */}
+        {state === "working" && tier === "full" && (
+          <svg
             aria-hidden
-            animate={{
-              width: aspect.width * 1.1,
-              height: aspect.height * 1.1,
-              borderRadius: radius,
-              rotate: baseRotate,
-              scale: isStatic ? 1 : auraScale,
-            }}
-            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            width={arcSize}
+            height={arcSize}
+            viewBox={`0 0 ${arcSize} ${arcSize}`}
             style={{
               position: "absolute",
               top: "50%",
               left: "50%",
-              translateX: "-50%",
-              translateY: "-50%",
-              background: style.glow,
-              filter: "blur(22px)",
-              opacity: auraOpacity,
+              transform: "translate(-50%, -50%) rotate(-90deg)",
               pointerEvents: "none",
             }}
-          />
+          >
+            <circle
+              cx={arcSize / 2}
+              cy={arcSize / 2}
+              r={arcR}
+              fill="none"
+              stroke="rgba(244, 109, 118, 0.18)"
+              strokeWidth={1.5}
+            />
+            <motion.circle
+              cx={arcSize / 2}
+              cy={arcSize / 2}
+              r={arcR}
+              fill="none"
+              stroke={CORAL.base}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeDasharray={arcCircum}
+              animate={{ strokeDashoffset: arcOffset }}
+              transition={{ type: "spring", stiffness: 60, damping: 20 }}
+            />
+          </svg>
+        )}
+
+        {/* Body lean (cursor reactive) */}
+        <motion.div
+          animate={{ x: bodyLean.x, y: bodyLean.y, rotate: bodyLean.tilt }}
+          transition={{ type: "spring", stiffness: 110, damping: 16 }}
+          style={{ position: "relative", width: size, height: size }}
+        >
+          {/* Aura */}
+          {tier === "full" && (
+            <motion.div
+              aria-hidden
+              animate={{
+                width: size * 1.1,
+                height: size * 1.1,
+                borderRadius: radius,
+                rotate: baseRotate,
+                scale: isStatic ? 1 : auraScale,
+              }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                translateX: "-50%",
+                translateY: "-50%",
+                background: "rgba(244, 109, 118, 0.32)",
+                filter: "blur(20px)",
+                opacity: auraOpacity,
+                pointerEvents: "none",
+              }}
+            />
+          )}
 
           {/* Body */}
           <motion.div
             animate={{
-              width: aspect.width,
-              height: aspect.height,
+              width: size,
+              height: size,
               borderRadius: radius,
-              rotate: thinkingSpin ? [baseRotate, baseRotate + 360] : baseRotate,
+              rotate: internalSpin ? [baseRotate, baseRotate + 360] : baseRotate,
+              scaleX: stretchX,
+              scaleY: stretchY,
             }}
             transition={
-              thinkingSpin
-                ? { rotate: { duration: 4.5, repeat: Infinity, ease: "linear" }, default: { type: "spring", stiffness: 120, damping: 16 } }
-                : { type: "spring", stiffness: 120, damping: 16 }
+              internalSpin
+                ? {
+                    rotate: { duration: 5, repeat: Infinity, ease: "linear" },
+                    default: { type: "spring", stiffness: 140, damping: 18 },
+                  }
+                : { type: "spring", stiffness: 140, damping: 18 }
             }
             style={{
-              background: style.background,
+              background: `radial-gradient(circle at 50% 38%, ${CORAL.light} 0%, #f57780 42%, ${CORAL.base} 78%, ${CORAL.deep} 100%)`,
               position: "relative",
-              boxShadow: style.shadow,
+              boxShadow:
+                tier === "full"
+                  ? "0 26px 64px -28px rgba(244,109,118,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
+                  : "inset 0 1px 0 rgba(255,255,255,0.22)",
               overflow: "hidden",
             }}
           >
-            {/* Eyes (counter-rotated so they read upright) */}
-            <motion.div
-              animate={{ rotate: thinkingSpin ? [-baseRotate, -baseRotate - 360] : -baseRotate }}
-              transition={
-                thinkingSpin
-                  ? { rotate: { duration: 4.5, repeat: Infinity, ease: "linear" } }
-                  : { type: "spring", stiffness: 120, damping: 16 }
-              }
+            {/* Inner highlight (top-left soft white) */}
+            <span
+              aria-hidden
               style={{
                 position: "absolute",
                 inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: eyeGap,
+                background:
+                  "radial-gradient(circle at 28% 22%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 45%)",
+                pointerEvents: "none",
               }}
-            >
-              {[0, 1].map((index) => (
-                <motion.div
-                  key={index}
-                  animate={{ x: eyeOffset.x, y: eyeOffset.y }}
-                  transition={{ type: "spring", stiffness: 170, damping: 18 }}
-                  style={{
-                    width: eyeSize,
-                    height: eyeSize,
-                    borderRadius: "999px",
-                    background: "#11141f",
-                    boxShadow: "0 0 0 1px rgba(0,0,0,0.04)",
-                  }}
-                />
-              ))}
-            </motion.div>
+            />
+
+            {/* Periwinkle rim-light (subtle palette tie-in) */}
+            <span
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: radius,
+                boxShadow: "inset 0 0 0 1px rgba(167, 174, 242, 0.18)",
+                pointerEvents: "none",
+              }}
+            />
+
+            {/* Liquid swirl for thinking/working (full tier only) */}
+            {(state === "thinking" || state === "working") && tier === "full" && !isStatic && (
+              <motion.div
+                aria-hidden
+                animate={{ rotate: [-baseRotate, -baseRotate - 360] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                style={{ position: "absolute", inset: 0 }}
+              >
+                <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <motion.path
+                    fill="rgba(255,255,255,0.12)"
+                    animate={{
+                      d: [
+                        "M30,50 Q50,20 70,50 Q50,80 30,50 Z",
+                        "M28,52 Q52,28 72,48 Q48,78 28,52 Z",
+                        "M32,48 Q48,22 68,52 Q52,82 32,48 Z",
+                        "M30,50 Q50,20 70,50 Q50,80 30,50 Z",
+                      ],
+                    }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                </svg>
+              </motion.div>
+            )}
           </motion.div>
 
-          {/* Sparkle */}
-          <motion.span
-            aria-hidden
-            animate={isStatic ? { opacity: 1, scale: 1 } : { opacity: [0.9, 1, 0.9], scale: [1, 0.95, 1] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              position: "absolute",
-              left: `${style.sparkLeft}%`,
-              top: `${style.sparkTop}%`,
-              width: sparkSize,
-              height: sparkSize,
-              borderRadius: "999px",
-              background: "rgba(255,255,255,0.98)",
-              boxShadow: `0 0 ${Math.max(10, size * 0.16)}px rgba(255,255,255,0.34)`,
-              transform: "translate(-50%, -50%)",
-              pointerEvents: "none",
-            }}
-          />
+          {/* Speaking ripple */}
+          {state === "speaking" && tier === "full" && !isStatic && (
+            <motion.span
+              aria-hidden
+              initial={{ scale: 1, opacity: 0.5 }}
+              animate={{ scale: 1.45, opacity: 0 }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                width: size,
+                height: size,
+                borderRadius: radius,
+                border: `1px solid ${CORAL.base}`,
+                transform: `translate(-50%, -50%) rotate(${baseRotate}deg)`,
+                pointerEvents: "none",
+              }}
+            />
+          )}
         </motion.div>
       </motion.div>
-    </span>
+    </motion.span>
   );
 }
 

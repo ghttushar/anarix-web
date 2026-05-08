@@ -1,9 +1,10 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useAan } from "./AanContext";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
 import { AanGlyph } from "./AanGlyph";
 import { AanMascot } from "./AanMascot";
+import { useAanPresence } from "./AanPresenceContext";
 import { useBranding } from "@/contexts/BrandingContext";
 import { format } from "date-fns";
 import { ArtifactCard } from "./ArtifactCard";
@@ -12,13 +13,27 @@ import { CircularProgress } from "@/components/ui/circular-progress";
 export function AanConversation() {
   const { messages, openSplit, isGenerating, generationType, generationProgress } = useAan();
   const { newBranding } = useBranding();
+  const { registerAnchor } = useAanPresence();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pendingAnchorEl, setPendingAnchorEl] = useState<HTMLDivElement | null>(null);
+  const [generationAnchorEl, setGenerationAnchorEl] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isGenerating, generationProgress]);
+
+  // Register the generation card anchor — owns the live presence while generating
+  useEffect(() => {
+    if (!newBranding) return;
+    if (isGenerating) {
+      registerAnchor("generation", generationAnchorEl, 56);
+    } else {
+      registerAnchor("generation", null);
+    }
+    return () => registerAnchor("generation", null);
+  }, [newBranding, isGenerating, generationAnchorEl, registerAnchor]);
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -43,7 +58,7 @@ export function AanConversation() {
           >
             {message.role === "assistant" ? (
               newBranding ? (
-                <AanMascot size={26} state="idle" interactive={false} />
+                <AanMascot size={20} state="anchor" interactive={false} />
               ) : (
                 <AanGlyph className="h-4 w-4" />
               )
@@ -89,23 +104,28 @@ export function AanConversation() {
       {/* Generation Progress Indicator */}
       {isGenerating && (
         <div className="flex gap-3">
-          {/* Avatar */}
+          {/* Avatar slot — live presence portals here in new branding */}
           <div
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center",
               newBranding ? "text-foreground" : "rounded-full aan-gradient text-white"
             )}
           >
-            {newBranding ? (
-              <AanMascot size={26} state="thinking" interactive={false} />
-            ) : (
-              <AanGlyph state="thinking" className="h-4 w-4" />
-            )}
+            {!newBranding && <AanGlyph state="thinking" className="h-4 w-4" />}
           </div>
 
           {/* Progress Card */}
           <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card">
-            <CircularProgress progress={generationProgress} size={56} />
+            {newBranding ? (
+              <div
+                ref={setGenerationAnchorEl}
+                aria-hidden
+                data-aan-anchor="generation"
+                className="w-14 h-14 shrink-0"
+              />
+            ) : (
+              <CircularProgress progress={generationProgress} size={56} />
+            )}
             <div>
               <p className="font-medium text-foreground">
                 {generationType === "report" ? "Generating Report" : "Running Audit"}

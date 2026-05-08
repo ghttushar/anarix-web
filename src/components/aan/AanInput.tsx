@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Square, X, Paperclip, ChevronDown, Check, Zap, Brain, Cpu, Gauge } from "lucide-react";
 import { AanGlyph } from "./AanGlyph";
-import { AanMascot, AanMascotState } from "./AanMascot";
+import { AanMascot } from "./AanMascot";
+import { useAanPresence } from "./AanPresenceContext";
 import { useBranding } from "@/contexts/BrandingContext";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -102,6 +103,7 @@ function formatFileSize(bytes: number): string {
 export function AanInput() {
   const { addMessage, setGenerationState, messages, selectedModel, setSelectedModel, pendingPrompt, setPendingPrompt, isGenerating, generationType } = useAan();
   const { newBranding } = useBranding();
+  const { registerAnchor } = useAanPresence();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -110,26 +112,18 @@ export function AanInput() {
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [modelOpen, setModelOpen] = useState(false);
+  const [inputAnchorEl, setInputAnchorEl] = useState<HTMLDivElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const suggestionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Aan presence state for the mascot above the input
-  const presenceState: AanMascotState = isGenerating || isLoading
-    ? "thinking"
-    : (input.trim().length > 0 || isFocused)
-      ? "listening"
-      : "idle";
-  const presenceLabel = isGenerating && generationType === "report"
-    ? "Working on your report\u2026"
-    : isGenerating && generationType === "audit"
-      ? "Running the audit\u2026"
-      : isLoading
-        ? "Thinking\u2026"
-        : input.trim().length > 0
-          ? "Your prompt is ready."
-          : "Ready when you are.";
+  // Register the top-left input slot as the resting anchor for the travelling Aan presence
+  useEffect(() => {
+    if (!newBranding) return;
+    registerAnchor("input", inputAnchorEl, 24);
+    return () => registerAnchor("input", null);
+  }, [newBranding, inputAnchorEl, registerAnchor]);
 
   useEffect(() => {
     return () => {
@@ -264,17 +258,7 @@ export function AanInput() {
 
   return (
     <div className="shrink-0 bg-background">
-      {/* Persistent Aan presence (new branding only) */}
-      {newBranding && !showSuggestion && (
-        <div
-          key={presenceState + presenceLabel}
-          className="px-4 pt-3 flex flex-col items-center justify-end gap-1 animate-in fade-in slide-in-from-bottom-1 duration-200"
-        >
-          <AanMascot size={30} state={presenceState} interactive floating />
-          <span className="text-[11px] font-medium text-muted-foreground">{presenceLabel}</span>
-        </div>
-      )}
-      <div className="px-4 pb-4 pt-2">
+      <div className="px-4 pb-4 pt-3">
         <div className="relative">
           {/* Prompt suggestion notch */}
           {showSuggestion && (
@@ -324,6 +308,15 @@ export function AanInput() {
 
           {/* Input container */}
           <div className="relative flex items-end gap-0 rounded-lg border border-border bg-card focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+            {/* Aan presence anchor — top-left of input box (new branding only) */}
+            {newBranding && (
+              <div
+                ref={setInputAnchorEl}
+                aria-hidden
+                data-aan-anchor="input"
+                className="absolute top-1.5 left-2 w-6 h-6 pointer-events-none z-10"
+              />
+            )}
             {/* Attachment button */}
             <button
               onClick={() => fileInputRef.current?.click()}

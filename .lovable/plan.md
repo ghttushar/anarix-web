@@ -1,90 +1,124 @@
-## Integrations — WhatsApp Alerts (Settings)
+## Aan v2 — A Living Diamond
 
-A new top-level entry in the Profile dropdown that opens a connector-style page where users link WhatsApp to receive alerts from selected services and accounts. Mock-only (no backend), full CRUD, persisted in localStorage. Always on (not behind the Aan/new-branding toggle).
+Keep Aan's shape exactly as defined: the coral diamond/cube echoing the Anarix logo symbol. Take from Aria only the **behavior** — a single, fluid, mature presence that travels through the chat surface, morphs subtly between states, and never appears twice at once. No sparkle dot. Fix the small-size diamond. Move to top-left of the input. One Aan, always at the point of action.
 
-### 1. Navigation entry
-- Add **Integrations** item to the profile dropdown in `src/components/layout/AppSidebar.tsx` (both expanded and collapsed variants), positioned right after **Accounts**, icon `Plug` from lucide.
-- Route: `/settings/integrations` and `/settings/integrations/whatsapp/:id?` (single page, sub-views via state).
-- Register routes in `src/App.tsx`.
+---
 
-### 2. New context — `IntegrationsContext`
-File: `src/contexts/IntegrationsContext.tsx`. localStorage-persisted (`anarix_integrations`). Provider mounted in `App.tsx` near other contexts.
+### 1. Mascot stays a diamond — refined, not replaced
 
-```ts
-type ServiceKey = "profitability" | "advertising" | "rules" | "catalog" | "bi" | "dayparting";
-interface WhatsAppIntegration {
-  id: string;
-  phoneNumber: string;        // E.164, +country code
-  countryCode: string;
-  verifiedAt: string;
-  services: ServiceKey[];
-  accountIds: string[];       // references AccountContext.accounts[].id
-  enabled: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-```
-CRUD: `addIntegration`, `updateIntegration`, `removeIntegration`, `toggleEnabled`. Reads from `useAccounts()` to resolve account labels at render time.
+`AanMascot.tsx` keeps its identity. We refine it, we don't redesign it.
 
-### 3. Pages
+**Visual changes**
+- **Remove the white sparkle dot** entirely (`shapeStyles[*].sparkLeft/sparkTop` + the `<motion.span>` sparkle block).
+- **Remove the eyes.** Aria has no face; Aan shouldn't either at this scale. Personality moves into shape morph + motion.
+- Keep the coral gradient + soft aura + ground shadow.
+- Add a faint inner highlight (top-left, white at 8% opacity) so the diamond reads dimensional without a sparkle.
+- Add a very subtle rim-light using `brand.accent` (#A7AEF2) at 15% — ties Aan to the periwinkle palette without breaking the coral.
 
-**`src/pages/settings/Integrations.tsx`** — connector hub
-- Page header "Integrations" + subtitle "Send Anarix alerts to the channels you actually check."
-- Section "Available integrations" with one card: **WhatsApp** (logo, name, "Send alerts and notifications to WhatsApp", primary CTA `Connect WhatsApp` or `Add another` if any exist).
-- Section "Your connections" — list of existing `WhatsAppIntegration` rows showing: phone, services as chips, account count, enabled toggle, kebab menu (Edit, Delete with AlertDialog confirm).
-- Empty state explains purpose, lists what alerts will be sent, single CTA.
+**State system (Aria-inspired morphing — diamond is always the base)**
+| State | Behavior |
+|---|---|
+| `idle` | Diamond, slow breathe (scale 1 → 1.015, 4s), drift ±1px |
+| `listening` | Diamond softens corners (radius 16% → 28%), gentle horizontal stretch (1.04 / 0.97), aura brightens — like Aria opening up |
+| `thinking` | Corners tighten back, internal slow rotation (one full turn over 5s, linear), eyes-area replaced by a subtle liquid-swirl SVG path that morphs between 3 keyframes (Aria's "processing" feel) |
+| `working` | Same as thinking + a thin progress arc traces around the rim (stroke-dasharray driven by `generationProgress`) |
+| `speaking` | Single soft outward ring ripple every ~2s |
+| `anchor` | Static diamond, no motion — used as inline avatar in past assistant messages |
 
-**`src/pages/settings/IntegrationWhatsApp.tsx`** — guided flow (right-side panel style sheet `Sheet` from `ui/sheet`, full-height, fixed). Stepper with 4 steps; reused for both Create and Edit. In Edit, user can jump between steps via the stepper.
+All transitions: Framer Motion spring (stiffness 180, damping 22), ≤240ms per project motion spec. No bounce, no elastic.
 
-Steps:
-1. **Phone number** — country code `Select` (default `+91`), `Input` numeric. Validate length 7–15 digits. CTA `Send code`.
-2. **OTP verification** — `InputOTP` 6 slots, numbers only. Correct code is hardcoded `123456`. Any other → inline error "Invalid code. Please try again." with destructive styling. `Resend` link (cosmetic). Auto-advance on success.
-3. **Select services** — checkbox grid of the 6 services with icon + short description of what alerts each one sends (e.g. Profitability: "Margin drops, COGS swings". Advertising: "ACoS spikes, budget pacing". Rules: "Rule triggers, errors". Catalog: "Stockouts, listing issues". Business Intelligence: "SOV shifts, keyword anomalies". Day Parting: "Schedule changes, missed windows."). Must select ≥1 to continue.
-4. **Select accounts** — accounts grouped by marketplace (Amazon, Walmart, Shopify, TikTok), each group expandable with checkboxes per linked account from `AccountContext`. "Select all" per marketplace. Must select ≥1. CTA `Finish` saves integration and returns to hub with success toast.
+**Small-size fix (nav, FAB, suggestion chip, breadcrumb)**
+The diamond looks ugly when it's tiny because the rotation + aura + ground shadow are all visible at 16px. Fix:
+- **Below 24px**: render a flat filled "soft-diamond" — the same coral gradient but with rounded corners (radius 30%), no aura, no ground shadow, no internal motion, no rotation. Reads as a confident brand mark, not a wobbly toy.
+- **24–40px**: diamond with breathe only, no swirl, no rotation.
+- **40px+**: full state behavior.
 
-Above the form (or as a side info panel on step 1): explainer block — "What WhatsApp will be used for" + bulleted alert types, mirroring the Lovable connector pattern.
+A single `size` prop on `AanMascot` decides which tier renders — consumers don't change.
 
-### 4. Components (small, reusable, in `src/components/integrations/`)
-- `WhatsAppLogo.tsx` — inline SVG (semantic token colors, no hardcoded green outside data-viz scope; use `text-success` token).
-- `IntegrationCard.tsx` — reusable card for the hub.
-- `ConnectionRow.tsx` — list row in "Your connections".
-- `WhatsAppFlowStepper.tsx` — top stepper used inside the sheet.
-- `ServiceSelector.tsx`, `AccountSelector.tsx` — step bodies.
-- `WhatsAppPurposeInfo.tsx` — the "what this does" explainer block.
+---
 
-### 5. Validation rules
-- Phone: only digits accepted (input `inputMode="numeric"`, strip non-digits on change), 7–15 chars.
-- OTP: only digits, exactly 6, `123456` succeeds, any other shows inline destructive message; clear on change.
-- Services and Accounts steps: Continue button disabled until ≥1 selected.
+### 2. One travelling Aan in the chat (`AanPresence` controller)
 
-### 6. Tone & visual rules (per project knowledge)
-- Neutral analytics zone — no gradients, no expressive motion, transitions ≤180ms.
-- Use semantic tokens only (`bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, `text-primary`, `text-destructive`, `text-success`).
-- Primary buttons for forward step, Secondary for Back, Destructive button + AlertDialog for Delete.
-- Right-side `Sheet` for the workflow (matches existing dual-panel pattern).
-- Toasts: success "WhatsApp connected", "Integration updated", "Integration removed".
+Only **one** animated diamond exists in the conversation surface at a time. It physically moves between anchor points using Framer Motion `layoutId="aan-presence"` so the same DOM element animates between locations.
 
-### 7. Files touched / created
-Created:
-- `src/contexts/IntegrationsContext.tsx`
-- `src/pages/settings/Integrations.tsx`
-- `src/pages/settings/IntegrationWhatsApp.tsx`
-- `src/components/integrations/WhatsAppLogo.tsx`
-- `src/components/integrations/IntegrationCard.tsx`
-- `src/components/integrations/ConnectionRow.tsx`
-- `src/components/integrations/WhatsAppFlowStepper.tsx`
-- `src/components/integrations/ServiceSelector.tsx`
-- `src/components/integrations/AccountSelector.tsx`
-- `src/components/integrations/WhatsAppPurposeInfo.tsx`
+**Anchor points (priority order)**
+1. **Input top-left** — resting position. Replaces today's centered mascot above the input.
+2. **Pending-reply slot** — placeholder row inserted on send, where the next assistant message will land.
+3. **Generation card slot** — inside the "Generating Report / Running Audit" card, replacing the current `CircularProgress` puck.
+4. **Latest assistant message avatar** — once a response finishes, the diamond settles there as the row avatar.
 
-Edited:
-- `src/App.tsx` — add routes + `IntegrationsProvider`.
-- `src/components/layout/AppSidebar.tsx` — add **Integrations** item to both profile dropdowns.
+**Choreography on Send**
+1. User hits Send → input clears.
+2. Diamond at input-top-left morphs to `thinking`.
+3. It animates (layoutId) down into the new pending-assistant row in ~220ms.
+4. While the assistant is "typing": diamond stays in pending row in `thinking` state.
+5. If response is a **report/audit**: diamond animates into the Generation Card slot, morphs to `working`, the rim arc tracks `generationProgress`.
+6. When generation completes: diamond animates back up to the input anchor and returns to `idle`. The completed message shows a static `anchor`-state mini-diamond as its row avatar.
+7. **Never two animated diamonds.** Past assistant messages get the small static variant only.
 
-### Out of scope
-- No real WhatsApp/Twilio API; OTP and sending are mocked.
-- No changes to Aan, branding toggle, or any existing screen besides the sidebar dropdown and App routes.
-- No backend / Cloud enablement.
+**Implementation**
+- New `AanPresenceContext` exposes `currentAnchor: 'input' | 'pending' | 'generation' | 'lastMessage'` and `setAnchor()`.
+- A single `<AanMascot layoutId="aan-presence" />` is portalled (`createPortal`) into whichever anchor slot is registered as active.
+- Each anchor slot renders an empty `data-aan-anchor` div sized to reserve space; the portal injects the live diamond there. Layout stays stable as Aan moves.
 
-### Open question (one)
-The brief says "when hovered over profiles" — I'm reading this as **a new item inside the existing Profile dropdown** (which is already hover/click-triggered from the avatar). Confirm? If you instead want Integrations as a top-level sidebar nav group (outside Settings), say so and I'll move it.
+---
+
+### 3. Specific placement changes
+
+**`AanInput.tsx`**
+- Remove the centered presence block above the textarea (lines 268–276), including the `presenceLabel` micro-copy ("Ready when you are.", etc.) — it's noise; the diamond communicates state.
+- Add a `data-aan-anchor="input"` slot at the **top-left** corner of the input container. Diamond size: 24px.
+- Paperclip moves down to bottom-left, beside the model selector.
+
+**`AanConversation.tsx`**
+- Per-message assistant avatars: switch from animated `AanMascot` to the small static variant (`size={20}`, `state="anchor"`, `interactive={false}`) — the "soft-diamond" tier.
+- The `isGenerating` block: replace the avatar + `CircularProgress` puck with a single `data-aan-anchor="generation"` slot. The `AanPresence` controller drops the live diamond here, and the rim arc reflects `generationProgress`. Keep the "Generating Report / 18s remaining" copy beside it.
+- Insert a `data-aan-anchor="pending"` row after the user's message while `isLoading` is true (before the assistant reply lands).
+
+**Other small-size surfaces (sparkle/diamond fix)**
+- `AanWorkspaceSidebar`, `AanTrigger`, `MiniSidebar`, `FloatingActionIsland`, prompt suggestion chip, breadcrumb — all keep `<AanMascot />` but at sizes 16–20px, which now auto-render the flat soft-diamond variant. No diamond rotation/aura at these sizes.
+
+---
+
+### 4. Cleanup
+
+- **Keep** `AanMascot.tsx` (it remains the diamond identity); refactor internals.
+- **Remove**: sparkle motion span; eyes block; `shape: circle | bar | cube` API (only `diamond` remains, with size-tier-driven rendering).
+- **Remove** the `AanGlyph` fallback in `AanConversation` for the new-branding path — single source of truth is `AanMascot`.
+- Update `AanMascotShowcase` page to demo the refined diamond + the travelling presence.
+
+---
+
+### 5. What stays the same
+
+- Aan's role, copy, gating, the `newBranding` toggle.
+- Coral diamond identity (matches Anarix logo).
+- Periwinkle palette, motion budget (≤240ms), no decorative loops outside Aan.
+- All chat logic in `AanInput.handleSend` (report/audit detection, mock responses, generation timers).
+
+---
+
+### Files to touch
+
+**Create**
+- `src/components/aan/AanPresenceContext.tsx` — anchor state
+- `src/components/aan/AanPresencePortal.tsx` — single travelling diamond, portalled to active anchor
+
+**Edit**
+- `src/components/aan/AanMascot.tsx` — remove sparkle + eyes, add size tiers, refine states
+- `src/components/aan/AanInput.tsx` — orb at top-left input slot, remove centered block + label
+- `src/components/aan/AanConversation.tsx` — pending anchor, generation anchor, static row avatars
+- `src/pages/aan/Workspace.tsx` — wrap with `AanPresenceProvider`, mount `AanPresencePortal`
+- Small-size consumers (sidebar/trigger/island/suggestion/breadcrumb) — no API change, sizes already correct
+- `src/pages/brand/AanMascotShowcase.tsx` — refresh demos
+
+**Delete**
+- None (we're refining, not replacing)
+
+---
+
+### Open questions before I build
+
+1. **Past assistant message avatars** — keep a small static diamond on every past row, or remove avatars entirely once "the" presence has moved on (more Aria-like minimalism)? Proposing: keep small static diamonds — provides scan-ability without competing with the live presence.
+2. **Travel motion** — straight line via `layoutId` spring (snappy, ~220ms), or a slight arc? Proposing: straight + spring; arcs feel decorative and break the 240ms budget.
+3. **Color** — keep the current coral, or shift slightly toward the Anarix logo's exact coral hex if it differs? If you have the logo's exact hex, drop it and I'll match.
