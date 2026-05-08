@@ -59,9 +59,7 @@ export function AanPresenceProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAanPresence() {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useAanPresence must be used within AanPresenceProvider");
-  return ctx;
+  return useContext(Ctx);
 }
 
 /** Hook that registers a DOM ref as an anchor target. Pass null el to unregister. */
