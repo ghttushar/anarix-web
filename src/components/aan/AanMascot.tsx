@@ -124,6 +124,7 @@ export function AanMascot({
 
   return (
     <motion.span
+      layout
       layoutId={layoutId}
       className={cn("relative inline-flex items-end justify-center select-none", className)}
       style={{ width: containerW, height: containerH }}
