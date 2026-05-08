@@ -6,6 +6,8 @@ import { AanConversation } from "./AanConversation";
 import { AanInput } from "./AanInput";
 import { AanArtifactViewer } from "./AanArtifactViewer";
 import { MiniSidebar } from "@/components/layout/MiniSidebar";
+import { AanPresenceProvider } from "./AanPresenceContext";
+import { AanPresencePortal } from "./AanPresencePortal";
 
 export function AanWorkspace() {
   const { mode, viewingArtifact, closeArtifactView } = useAan();
