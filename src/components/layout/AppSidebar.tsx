@@ -6,7 +6,7 @@ import {
   CalendarClock, History, ListTodo, Settings, Users, ChevronDown,
   ChevronRight, Layers, Image, FlaskConical, PackageCheck,
   Send, Sun, Moon, User, LogOut, PanelLeft,
-  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck
+  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -349,6 +349,9 @@ export function AppSidebar() {
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/accounts")}>
                     <Link className="h-4 w-4" /><span>Accounts</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/integrations")}>
+                    <Plug className="h-4 w-4" /><span>Integrations</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/team")}>
                     <Users className="h-4 w-4" /><span>Team</span>
                   </DropdownMenuItem>
@@ -404,6 +407,9 @@ export function AppSidebar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/accounts")}>
                     <Link className="h-4 w-4" /><span>Accounts</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/integrations")}>
+                    <Plug className="h-4 w-4" /><span>Integrations</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/team")}>
                     <Users className="h-4 w-4" /><span>Team</span>

@@ -11,6 +11,7 @@ import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
 import { DensityProvider } from "@/contexts/DensityContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AccountProvider, useAccounts } from "@/contexts/AccountContext";
+import { IntegrationsProvider } from "@/contexts/IntegrationsContext";
 import { VisualEffectsProvider } from "@/contexts/VisualEffectsContext";
 import { FeatureToggleProvider } from "@/contexts/FeatureToggleContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
@@ -84,6 +85,7 @@ import SettingsTeam from "./pages/settings/Team";
 import SettingsSystem from "./pages/settings/System";
 import DesignSystem from "./pages/settings/DesignSystem";
 import ComponentLibrary from "./pages/settings/ComponentLibrary";
+import Integrations from "./pages/settings/Integrations";
 
 // Brand
 import AanMascotShowcase from "./pages/brand/AanMascotShowcase";
@@ -202,6 +204,7 @@ function AppRoutes() {
       {/* Settings */}
       <Route path="/settings/appearance" element={<Preferences />} />
       <Route path="/settings/accounts" element={<Accounts />} />
+      <Route path="/settings/integrations" element={<Integrations />} />
       <Route path="/settings/accounts/connect/amazon" element={<ConnectAmazon />} />
       <Route path="/settings/accounts/connect/walmart" element={<ConnectWalmart />} />
       <Route path="/settings/team" element={<SettingsTeam />} />
@@ -225,6 +228,7 @@ const App = () => (
       <DensityProvider>
         <CurrencyProvider>
         <AccountProvider>
+          <IntegrationsProvider>
           <MarketplaceProvider defaultMarketplace="walmart">
             <FilterProvider>
               <ActivePanelProvider>
@@ -252,6 +256,7 @@ const App = () => (
               </ActivePanelProvider>
             </FilterProvider>
           </MarketplaceProvider>
+          </IntegrationsProvider>
         </AccountProvider>
         </CurrencyProvider>
       </DensityProvider>
