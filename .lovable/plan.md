@@ -1,76 +1,90 @@
-## Goal
+## Integrations — WhatsApp Alerts (Settings)
 
-Match Aria's pattern from the reference video/screenshots:
-- The mascot is a **bare** floating character (no circular avatar background, no gradient ring) sitting in whitespace.
-- It lives **above the input box** as a persistent presence, with a small status line ("Your prompt is ready.", "Planning your site…", etc.).
-- It **moves and reacts** — drifts gently, leans toward the cursor, and shifts shape/spin while Aan is thinking.
-- In the conversation, assistant messages also drop the round avatar chip — the mascot itself is the avatar (smaller, no background).
+A new top-level entry in the Profile dropdown that opens a connector-style page where users link WhatsApp to receive alerts from selected services and accounts. Mock-only (no backend), full CRUD, persisted in localStorage. Always on (not behind the Aan/new-branding toggle).
 
-This applies only when New Branding is ON. Legacy mode keeps the existing Sparkles + circle avatar untouched.
+### 1. Navigation entry
+- Add **Integrations** item to the profile dropdown in `src/components/layout/AppSidebar.tsx` (both expanded and collapsed variants), positioned right after **Accounts**, icon `Plug` from lucide.
+- Route: `/settings/integrations` and `/settings/integrations/whatsapp/:id?` (single page, sub-views via state).
+- Register routes in `src/App.tsx`.
 
-## Scope (3 files only)
+### 2. New context — `IntegrationsContext`
+File: `src/contexts/IntegrationsContext.tsx`. localStorage-persisted (`anarix_integrations`). Provider mounted in `App.tsx` near other contexts.
 
-### 1. `src/components/aan/AanMascot.tsx` — add real motion
-
-Currently the mascot only floats up/down 3px and tracks the cursor with its eyes. Add:
-- **Drift**: slow x/y wander (±4px, 6–8s loop) so it feels alive when idle.
-- **Cursor lean**: whole body tilts ~6° and shifts ~4px toward the pointer (in addition to eye tracking) when `interactive` and not `anchor`.
-- **Thinking spin**: when `state="thinking"`, the body slowly rotates (diamond → cube morph already there) and the aura pulses faster.
-- **Listening bob**: when `state="listening"`, slightly faster floating + brighter aura.
-- New optional prop `floating?: boolean` (default false) — when true, adds a soft drop shadow ellipse beneath the mascot (matches Aria's grounded look in the screenshots). Used by the input-bar presence.
-- Keep the existing API and all 10 call sites unchanged. No new dependencies.
-
-### 2. `src/components/aan/AanConversation.tsx` — remove the circle behind the mascot
-
-Replace the assistant avatar chip:
-
-```text
-Before:  [⬤ gradient circle 32px] containing <AanGlyph h-4>
-After (newBranding ON):  bare <AanMascot size={22} state="idle"> floating in 32px slot, no bg, no rounded-full
-After (newBranding OFF): unchanged — keep the gradient circle + Sparkles
+```ts
+type ServiceKey = "profitability" | "advertising" | "rules" | "catalog" | "bi" | "dayparting";
+interface WhatsAppIntegration {
+  id: string;
+  phoneNumber: string;        // E.164, +country code
+  countryCode: string;
+  verifiedAt: string;
+  services: ServiceKey[];
+  accountIds: string[];       // references AccountContext.accounts[].id
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 ```
+CRUD: `addIntegration`, `updateIntegration`, `removeIntegration`, `toggleEnabled`. Reads from `useAccounts()` to resolve account labels at render time.
 
-Same change for the "thinking" avatar shown next to the CircularProgress card — bare mascot with `state="thinking"`, no circle.
+### 3. Pages
 
-User avatar (the right-side `<User />` chip) stays exactly as it is.
+**`src/pages/settings/Integrations.tsx`** — connector hub
+- Page header "Integrations" + subtitle "Send Anarix alerts to the channels you actually check."
+- Section "Available integrations" with one card: **WhatsApp** (logo, name, "Send alerts and notifications to WhatsApp", primary CTA `Connect WhatsApp` or `Add another` if any exist).
+- Section "Your connections" — list of existing `WhatsAppIntegration` rows showing: phone, services as chips, account count, enabled toggle, kebab menu (Edit, Delete with AlertDialog confirm).
+- Empty state explains purpose, lists what alerts will be sent, single CTA.
 
-### 3. `src/components/aan/AanInput.tsx` — add the persistent Aan presence above the input
+**`src/pages/settings/IntegrationWhatsApp.tsx`** — guided flow (right-side panel style sheet `Sheet` from `ui/sheet`, full-height, fixed). Stepper with 4 steps; reused for both Create and Edit. In Edit, user can jump between steps via the stepper.
 
-Add a new block rendered **above** the existing prompt-suggestion notch and input container, only when `newBranding` is ON:
+Steps:
+1. **Phone number** — country code `Select` (default `+91`), `Input` numeric. Validate length 7–15 digits. CTA `Send code`.
+2. **OTP verification** — `InputOTP` 6 slots, numbers only. Correct code is hardcoded `123456`. Any other → inline error "Invalid code. Please try again." with destructive styling. `Resend` link (cosmetic). Auto-advance on success.
+3. **Select services** — checkbox grid of the 6 services with icon + short description of what alerts each one sends (e.g. Profitability: "Margin drops, COGS swings". Advertising: "ACoS spikes, budget pacing". Rules: "Rule triggers, errors". Catalog: "Stockouts, listing issues". Business Intelligence: "SOV shifts, keyword anomalies". Day Parting: "Schedule changes, missed windows."). Must select ≥1 to continue.
+4. **Select accounts** — accounts grouped by marketplace (Amazon, Walmart, Shopify, TikTok), each group expandable with checkboxes per linked account from `AccountContext`. "Select all" per marketplace. Must select ≥1. CTA `Finish` saves integration and returns to hub with success toast.
 
-```text
-┌──────────────────────────────────────────┐
-│   (whitespace)                           │
-│        [Aan mascot, floating]            │
-│        Your prompt is ready.             │   ← status line (12px, muted)
-│   ┌──────────────────────────────────┐   │
-│   │ Ask Aan anything...           ➤ │   │
-│   └──────────────────────────────────┘   │
-└──────────────────────────────────────────┘
-```
+Above the form (or as a side info panel on step 1): explainer block — "What WhatsApp will be used for" + bulleted alert types, mirroring the Lovable connector pattern.
 
-Behavior:
-- **State derives from existing context**: `state="thinking"` when `isGenerating || isLoading`, `state="listening"` when `input.length > 0` and focused, otherwise `state="idle"`.
-- **Status line text**:
-  - idle → "Ready when you are."
-  - input typed → "Your prompt is ready."
-  - generating report → "Working on your report…"
-  - generating audit → "Running the audit…"
-  - loading reply → "Thinking…"
-- Mascot size 28px, `floating` shadow on, no background, sits in a 56px-tall flex row with bottom padding 8px.
-- The whole presence row fades + slides 4px on state change (Section 9 motion budget: 180ms, opacity + translateY only — no bounce).
-- Hidden when the prompt-suggestion notch is showing (avoid stacking two hints).
-- Hidden when New Branding is OFF — input layout reverts to current behavior with zero visual change.
+### 4. Components (small, reusable, in `src/components/integrations/`)
+- `WhatsAppLogo.tsx` — inline SVG (semantic token colors, no hardcoded green outside data-viz scope; use `text-success` token).
+- `IntegrationCard.tsx` — reusable card for the hub.
+- `ConnectionRow.tsx` — list row in "Your connections".
+- `WhatsAppFlowStepper.tsx` — top stepper used inside the sheet.
+- `ServiceSelector.tsx`, `AccountSelector.tsx` — step bodies.
+- `WhatsAppPurposeInfo.tsx` — the "what this does" explainer block.
 
-## What we are NOT doing
+### 5. Validation rules
+- Phone: only digits accepted (input `inputMode="numeric"`, strip non-digits on change), 7–15 chars.
+- OTP: only digits, exactly 6, `123456` succeeds, any other shows inline destructive message; clear on change.
+- Services and Accounts steps: Continue button disabled until ≥1 selected.
 
-- No changes to `AanGlyph`, `AanLogo`, `AanBreadcrumb`, `AanWorkspaceSidebar`, `FloatingActionIsland`, `AppSidebar`, `AppTaskbar`, `AskAanTooltip` — those Sparkles→AanGlyph swaps stay as is.
-- No new routes, no new context, no new dependencies.
-- No copy changes outside the new status line.
-- Legacy branding mode is byte-identical to today.
+### 6. Tone & visual rules (per project knowledge)
+- Neutral analytics zone — no gradients, no expressive motion, transitions ≤180ms.
+- Use semantic tokens only (`bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, `text-primary`, `text-destructive`, `text-success`).
+- Primary buttons for forward step, Secondary for Back, Destructive button + AlertDialog for Delete.
+- Right-side `Sheet` for the workflow (matches existing dual-panel pattern).
+- Toasts: success "WhatsApp connected", "Integration updated", "Integration removed".
 
-## Files changed
+### 7. Files touched / created
+Created:
+- `src/contexts/IntegrationsContext.tsx`
+- `src/pages/settings/Integrations.tsx`
+- `src/pages/settings/IntegrationWhatsApp.tsx`
+- `src/components/integrations/WhatsAppLogo.tsx`
+- `src/components/integrations/IntegrationCard.tsx`
+- `src/components/integrations/ConnectionRow.tsx`
+- `src/components/integrations/WhatsAppFlowStepper.tsx`
+- `src/components/integrations/ServiceSelector.tsx`
+- `src/components/integrations/AccountSelector.tsx`
+- `src/components/integrations/WhatsAppPurposeInfo.tsx`
 
-- edit `src/components/aan/AanMascot.tsx` (add drift, cursor lean, thinking spin, `floating` prop with shadow ellipse)
-- edit `src/components/aan/AanConversation.tsx` (drop avatar circle for assistant when newBranding ON)
-- edit `src/components/aan/AanInput.tsx` (add persistent mascot + status line above input when newBranding ON)
+Edited:
+- `src/App.tsx` — add routes + `IntegrationsProvider`.
+- `src/components/layout/AppSidebar.tsx` — add **Integrations** item to both profile dropdowns.
+
+### Out of scope
+- No real WhatsApp/Twilio API; OTP and sending are mocked.
+- No changes to Aan, branding toggle, or any existing screen besides the sidebar dropdown and App routes.
+- No backend / Cloud enablement.
+
+### Open question (one)
+The brief says "when hovered over profiles" — I'm reading this as **a new item inside the existing Profile dropdown** (which is already hover/click-triggered from the avatar). Confirm? If you instead want Integrations as a top-level sidebar nav group (outside Settings), say so and I'll move it.
