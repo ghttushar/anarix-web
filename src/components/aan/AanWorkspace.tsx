@@ -21,22 +21,26 @@ export function AanWorkspace() {
 
   return (
     <div className="fixed inset-0 z-[60] flex bg-background">
-      {/* Mini app sidebar for navigation */}
-      <MiniSidebar />
+    <AanPresenceProvider>
+      <div className="fixed inset-0 z-[60] flex bg-background">
+        {/* Mini app sidebar for navigation */}
+        <MiniSidebar />
 
-      {/* Aan workspace content — no header bar */}
-      <div className="flex-1 flex min-w-0 overflow-hidden">
-        {showSidebar && <AanWorkspaceSidebar />}
+        {/* Aan workspace content — no header bar */}
+        <div className="flex-1 flex min-w-0 overflow-hidden">
+          {showSidebar && <AanWorkspaceSidebar />}
 
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <AanConversation />
-          <AanInput />
-        </main>
+          <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+            <AanConversation />
+            <AanInput />
+          </main>
 
-        {showArtifactPanel && viewingArtifact && (
-          <AanArtifactViewer artifact={viewingArtifact} onClose={closeArtifactView} />
-        )}
+          {showArtifactPanel && viewingArtifact && (
+            <AanArtifactViewer artifact={viewingArtifact} onClose={closeArtifactView} />
+          )}
+        </div>
+        <AanPresencePortal />
       </div>
-    </div>
+    </AanPresenceProvider>
   );
 }
