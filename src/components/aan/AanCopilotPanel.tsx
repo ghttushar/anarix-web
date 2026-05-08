@@ -66,8 +66,10 @@ export function AanCopilotPanel() {
           <div className="shrink-0">
             <AanInput />
           </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+        <AanPresencePortal />
+      </div>
+    </AanPresenceProvider>
   );
 }
