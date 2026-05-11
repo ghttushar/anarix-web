@@ -10,7 +10,7 @@ import { useAan } from "./AanContext";
  */
 export function AanPresencePortal() {
   const { activeAnchor, getAnchorEl, getAnchorSize } = useAanPresence();
-  const { isGenerating, generationProgress, generationType } = useAan();
+  const { isGenerating, generationProgress, generationType, inputFocused } = useAan();
 
   if (!activeAnchor) return null;
   const target = getAnchorEl(activeAnchor);
@@ -18,7 +18,7 @@ export function AanPresencePortal() {
   const size = getAnchorSize(activeAnchor);
 
   let state: AanMascotState = "idle";
-  if (activeAnchor === "input") state = "idle";
+  if (activeAnchor === "input") state = inputFocused ? "listening" : "idle";
   else if (activeAnchor === "pending") state = "thinking";
   else if (activeAnchor === "generation") state = "working";
   else if (activeAnchor === "lastMessage") state = "speaking";

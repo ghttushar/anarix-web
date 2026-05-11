@@ -81,6 +81,8 @@ interface AanContextType {
   setSelectedModel: (model: string) => void;
   pendingPrompt: string | null;
   setPendingPrompt: (prompt: string | null) => void;
+  inputFocused: boolean;
+  setInputFocused: (focused: boolean) => void;
 }
 
 const AanContext = createContext<AanContextType | undefined>(undefined);
@@ -139,6 +141,7 @@ export function AanProvider({ children }: { children: ReactNode }) {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [selectedModel, setSelectedModel] = useState("gemini-flash");
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const [inputFocused, setInputFocused] = useState(false);
 
   const currentConversation = useMemo(() => {
     return conversations.find((c) => c.id === currentConversationId) || null;
@@ -256,6 +259,7 @@ export function AanProvider({ children }: { children: ReactNode }) {
       conversations, currentConversation, activeFilter, setActiveFilter, startNewConversation, selectConversation,
       context, setContext, selectedModel, setSelectedModel,
       pendingPrompt, setPendingPrompt,
+      inputFocused, setInputFocused,
     }}>
       {children}
     </AanContext.Provider>
