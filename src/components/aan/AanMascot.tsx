@@ -169,11 +169,11 @@ export function AanMascot({
   const arcCircum = 2 * Math.PI * arcR;
   const arcOffset = arcCircum * (1 - Math.min(100, Math.max(0, progress)) / 100);
 
-  // Eye geometry — counter-rotated against the diamond's 45° rotation so eyes stay upright
-  const eyeSize = Math.max(2.5, size * 0.075);
-  const eyeOffsetX = size * 0.16;
-  const eyeY = size * 0.04; // slightly above center for "looking forward" feel
-  const pupilSize = eyeSize * 0.55;
+  // Eyes — solid dark dots directly on the coral (no sclera)
+  const eyeSize = Math.max(2, size * 0.06);
+  const eyeOffsetX = size * 0.13;
+  const eyeY = size * 0.04;
+  const eyeTravel = size * 0.04;
 
   return (
     <motion.span
