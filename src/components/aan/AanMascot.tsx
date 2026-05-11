@@ -121,7 +121,7 @@ export function AanMascot({
 
   // Blink — random interval, runs whenever eyes are visible
   useEffect(() => {
-    if (!showEyes) return;
+    if (!showEyes || staticEyes) return;
     let cancelled = false;
     const schedule = () => {
       const delay = state === "listening" ? 2200 + Math.random() * 2200 : 3500 + Math.random() * 3500;
