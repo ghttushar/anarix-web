@@ -31,7 +31,7 @@ export function FloatingActionIsland() {
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
-  const { openPanel } = useAan();
+  const navigate = useNavigate();
   const { openPanel: openInsights, criticalCount } = useInsights();
   const { newBranding } = useBranding();
 
@@ -75,7 +75,7 @@ export function FloatingActionIsland() {
   const { setDataPanel } = useActivePanel();
 
   const actions: ActionItem[] = [
-    { icon: AanGlyph, label: "Ask Aan", onClick: () => openPanel(), alwaysShowLabel: true },
+    { icon: AanGlyph, label: "Ask Aan", onClick: () => navigate("/aan"), alwaysShowLabel: true },
     { icon: Bell, label: criticalCount > 0 ? `Alerts (${criticalCount})` : "Alerts", onClick: () => setDataPanel("notifications"), highlight: criticalCount > 0, badge: criticalCount > 0 ? criticalCount : undefined },
     { icon: Lightbulb, label: "Insights", onClick: openInsights },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
