@@ -103,36 +103,35 @@ export function AanConversation() {
 
       {/* Generation Progress Indicator */}
       {isGenerating && (
-        <div className="flex gap-3">
-          {/* Avatar slot — live presence portals here in new branding */}
-          <div
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center",
-              newBranding ? "text-foreground" : "rounded-full aan-gradient text-white"
-            )}
-          >
-            {!newBranding && <AanGlyph state="thinking" className="h-4 w-4" />}
-          </div>
-
-          {/* Progress Card */}
-          <div className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card">
-            {newBranding ? (
+        <div className="flex">
+          {/* Progress Card — clean, well-designed loader */}
+          <div className="flex flex-col gap-3 p-4 rounded-2xl border border-border bg-card w-fit min-w-[300px] shadow-sm">
+            <div className="flex items-center gap-3">
+              {newBranding ? (
+                <div
+                  ref={setGenerationAnchorEl}
+                  aria-hidden
+                  data-aan-anchor="generation"
+                  className="w-14 h-14 shrink-0 flex items-center justify-center"
+                />
+              ) : (
+                <CircularProgress progress={generationProgress} size={56} />
+              )}
+              <div className="flex flex-col min-w-0">
+                <p className="font-medium text-foreground text-sm leading-tight">
+                  {generationType === "report" ? "Generating Report" : "Running Audit"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {Math.max(1, Math.ceil((100 - generationProgress) * 0.3))}s remaining
+                </p>
+              </div>
+            </div>
+            {/* Deterministic progress bar */}
+            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
               <div
-                ref={setGenerationAnchorEl}
-                aria-hidden
-                data-aan-anchor="generation"
-                className="w-14 h-14 shrink-0"
+                className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-[width] duration-700 ease-out"
+                style={{ width: `${Math.min(100, Math.max(0, generationProgress))}%` }}
               />
-            ) : (
-              <CircularProgress progress={generationProgress} size={56} />
-            )}
-            <div>
-              <p className="font-medium text-foreground">
-                {generationType === "report" ? "Generating Report" : "Running Audit"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {Math.ceil((100 - generationProgress) * 0.3)}s remaining
-              </p>
             </div>
           </div>
         </div>
