@@ -5,7 +5,7 @@ import { AanGlyph } from "@/components/aan/AanGlyph";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useAan } from "@/components/aan";
+
 import { useInsights } from "@/components/insights";
 import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
