@@ -361,8 +361,10 @@ export function AanMascot({
                   top: 0,
                   left: 0,
                   height: "100%",
-                  background:
-                    "linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.32) 100%)",
+                  borderRadius: 999,
+                  background: `linear-gradient(90deg, ${CORAL.deep} 0%, ${CORAL.base} 60%, ${CORAL.light} 100%)`,
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.45), 0 0 12px -2px rgba(244,109,118,0.55)",
                   pointerEvents: "none",
                 }}
               />
