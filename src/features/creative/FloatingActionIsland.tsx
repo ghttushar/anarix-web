@@ -138,13 +138,14 @@ export function FloatingActionIsland() {
                   size="sm"
                   onClick={action.onClick}
                   className={cn(
-                    "rounded-full transition-all duration-200 relative h-8",
-                    (isExpanded || action.alwaysShowLabel) ? "px-3 gap-1.5" : "px-2",
+                    "rounded-full transition-all duration-200 relative",
+                    isAskAan ? "h-10 px-2.5 gap-2" : "h-8",
+                    !isAskAan && ((isExpanded || action.alwaysShowLabel) ? "px-3 gap-1.5" : "px-2"),
                     action.highlight && "text-destructive"
                   )}
                 >
                   {isAskAan ? (
-                    <AanMascot size={26} state="idle" interactive floating />
+                    <AanMascot size={32} state="idle" interactive floating />
                   ) : (
                     <action.icon className="h-3.5 w-3.5 shrink-0" />
                   )}

@@ -8,6 +8,7 @@ interface AanGlyphProps {
   state?: AanMascotState;
   size?: number;
   interactive?: boolean;
+  staticEyes?: boolean;
 }
 
 /**
@@ -15,7 +16,7 @@ interface AanGlyphProps {
  * mark Aan AI surfaces. Renders the original Sparkles when New Branding is
  * OFF; renders the AanMascot diamond when ON.
  */
-export function AanGlyph({ className, state = "idle", size, interactive = false }: AanGlyphProps) {
+export function AanGlyph({ className, state = "idle", size, interactive = false, staticEyes = false }: AanGlyphProps) {
   const { newBranding } = useBranding();
 
   if (!newBranding) {
@@ -32,7 +33,7 @@ export function AanGlyph({ className, state = "idle", size, interactive = false 
 
   return (
     <span className={cn("inline-flex items-center justify-center shrink-0", className)}>
-      <AanMascot state={state} size={size ?? inferred} interactive={interactive} />
+      <AanMascot state={state} size={size ?? inferred} interactive={interactive} staticEyes={staticEyes} />
     </span>
   );
 }

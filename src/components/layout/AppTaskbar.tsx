@@ -352,7 +352,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openAan()}>
-                        <AanGlyph className="h-3 w-3 text-primary" />
+                        <AanGlyph className="h-4 w-4 text-primary" staticEyes />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom"><p>Ask Aan</p></TooltipContent>
@@ -377,7 +377,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
               ) : (
                 <>
                   <Button variant="ghost" size="sm" className="h-7 px-2 gap-1" onClick={() => openAan()}>
-                    <AanGlyph className="h-3 w-3 text-primary" />
+                    <AanGlyph className="h-4 w-4 text-primary" staticEyes />
                     <span className="text-[11px]">Ask Aan</span>
                   </Button>
                   <Button variant="ghost" size="sm" className="h-7 px-2 gap-1" onClick={() => openInsights()}>

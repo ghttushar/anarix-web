@@ -16,7 +16,7 @@ import { VisualEffectsProvider } from "@/contexts/VisualEffectsContext";
 import { FeatureToggleProvider } from "@/contexts/FeatureToggleContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
 import { ActivePanelProvider } from "@/contexts/ActivePanelContext";
-import { AanProvider, AanPanel } from "@/components/aan";
+import { AanProvider } from "@/components/aan";
 import { InsightsProvider } from "@/components/insights";
 import { CreativeFeatures } from "@/features/creative";
 import { toast } from "sonner";
@@ -244,7 +244,7 @@ const App = () => (
                             <CreativeFeatures>
                               <WelcomeToasts />
                               <AppRoutes />
-                              <AanPanel />
+                              
                             </CreativeFeatures>
                           </BrowserRouter>
                         </TooltipProvider>

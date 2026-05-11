@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAan } from "./AanContext";
 import { AanConversation } from "./AanConversation";
-import { AanDraftPreview } from "./AanDraftPreview";
+
 import { AanInput } from "./AanInput";
 import { AanLogo } from "./AanLogo";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -59,8 +59,7 @@ export function AanCopilotPanel() {
             <AanConversation />
           </ScrollArea>
 
-          {/* Draft Preview (when active) */}
-          <AanDraftPreview />
+          {/* Draft preview removed — drafts are now shown inline in the conversation */}
 
           {/* Input Area */}
           <div className="shrink-0">

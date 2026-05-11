@@ -64,7 +64,7 @@ export function AanWorkspaceSidebar() {
       <aside className="w-14 border-r border-border bg-card flex flex-col h-full shrink-0">
         {/* Collapsed header — centered symbol logo */}
         <div className="flex items-center justify-center h-12 border-b border-border/30 shrink-0">
-          <AanGlyph className="h-5 w-5 aan-gradient-text" />
+          <AanGlyph className="h-6 w-6 aan-gradient-text" staticEyes />
         </div>
 
         {/* Expand button */}
@@ -119,7 +119,7 @@ export function AanWorkspaceSidebar() {
       {/* Header — Logo left, collapse right (matches AppSidebar) */}
       <div className="flex items-center justify-between h-12 px-3 border-b border-border/30 shrink-0">
         <div className="flex items-center gap-2">
-          <AanGlyph className="h-5 w-5 aan-gradient-text" />
+          <AanGlyph className="h-6 w-6 aan-gradient-text" staticEyes />
           <span className="font-aan text-aan aan-gradient-text font-bold">Aan</span>
         </div>
         <button

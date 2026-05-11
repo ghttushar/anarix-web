@@ -15,6 +15,8 @@ interface AanMascotProps {
   progress?: number;
   layoutId?: string;
   className?: string;
+  /** Render eyes as static dots with no motion. Forces tier ≥ compact eye visibility and disables all animation. */
+  staticEyes?: boolean;
 }
 
 const CORAL = {
@@ -42,6 +44,7 @@ export function AanMascot({
   progress = 0,
   layoutId,
   className,
+  staticEyes = false,
 }: AanMascotProps) {
   const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
@@ -52,14 +55,17 @@ export function AanMascot({
   const [blinkKey, setBlinkKey] = useState(0);
 
   const shape = deriveShape(state, shapeOverride);
-  const tier: "micro" | "compact" | "full" = size < 24 ? "micro" : size <= 40 ? "compact" : "full";
-  const isStatic = state === "anchor" || reduceMotion;
+  // staticEyes promotes micro sizes (≥16) into compact tier so eyes can render
+  const rawTier: "micro" | "compact" | "full" = size < 24 ? "micro" : size <= 40 ? "compact" : "full";
+  const tier: "micro" | "compact" | "full" = staticEyes && size >= 16 && rawTier === "micro" ? "compact" : rawTier;
+  const isStatic = staticEyes || state === "anchor" || reduceMotion;
   const trackCursor = interactive && !isStatic && tier === "full" && shape !== "bar";
-  const showEyes =
-    tier === "full" &&
-    !reduceMotion &&
-    shape !== "bar" &&
-    (state === "idle" || state === "listening" || state === "speaking");
+  const showEyes = staticEyes
+    ? size >= 16 && shape !== "bar"
+    : tier === "full" &&
+      !reduceMotion &&
+      shape !== "bar" &&
+      (state === "idle" || state === "listening" || state === "speaking");
 
   // Cursor tracking — body lean + eye gaze
   useEffect(() => {
@@ -115,7 +121,7 @@ export function AanMascot({
 
   // Blink — random interval, runs whenever eyes are visible
   useEffect(() => {
-    if (!showEyes) return;
+    if (!showEyes || staticEyes) return;
     let cancelled = false;
     const schedule = () => {
       const delay = state === "listening" ? 2200 + Math.random() * 2200 : 3500 + Math.random() * 3500;
@@ -422,7 +428,22 @@ export function AanMascot({
                 {[-1, 1].map((dir) => {
                   const gx = Math.max(-eyeTravel, Math.min(eyeTravel, eyeGaze.x));
                   const gy = Math.max(-eyeTravel, Math.min(eyeTravel, eyeGaze.y));
-                  return (
+                  return staticEyes ? (
+                    <div
+                      key={`eye-${dir}`}
+                      style={{
+                        position: "absolute",
+                        left: `calc(50% + ${dir * eyeOffsetX}px)`,
+                        top: `calc(50% + ${eyeY}px)`,
+                        width: eyeSize,
+                        height: eyeSize,
+                        marginLeft: -eyeSize / 2,
+                        marginTop: -eyeSize / 2,
+                        borderRadius: "50%",
+                        background: "#1a0608",
+                      }}
+                    />
+                  ) : (
                     <motion.div
                       key={`eye-${dir}`}
                       animate={{ x: gx, y: gy }}

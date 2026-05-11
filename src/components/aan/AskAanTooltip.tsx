@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { AanGlyph } from "./AanGlyph";
+import { AanMascot } from "./AanMascot";
 import { useAan } from "./AanContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 
@@ -77,9 +77,14 @@ export function AskAanTooltip() {
     >
       <button
         onClick={handleClick}
-        className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg hover:opacity-90 transition-opacity cursor-pointer"
+        className="flex items-center gap-2 rounded-full bg-primary py-1 pl-1.5 pr-3 text-xs font-medium text-primary-foreground shadow-lg hover:opacity-90 transition-opacity cursor-pointer"
       >
-        <AanGlyph className="h-3 w-3" />
+        <AanMascot size={24} state="listening" interactive={false} />
+        <span className="flex items-center gap-0.5">
+          <span className="h-1 w-1 rounded-full bg-primary-foreground/80 animate-pulse" style={{ animationDelay: "0ms" }} />
+          <span className="h-1 w-1 rounded-full bg-primary-foreground/70 animate-pulse" style={{ animationDelay: "150ms" }} />
+          <span className="h-1 w-1 rounded-full bg-primary-foreground/60 animate-pulse" style={{ animationDelay: "300ms" }} />
+        </span>
         Ask Aan
       </button>
     </div>
