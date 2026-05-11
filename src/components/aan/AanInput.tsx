@@ -101,7 +101,7 @@ function formatFileSize(bytes: number): string {
 }
 
 export function AanInput() {
-  const { addMessage, setGenerationState, messages, selectedModel, setSelectedModel, pendingPrompt, setPendingPrompt, isGenerating, generationType } = useAan();
+  const { addMessage, setGenerationState, messages, selectedModel, setSelectedModel, pendingPrompt, setPendingPrompt, isGenerating, generationType, setInputFocused } = useAan();
   const { newBranding } = useBranding();
   const { registerAnchor } = useAanPresence();
   const [input, setInput] = useState("");
@@ -367,8 +367,8 @@ export function AanInput() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
+              onFocus={() => { setIsFocused(true); setInputFocused(true); }}
+              onBlur={() => { setIsFocused(false); setInputFocused(input.trim().length > 0); }}
               placeholder="Ask Aan anything..."
               className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-12 pl-0"
               rows={1}
