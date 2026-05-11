@@ -113,12 +113,12 @@ export function AanMascot({
     return () => window.removeEventListener("mousemove", handler);
   }, [hovered, trackCursor]);
 
-  // Blink — random interval, idle only
+  // Blink — random interval, runs whenever eyes are visible
   useEffect(() => {
-    if (!showEyes || state !== "idle") return;
+    if (!showEyes) return;
     let cancelled = false;
     const schedule = () => {
-      const delay = 4000 + Math.random() * 4000;
+      const delay = state === "listening" ? 2200 + Math.random() * 2200 : 3500 + Math.random() * 3500;
       const t = setTimeout(() => {
         if (cancelled) return;
         setBlinkKey((k) => k + 1);
@@ -198,10 +198,10 @@ export function AanMascot({
   const containerH = slotH + (floating && tier === "full" ? 14 : 0);
 
   // Eyes
-  const eyeSize = Math.max(3, size * 0.085);
-  const eyeOffsetX = shape === "circle" ? size * 0.13 : size * 0.11;
+  const eyeSize = Math.max(4, size * 0.13);
+  const eyeOffsetX = shape === "circle" ? size * 0.18 : size * 0.16;
   const eyeY = shape === "diamond" ? size * 0.04 : 0;
-  const eyeTravel = size * 0.035;
+  const eyeTravel = Math.max(1.5, size * 0.05);
 
   // Bar progress fill (working state)
   const barProgress = Math.max(0, Math.min(100, progress));
