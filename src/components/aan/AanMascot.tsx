@@ -169,9 +169,9 @@ export function AanMascot({
 
   // Body dimensions per shape
   const bodyW =
-    shape === "bar" ? size * 1.6 : shape === "cube" ? size * 0.92 : size;
+    shape === "bar" ? size * 1.8 : shape === "cube" ? size * 0.92 : size;
   const bodyH =
-    shape === "bar" ? size * 0.5 : shape === "cube" ? size * 0.92 : size;
+    shape === "bar" ? size * 0.34 : shape === "cube" ? size * 0.92 : size;
 
   // Stretch on hover (diamond only)
   const stretchX = hoverBoost ? 1.06 : 1;
@@ -180,13 +180,15 @@ export function AanMascot({
   const floatDur = state === "listening" ? 3.2 : state === "thinking" || state === "working" ? 2.6 : 4.4;
   const floatRange = tier === "full" && shape !== "bar" ? (state === "thinking" ? 3 : 2.5) : 0;
   const auraScale =
-    state === "thinking" || state === "working"
-      ? [1, 1.06, 1]
-      : state === "listening"
-        ? [1, 1.04, 1]
-        : [1, 1.02, 1];
+    shape === "bar"
+      ? [1, 1.02, 1]
+      : state === "thinking" || state === "working"
+        ? [1, 1.06, 1]
+        : state === "listening"
+          ? [1, 1.04, 1]
+          : [1, 1.02, 1];
   const auraOpacity =
-    state === "thinking" || state === "working" ? 1.05 : state === "listening" ? 1.0 : 0.85;
+    shape === "bar" ? 0.55 : state === "thinking" || state === "working" ? 1.05 : state === "listening" ? 1.0 : 0.85;
   const internalSpin = state === "thinking" && !isStatic && tier === "full";
 
   // Container must accommodate the widest body shape (bar) to avoid clipping
@@ -314,7 +316,10 @@ export function AanMascot({
               left: "50%",
               translateX: "-50%",
               translateY: "-50%",
-              background: `radial-gradient(circle at 50% 38%, ${CORAL.light} 0%, #f57780 42%, ${CORAL.base} 78%, ${CORAL.deep} 100%)`,
+              background:
+                shape === "bar"
+                  ? `linear-gradient(180deg, rgba(244,109,118,0.18) 0%, rgba(244,109,118,0.28) 100%)`
+                  : `radial-gradient(circle at 50% 38%, ${CORAL.light} 0%, #f57780 42%, ${CORAL.base} 78%, ${CORAL.deep} 100%)`,
               boxShadow:
                 tier === "full"
                   ? "0 26px 64px -28px rgba(244,109,118,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
@@ -356,8 +361,10 @@ export function AanMascot({
                   top: 0,
                   left: 0,
                   height: "100%",
-                  background:
-                    "linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.32) 100%)",
+                  borderRadius: 999,
+                  background: `linear-gradient(90deg, ${CORAL.deep} 0%, ${CORAL.base} 60%, ${CORAL.light} 100%)`,
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.45), 0 0 12px -2px rgba(244,109,118,0.55)",
                   pointerEvents: "none",
                 }}
               />
