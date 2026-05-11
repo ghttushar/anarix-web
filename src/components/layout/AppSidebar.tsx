@@ -228,7 +228,7 @@ export function AppSidebar() {
         <div className={cn("shrink-0", collapsed ? "px-1 py-2" : "px-3 py-2")}>
           {!collapsed ? (
             <button
-              onClick={e => { e.stopPropagation(); e.preventDefault(); openWorkspace(); }}
+              onClick={e => { e.stopPropagation(); e.preventDefault(); navigate("/aan"); }}
               className="group relative w-full flex items-center gap-2 h-9 rounded-full border border-border/60 bg-background px-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
             >
               <div className="absolute inset-0 rounded-full aan-gradient opacity-0 group-hover:opacity-[0.06] transition-opacity" />
@@ -239,7 +239,7 @@ export function AppSidebar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={e => { e.stopPropagation(); e.preventDefault(); openWorkspace(); }}
+                  onClick={e => { e.stopPropagation(); e.preventDefault(); navigate("/aan"); }}
                   className="group relative flex w-full items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
                 >
                   <AanGlyph className="h-4 w-4 aan-gradient-text" staticEyes />
