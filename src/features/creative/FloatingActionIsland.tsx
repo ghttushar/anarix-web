@@ -8,6 +8,7 @@ import { useAan } from "@/components/aan";
 import { useInsights } from "@/components/insights";
 import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
+import { useBranding } from "@/contexts/BrandingContext";
 import html2canvas from "html2canvas";
 
 interface ActionItem {
@@ -29,8 +30,9 @@ export function FloatingActionIsland() {
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
-  const { openPanel } = useAan();
+  const { openPanel, openCopilot, setPendingPrompt } = useAan();
   const { openPanel: openInsights, criticalCount } = useInsights();
+  const { newBranding } = useBranding();
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
