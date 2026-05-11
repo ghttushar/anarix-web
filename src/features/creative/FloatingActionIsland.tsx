@@ -144,7 +144,7 @@ export function FloatingActionIsland() {
                   )}
                 >
                   {isAskAan ? (
-                    <AanMascot size={18} state="idle" interactive={false} />
+                    <AanMascot size={26} state="idle" interactive floating />
                   ) : (
                     <action.icon className="h-3.5 w-3.5 shrink-0" />
                   )}
