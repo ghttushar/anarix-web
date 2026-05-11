@@ -316,7 +316,10 @@ export function AanMascot({
               left: "50%",
               translateX: "-50%",
               translateY: "-50%",
-              background: `radial-gradient(circle at 50% 38%, ${CORAL.light} 0%, #f57780 42%, ${CORAL.base} 78%, ${CORAL.deep} 100%)`,
+              background:
+                shape === "bar"
+                  ? `linear-gradient(180deg, rgba(244,109,118,0.18) 0%, rgba(244,109,118,0.28) 100%)`
+                  : `radial-gradient(circle at 50% 38%, ${CORAL.light} 0%, #f57780 42%, ${CORAL.base} 78%, ${CORAL.deep} 100%)`,
               boxShadow:
                 tier === "full"
                   ? "0 26px 64px -28px rgba(244,109,118,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
