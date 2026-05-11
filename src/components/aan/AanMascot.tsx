@@ -170,10 +170,10 @@ export function AanMascot({
   const arcOffset = arcCircum * (1 - Math.min(100, Math.max(0, progress)) / 100);
 
   // Eyes — solid dark dots directly on the coral (no sclera)
-  const eyeSize = Math.max(2, size * 0.06);
-  const eyeOffsetX = size * 0.13;
+  const eyeSize = Math.max(3, size * 0.085);
+  const eyeOffsetX = size * 0.11;
   const eyeY = size * 0.04;
-  const eyeTravel = size * 0.04;
+  const eyeTravel = size * 0.035;
 
   return (
     <motion.span
@@ -396,6 +396,10 @@ export function AanMascot({
                         position: "absolute",
                         left: `calc(50% + ${dir * eyeOffsetX}px)`,
                         top: `calc(50% + ${eyeY}px)`,
+                        width: eyeSize,
+                        height: eyeSize,
+                        marginLeft: -eyeSize / 2,
+                        marginTop: -eyeSize / 2,
                       }}
                     >
                       <motion.div
@@ -407,7 +411,6 @@ export function AanMascot({
                           height: eyeSize,
                           borderRadius: "50%",
                           background: "#1a0608",
-                          transform: "translate(-50%, -50%)",
                         }}
                       />
                     </motion.div>
