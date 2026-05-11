@@ -384,39 +384,35 @@ export function AanMascot({
                   justifyContent: "center",
                 }}
               >
-                {[-1, 1].map((dir) => (
-                  <motion.div
-                    key={`eye-${dir}-${blinkKey}`}
-                    animate={{ scaleY: [1, 0.05, 1] }}
-                    transition={{ duration: 0.16, times: [0, 0.5, 1], ease: "easeOut" }}
-                    style={{
-                      position: "absolute",
-                      left: `calc(50% + ${dir * eyeOffsetX}px)`,
-                      top: `calc(50% + ${eyeY}px)`,
-                      transform: "translate(-50%, -50%)",
-                      width: eyeSize,
-                      height: eyeSize,
-                      borderRadius: "50%",
-                      background: "rgba(255, 240, 235, 0.85)",
-                      boxShadow: "inset 0 0 0 0.5px rgba(176,40,50,0.25)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }}
-                  >
+                {[-1, 1].map((dir) => {
+                  const gx = Math.max(-eyeTravel, Math.min(eyeTravel, eyeGaze.x));
+                  const gy = Math.max(-eyeTravel, Math.min(eyeTravel, eyeGaze.y));
+                  return (
                     <motion.div
-                      animate={{ x: eyeGaze.x, y: eyeGaze.y }}
+                      key={`eye-${dir}`}
+                      animate={{ x: gx, y: gy }}
                       transition={{ type: "spring", stiffness: 120, damping: 18 }}
                       style={{
-                        width: pupilSize,
-                        height: pupilSize,
-                        borderRadius: "50%",
-                        background: "#3a0d10",
+                        position: "absolute",
+                        left: `calc(50% + ${dir * eyeOffsetX}px)`,
+                        top: `calc(50% + ${eyeY}px)`,
                       }}
-                    />
-                  </motion.div>
-                ))}
+                    >
+                      <motion.div
+                        key={`blink-${dir}-${blinkKey}`}
+                        animate={{ scaleY: [1, 0.05, 1] }}
+                        transition={{ duration: 0.16, times: [0, 0.5, 1], ease: "easeOut" }}
+                        style={{
+                          width: eyeSize,
+                          height: eyeSize,
+                          borderRadius: "50%",
+                          background: "#1a0608",
+                          transform: "translate(-50%, -50%)",
+                        }}
+                      />
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           )}
