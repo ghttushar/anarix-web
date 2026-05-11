@@ -55,7 +55,9 @@ export function AanMascot({
   const [blinkKey, setBlinkKey] = useState(0);
 
   const shape = deriveShape(state, shapeOverride);
-  const tier: "micro" | "compact" | "full" = size < 24 ? "micro" : size <= 40 ? "compact" : "full";
+  // staticEyes promotes micro sizes (≥16) into compact tier so eyes can render
+  const rawTier: "micro" | "compact" | "full" = size < 24 ? "micro" : size <= 40 ? "compact" : "full";
+  const tier: "micro" | "compact" | "full" = staticEyes && size >= 16 && rawTier === "micro" ? "compact" : rawTier;
   const isStatic = staticEyes || state === "anchor" || reduceMotion;
   const trackCursor = interactive && !isStatic && tier === "full" && shape !== "bar";
   const showEyes = staticEyes
