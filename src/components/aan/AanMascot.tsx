@@ -113,12 +113,12 @@ export function AanMascot({
     return () => window.removeEventListener("mousemove", handler);
   }, [hovered, trackCursor]);
 
-  // Blink — random interval, idle only
+  // Blink — random interval, runs whenever eyes are visible
   useEffect(() => {
-    if (!showEyes || state !== "idle") return;
+    if (!showEyes) return;
     let cancelled = false;
     const schedule = () => {
-      const delay = 4000 + Math.random() * 4000;
+      const delay = state === "listening" ? 2200 + Math.random() * 2200 : 3500 + Math.random() * 3500;
       const t = setTimeout(() => {
         if (cancelled) return;
         setBlinkKey((k) => k + 1);
