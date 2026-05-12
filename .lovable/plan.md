@@ -1,50 +1,42 @@
 ## Goal
 
-Make the in-progress generation card sit in the conversation flow exactly like an assistant message — with the small Aan avatar on the left and the card aligned to the message column — so it reads as part of Aan's reply rather than a floating standalone block.  
-also write the details of what report is generating
+Give Aan a single, continuous travel motion tied to the generation lifecycle:
 
-## Today's behavior
+1. **Rest** — Aan sits as a diamond above the input box (current behavior, unchanged).
+2. **Send** — User presses Enter → Aan morphs into a **ball (circle)** and travels from the input slot down into the in-progress generation card.
+3. **Generate** — While docked in the generation card, Aan stays as a ball and a **floating-dots thinking indicator** plays next to it.
+4. **Return** — When generation completes, Aan travels back up to the input slot and re-morphs to its resting diamond. The completed assistant message remains in the conversation as a normal bubble (the existing empty/box-only style stays as it is now).
 
-The loader is wrapped in `<div className="flex justify-center py-2">` and rendered without an avatar, so it's centered in the column and visually disconnected from the surrounding messages.
+No new components, no new libraries — this builds on the existing `AanPresencePortal` + `layoutId="aan-presence"` system, which already animates a single mascot between registered anchors.
 
-## Change
+## Files to change
 
-### `src/components/aan/AanConversation.tsx`
+### 1. `src/components/aan/AanPresencePortal.tsx`
+- Force the mascot's `shape` to `"circle"` (ball) whenever `activeAnchor === "generation"`, regardless of state. This is the visual "morph into ball" the user described.
+- Keep `state="working"` so internal timing/aura still reads as active.
+- Keep `state="idle"` (diamond) when anchor is `"input"` so it returns to its resting diamond shape automatically.
 
-Restructure the `{isGenerating && (...)}` block to mirror the assistant-message layout used in the `messages.map(...)` above:
+### 2. `src/components/aan/AanConversation.tsx` (generation card only — lines 105–142)
+- Inside the loader card, place the mascot anchor on the **left** and a new **floating dots indicator** on the **right**, in a single horizontal row (instead of the current vertically stacked layout).
+- Replace the current "Xs remaining" text with a calmer "Aan is generating your report…" line and the three-dot animation underneath/next to it. Keep `CircularProgress` as the legacy fallback when `newBranding` is false (unchanged).
+- Anchor slot stays sized for a ~44–48px ball so the morph lands cleanly inside the card.
 
-```tsx
-{isGenerating && (
-  <div className="flex flex-row gap-3">
-    {/* Avatar — same as assistant messages */}
-    <div className={cn(
-      "flex h-8 w-8 shrink-0 items-center justify-center",
-      newBranding ? "text-foreground" : "rounded-full aan-gradient text-white"
-    )}>
-      {newBranding ? (
-        <AanMascot size={20} state="anchor" interactive={false} />
-      ) : (
-        <AanGlyph className="h-4 w-4" />
-      )}
-    </div>
+### 3. New: `src/components/aan/FloatingDots.tsx`
+- Tiny presentational component: three dots that fade/translate in sequence using existing Tailwind keyframes (or a small inline framer-motion stagger). Uses `text-muted-foreground`. No new dependencies.
 
-    {/* Loader card in the message column */}
-    <div className="flex max-w-[80%] flex-col gap-2 items-start">
-      <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-center justify-start">
-        {/* anchor + text — unchanged */}
-        ...
-      </div>
-    </div>
-  </div>
-)}
-```
-
-- Outer wrapper: `flex flex-row gap-3` (same spacing/direction as assistant messages).
-- Avatar: identical to the assistant avatar in the map loop (size 20 anchor mascot in new branding, AanGlyph fallback otherwise).
-- Bubble column: `flex max-w-[80%] flex-col gap-2 items-start` (same as message bubble column).
-- Loader card classes preserved as-is (centered children, left-aligned in column).
+### How the travel itself works (already in place — no change needed)
+- `AanPresenceContext` priority order is `["generation", "pending", "lastMessage", "input"]`.
+- When `isGenerating` flips true, `AanConversation` registers the `generation` anchor → `activeAnchor` switches → `AanPresencePortal` re-portals the **same** `<AanMascot layoutId="aan-presence">` into the new DOM node. Framer Motion's shared layout animates position + size between the two anchors automatically. That is the "ball shifting" motion the screenshots show.
+- When `isGenerating` flips false, the `generation` anchor unregisters → priority falls back to `input` → the same mascot animates back up to the input slot.
 
 ## Out of scope
+- No changes to `AanInput.tsx`, `AanContext.tsx`, message bubble styles, or anchor-priority logic.
+- No new loader assets, no Lottie, no extra progress bar.
+- No backend / data changes.
 
-- No mascot or progress logic changes.
-- No timestamp under the loader (it's a transient working state).
+## Acceptance check (manual)
+1. Open `/aan`, focus input, press Enter on a prompt that triggers generation.
+2. Watch the diamond above the input morph to a circle and glide down into the generation card.
+3. Floating dots animate next to the docked ball; "Generating…" copy is visible.
+4. When generation finishes, the ball glides back up to the input slot and re-morphs to the resting diamond.
+5. The newly added assistant message sits in the conversation as a normal bubble (unchanged styling).

@@ -23,11 +23,15 @@ export function AanPresencePortal() {
   else if (activeAnchor === "generation") state = "working";
   else if (activeAnchor === "lastMessage") state = "speaking";
 
+  // While docked in the generation card, force ball (circle) shape regardless of state.
+  const shapeOverride = activeAnchor === "generation" ? "circle" : undefined;
+
   return createPortal(
     <LayoutGroup>
       <AanMascot
         layoutId="aan-presence"
         state={state}
+        shape={shapeOverride}
         size={size}
         progress={isGenerating ? generationProgress : 0}
         interactive={activeAnchor === "input"}

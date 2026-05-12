@@ -9,6 +9,7 @@ import { useBranding } from "@/contexts/BrandingContext";
 import { format } from "date-fns";
 import { ArtifactCard } from "./ArtifactCard";
 import { CircularProgress } from "@/components/ui/circular-progress";
+import { FloatingDots } from "./FloatingDots";
 
 export function AanConversation() {
   const { messages, openSplit, isGenerating, generationType, generationProgress } = useAan();
@@ -117,24 +118,22 @@ export function AanConversation() {
             )}
           </div>
           <div className="flex max-w-[80%] flex-col gap-2 items-start">
-            <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-center justify-start">
+            <div className="flex flex-row items-center gap-4 px-5 py-4 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px]">
               {newBranding ? (
                 <div
                   ref={setGenerationAnchorEl}
                   aria-hidden
                   data-aan-anchor="generation"
-                  className="w-[110px] h-12 shrink-0 flex items-center justify-center"
+                  className="w-12 h-12 shrink-0 flex items-center justify-center"
                 />
               ) : (
-                <CircularProgress progress={generationProgress} size={56} />
+                <CircularProgress progress={generationProgress} size={48} />
               )}
               <div className="flex flex-col items-start text-left">
                 <p className="font-medium text-foreground text-sm leading-tight">
                   {generationType === "report" ? "Generating Report" : "Running Audit"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {Math.max(1, Math.ceil((100 - generationProgress) * 0.3))}s remaining
-                </p>
+                <FloatingDots className="mt-2" />
               </div>
             </div>
           </div>
