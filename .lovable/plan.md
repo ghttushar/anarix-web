@@ -1,49 +1,38 @@
 ## Goal
-Shrink the Ask Aan mascot in the Floating Action Island pill, and fix the eye-to-body ratio across the entire app so the eyes scale evenly at every size — including the small mascots used in the left sidebar.
+Fix the in-progress generation loader inside the Aan conversation:
+1. Give the bar-shaped Aan mascot eyes (matching the reference image).
+2. Remove the duplicated separate progress bar — the mascot bar itself is the loader.
+3. Re-align and re-center the loader card so it sits prominently inside the report area.
 
-## Root cause of oversized eyes (sidebar)
-In `AanMascot.tsx`:
-```ts
-const eyeSize = Math.max(4, size * 0.13);
-```
-The `Math.max(4, ...)` floor clamps the eyes to **4px** for any mascot ≤ ~30px. For the sidebar glyph (size 16) this means eyes are 25% of body — far too large. The proper proportional ratio (~13–16%) is overridden by the floor.
+## Problems today
+- Two progress indicators visible: the morphing **bar mascot** (which already fills with progress) AND a separate gradient progress bar below the text. Redundant.
+- Bar mascot has no eyes (`shape !== "bar"` blocks eye render).
+- Anchor slot is `w-14 h-14` (56×56), but the bar body is `size*1.8 = ~100px` wide → it overflows the slot, throwing the card alignment off.
+- Card is left-aligned in the conversation flow instead of being centered/prominent.
 
 ## Changes
 
-### 1. `src/components/aan/AanMascot.tsx` — proportional eyes
-- Remove the `Math.max(4, …)` floor. Use a single proportional ratio that holds across all sizes:
-  - `eyeSize = size * 0.16` (slightly tighter at large sizes, but uniform).
-  - `eyeOffsetX = (shape === "circle" ? size * 0.20 : size * 0.18)` (currently 0.18/0.16) — nudged so eyes sit symmetrically with the new eye size.
-  - `eyeY = shape === "diamond" ? size * 0.04 : 0` (unchanged).
-- Result by size:
-  - 16px → eyes 2.56px (sidebar/navbar — small, proportional)
-  - 24px → eyes 3.84px (Ask Aan tooltip)
-  - 36px → eyes 5.76px (new pill mascot)
-  - 64px → eyes 10.24px (workspace anchor)
+### 1. `src/components/aan/AanMascot.tsx` — eyes on the bar
+- Relax eye gating: allow eyes on the bar shape when state is `working` (and on static eyes / idle / listening / speaking as today).
+  - `showEyes` becomes: `tier !== "micro" && !reduceMotion && (state === "idle" || "listening" || "speaking" || "working")` — no longer excludes bar.
+  - `staticEyes` branch already allowed; keep but still exclude bar there to avoid weirdness in static glyphs (sidebar diamonds only).
+- Add bar-specific eye geometry inside the existing eye block so eyes sit centered on the pill:
+  - When `shape === "bar"`: `eyeSize = size * 0.11`, `eyeOffsetX = size * 0.10` (tight cluster near center), `eyeY = 0`.
+  - Eyes render on top of the gradient progress fill (existing z-stack already supports this — eyes are rendered after the body element).
+- No other behavior changes.
 
-- Also relax `trackCursor` so the mouse-sway works on compact tier when `interactive` is true:
-  ```ts
-  const trackCursor = interactive && !isStatic && tier !== "micro" && shape !== "bar";
-  ```
-  This lets the smaller pill mascot still sway toward the cursor.
+### 2. `src/components/aan/AanConversation.tsx` — single, well-aligned loader
+- **Remove** the separate progress bar (`<div className="h-1 w-full rounded-full bg-muted ...">` and inner gradient div). The bar mascot is the only progress indicator.
+- Re-layout the card vertically and center it in the conversation:
+  - Outer wrapper: `flex justify-center` (instead of `flex`).
+  - Card: `flex flex-col items-center gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px]`.
+  - Anchor slot sized for the bar: `w-[110px] h-12 flex items-center justify-center` (was `w-14 h-14`). This stops the bar from overflowing.
+  - Text block centered below: title `text-sm font-medium text-foreground` + meta `text-xs text-muted-foreground`.
+- Keep `registerAnchor("generation", el, 56)` — bar dims (size 56) become ~100×19, fits perfectly in the new 110×48 slot.
 
-- Allow `showEyes` for compact tier on idle/listening/speaking states (currently only full tier renders animated eyes). With proportional sizing this is now safe at small sizes.
+### 3. No changes elsewhere
+- `AanPresencePortal` already routes to the generation anchor and passes `progress` — bar fill keeps working.
+- Other mascots (idle/listening/speaking) untouched.
 
-### 2. `src/features/creative/FloatingActionIsland.tsx` — smaller pill mascot
-- Drop mascot from `size={42}` to `size={32}`.
-- Tighten pill: `h-9 pl-1 pr-3 gap-1.5` (was `h-11 pl-1 pr-3.5`).
-- Cursor sway is preserved via the relaxed `trackCursor` rule above.
-
-### 3. App-wide audit (no further edits required)
-The fix is centralized in `AanMascot.tsx`, so all consumers automatically benefit:
-- `AppSidebar` — `AanGlyph` at h-4 (size 16) → eyes now ~2.5px instead of 4px.
-- `AppTaskbar` — same proportional improvement.
-- `AanWorkspaceSidebar` — same.
-- `AskAanTooltip` — size 24 mascot → eyes ~3.8px instead of 4px (small change, more harmonious).
-- `AanLogo` — same.
-- `AanConversation` generation loader, `AanPresencePortal` anchors — unchanged behavior, eyes scale proportionally.
-- `AanMascotShowcase` — visual showcase reflects the new scaling automatically.
-
-## Out of scope
-- No changes to mascot shape morphing, aura, blink timing, or color tokens.
-- No changes to mascot states or any other component logic.
+## Visual outcome
+A single centered card inside the conversation: large coral pill with two eyes on the left side, gradient fill animating to the right showing real progress, and below it: "Generating Report" + "Ns remaining". No second progress bar.

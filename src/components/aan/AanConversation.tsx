@@ -103,35 +103,25 @@ export function AanConversation() {
 
       {/* Generation Progress Indicator */}
       {isGenerating && (
-        <div className="flex">
-          {/* Progress Card — clean, well-designed loader */}
-          <div className="flex flex-col gap-3 p-4 rounded-2xl border border-border bg-card w-fit min-w-[300px] shadow-sm">
-            <div className="flex items-center gap-3">
-              {newBranding ? (
-                <div
-                  ref={setGenerationAnchorEl}
-                  aria-hidden
-                  data-aan-anchor="generation"
-                  className="w-14 h-14 shrink-0 flex items-center justify-center"
-                />
-              ) : (
-                <CircularProgress progress={generationProgress} size={56} />
-              )}
-              <div className="flex flex-col min-w-0">
-                <p className="font-medium text-foreground text-sm leading-tight">
-                  {generationType === "report" ? "Generating Report" : "Running Audit"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {Math.max(1, Math.ceil((100 - generationProgress) * 0.3))}s remaining
-                </p>
-              </div>
-            </div>
-            {/* Deterministic progress bar */}
-            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+        <div className="flex justify-center py-2">
+          <div className="flex flex-col items-center gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px]">
+            {newBranding ? (
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-[width] duration-700 ease-out"
-                style={{ width: `${Math.min(100, Math.max(0, generationProgress))}%` }}
+                ref={setGenerationAnchorEl}
+                aria-hidden
+                data-aan-anchor="generation"
+                className="w-[110px] h-12 shrink-0 flex items-center justify-center"
               />
+            ) : (
+              <CircularProgress progress={generationProgress} size={56} />
+            )}
+            <div className="flex flex-col items-center text-center">
+              <p className="font-medium text-foreground text-sm leading-tight">
+                {generationType === "report" ? "Generating Report" : "Running Audit"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {Math.max(1, Math.ceil((100 - generationProgress) * 0.3))}s remaining
+              </p>
             </div>
           </div>
         </div>

@@ -64,8 +64,7 @@ export function AanMascot({
     ? size >= 16 && shape !== "bar"
     : tier !== "micro" &&
       !reduceMotion &&
-      shape !== "bar" &&
-      (state === "idle" || state === "listening" || state === "speaking");
+      (state === "idle" || state === "listening" || state === "speaking" || state === "working");
 
   // Cursor tracking — body lean + eye gaze
   useEffect(() => {
@@ -204,8 +203,10 @@ export function AanMascot({
   const containerH = slotH + (floating && tier === "full" ? 14 : 0);
 
   // Eyes — fully proportional to body, no min-size floor (prevents oversized eyes at small sizes)
-  const eyeSize = size * 0.16;
-  const eyeOffsetX = shape === "circle" ? size * 0.20 : size * 0.18;
+  // Bar shape uses tighter geometry so eyes sit centered on the pill.
+  const eyeSize = shape === "bar" ? size * 0.11 : size * 0.16;
+  const eyeOffsetX =
+    shape === "bar" ? size * 0.10 : shape === "circle" ? size * 0.20 : size * 0.18;
   const eyeY = shape === "diamond" ? size * 0.04 : 0;
   const eyeTravel = Math.max(1, size * 0.05);
 
