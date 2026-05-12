@@ -1,145 +1,121 @@
-# Anarix Website — Build Plan
+## Goal
 
-A full marketing + docs site mounted inside the app at `/website`, linked from the user profile dropdown. Uses the same Periwinkle tokens, fonts, and Aan mascot/motion as the core app, but with a marketing-grade layout inspired by the referenced Lovable site and AttendFlow.
+Tear down the current `/website` marketing site and rebuild it as a faithful replica of `https://retail-growth-engine.vercel.app/` — same brand mark, same floating pill navbar, same hero, same sections, same copy, same overall layout. Keep it mounted at `/website` and keep the profile-dropdown link. Reuse our real `AanMascot` for the Aan AI motion as the user wanted earlier, and add a light/dark theme toggle in the navbar (using the existing `ThemeContext`).
 
-## 1. Entry point
+The reference site is a SPA — only `/` renders. Sub-pages (Products dropdown, Aan AI, Pricing, Documentation, Company) are client-side routes I'll mirror with thin pages so the navbar behaves identically.
 
-- Add **"Anarix Website"** item in the existing user profile dropdown (top-right avatar menu in `AppTaskbar` / wherever the profile menu lives). Opens `/website` in the same tab.
-- New public route `/website` (and nested routes) registered in `src/App.tsx`. Routes are wrapped in their own `WebsiteLayout` (no app sidebar/taskbar), so it feels like a real marketing site.
+## What gets removed
 
-## 2. Routes
+Delete the current marketing site files and start clean:
 
 ```text
-/website              -> Home (hero, product pillars, live Aan demo, KPI strip, CTA)
-/website/product      -> Product pages: Profitability, Advertising, Aan, Reports
-/website/aan          -> Dedicated Aan page (mascot motion + mock chat)
-/website/pricing      -> Pricing tiers (mock content)
-/website/customers    -> Logos + 2-3 mock case study cards
-/website/about        -> Mission, team, "Hall of Fame" strip
-/website/docs         -> Documentation hub
-/website/docs/:slug   -> Individual doc pages with embedded "Ask Aan" widget
-/website/contact      -> Contact form (mock submit)
+src/website/WebsiteLayout.tsx
+src/website/components/  (all)
+src/website/pages/       (all)
+src/website/aan/mockAanEngine.ts  (keep — reuse for Aan AI page widget)
 ```
 
-## 3. Layout / Nav
+The profile dropdown link in `src/components/layout/AppSidebar.tsx` stays as-is (already points to `/website`).
 
-`WebsiteLayout` with:
-- Sticky top nav: Anarix logo (left) | Product, Pricing, Customers, Docs, About (center) | Theme toggle + "Open App" button (right).
-- Light/Dark toggle reuses existing `ThemeContext` so colors come straight from Periwinkle tokens. No new colors introduced.
-- Footer: nav columns, social, small Aan glyph, copyright.
+## Visual spec (from reference site)
 
-## 4. Reusing real app UI ("Mix" approach)
+- **Background**: very pale lavender `#F5F6FA`-ish, with a subtle dotted/grid pattern overlay
+- **Navbar**: floating pill, white surface, soft shadow, centered, max-width ~1100px, top: 16px, rounded-full, padding 12-20px. Left = `Anarix.ai` wordmark (`.ai` in periwinkle/blue). Center = nav links (Products ▾, Aan AI, Pricing, Documentation, Company ▾). Right = "Sign In →" text + "Schedule Demo" pill (periwinkle solid).
+- **Hero**: centered. Badge pill "✦ The Anarix Insight Engine" (light periwinkle bg, periwinkle text). H1 large serif (use existing Satoshi or fall back to a serif token already in project) — "Save 20+ hours a week on marketplace" + italic periwinkle "profitability" with underline swash. Lead paragraph centered. Two CTAs: "Schedule a Demo" (solid pill, periwinkle), "Explore Products" (outline pill). 4-stat strip below.
+- **Channels marquee**: "Connects to every channel you sell on" + horizontally-scrolling logos row (Amazon, Walmart, Shopify, TikTok Shop, Meta Ads, Google Ads, HubSpot, Snowflake, Looker, Slack) — text pills, infinite scroll.
+- **Real impact**: H2 "Real impact. By the numbers." + 6-stat grid ($200M+, $1.2B+, 3.2x, 30%, 500+, 12+).
+- **Platform Capabilities**: H2 "The Anarix Operating System" + bento/feature grid of 9 cards (Profitability Dashboard with mini P&L mock, Advertising Intelligence, Rule Automation, Campaign Manager, Impact Analysis, Share of Voice, Master Dashboard, Enterprise Reporting, Aan Copilot).
+- **Testimonials**: H2 "What Our Partners Say" + 6 quote cards in a grid with role + brand subtitle.
+- **Bottom CTA**: H2 "Get your free margin audit" + supporting line + Schedule Demo pill.
+- **Footer**: simple — wordmark, link columns, copyright.
 
-- **Live components on hero**: real `AanMascot` + `AanPresencePortal` motion (idle diamond → ball → return), and 1–2 real KPI cards from `src/components/cards/KPICard.tsx` populated with mock numbers.
-- **Screenshots elsewhere**: capture the Profitability dashboard, Campaign Manager, Aan workspace via `browser--screenshot`, save to `src/assets/website/`, and embed in product/feature sections with subtle border + shadow.
-- All fonts (Satoshi, Noto Sans, Allura) and tokens reused — no new design system.
+All colors come from existing periwinkle tokens (`--primary`, `--background`, `--card`, `--muted`, `--border`). No new tokens. Light/dark via existing `ThemeContext`.
 
-## 5. Aan motion on the website
+## Routes
 
-- Reuse `AanMascot`, `AanPresenceContext`, `FloatingDots` already in the codebase.
-- Hero anchor: idle diamond floating above a CTA input ("Ask Aan anything…").
-- When user submits a question, mascot morphs to ball, travels to the answer card, FloatingDots play, mock answer streams in, then mascot returns. Same logic as in-app `AanConversation`.
+```text
+/website                     -> Home (full single-page replica)
+/website/aan-ai              -> Aan AI page (reuse AanMascot + mockAanEngine for live demo widget)
+/website/pricing             -> Pricing
+/website/documentation       -> Documentation hub
+/website/company             -> Company / About
+/website/products/profitability    -> Product detail
+/website/products/advertising      -> Product detail
+/website/products/rule-automation  -> Product detail
+/website/products/campaign-manager -> Product detail
+/website/products/impact-analysis  -> Product detail
+/website/products/share-of-voice   -> Product detail
+/website/products/master-dashboard -> Product detail
+/website/products/enterprise-reporting -> Product detail
+/website/demo                -> Schedule demo form
+```
 
-## 6. Mock "Talk to Aan" chat
+Sub-pages use the same WebsiteLayout (floating pill navbar + dotted background + footer) and contain a hero + 1–2 content sections matching the reference site's tone. Not 9 fully-designed product pages — each is a clean themed shell with the relevant capability copy already on the home page, plus a CTA back to demo. The home page is the high-fidelity replica; sub-pages exist so the nav doesn't 404.
 
-Per your choice — **mockup, no LLM**. A small client-only module:
-
-- `src/website/aan/mockAanEngine.ts` — keyword-matched canned responses about Anarix (Profitability, Advertising rules, Aan workspace, pricing, integrations, Amazon/Walmart, theme, etc.). Falls back to a generic "I'd love to show you that — book a demo" reply.
-- Simulated streaming: split response into tokens, append every ~20ms to mimic real generation. Reuses Aan motion described above.
-- Two mounts:
-  1. **Home & /website/aan** — large hero chat surface.
-  2. **Docs pages** — compact "Ask Aan about this page" widget in the right rail; pre-seeded with the doc's topic keywords for more relevant canned answers.
-
-No backend, no Lovable Cloud, no edge function. Purely frontend mock.
-
-## 7. Real content sources
-
-Content drawn from your existing project memory + visible app modules so it matches reality:
-- Profitability (Dashboard, Trends, P&L, Geo, Unified P&L)
-- Advertising (Campaign Manager, Impact Analysis, Targeting, Rules, Budget Pacing, Search Harvesting, Anomaly Alerts)
-- BI (Brand SOV, Keyword Tracker, Competitor Pricing)
-- AMC, Day Parting, Reports, Sandbox, Aan
-- Marketplaces: Amazon, Walmart (validation rules already in codebase)
-
-Pricing, customer logos, and team members will be plausible mock content (clearly placeholder text where appropriate) — easy to swap later.
-
-## 8. Documentation
-
-`/website/docs` hub with grouped sections:
-- Getting Started (Login, Connect Accounts, Onboarding walkthrough)
-- Modules (one doc per app module above)
-- Aan AI (capabilities, safety model, drafts vs apply)
-- Power Tools (Cmd+K, vim shortcuts, `?` help overlay)
-- Preferences (themes, density, visual effects, feature toggles)
-- API / Integrations (placeholder)
-
-Each doc is an MDX-like TSX page with: title, intro, screenshots from the app, step list, "Ask Aan about this page" widget at right.
-
-## 9. File structure (new)
+## File structure (new)
 
 ```text
 src/website/
-  WebsiteLayout.tsx
+  WebsiteLayout.tsx          # bg + dotted pattern + nav + footer + Outlet
   components/
-    WebsiteNav.tsx
-    WebsiteFooter.tsx
-    WebsiteThemeToggle.tsx
-    HeroAanDemo.tsx          # live mascot + mock chat
-    FeatureSection.tsx
-    PricingTable.tsx
-    CustomerLogos.tsx
-    DocSidebar.tsx
-    AskAanWidget.tsx         # compact docs version
-  aan/
-    mockAanEngine.ts
-    useMockAanChat.ts
+    PillNav.tsx              # floating pill navbar with dropdowns + theme toggle
+    NavDropdown.tsx          # Products / Company dropdown menu
+    ThemeToggle.tsx          # sun/moon, uses ThemeContext
+    Hero.tsx                 # badge + serif H1 + italic accent + CTAs + stat row
+    DottedBackground.tsx     # absolute dotted pattern overlay
+    ChannelsMarquee.tsx      # infinite-scroll logo row
+    StatsGrid.tsx            # 6-stat "Real impact" grid
+    CapabilitiesGrid.tsx     # 9 feature cards with Profitability P&L mini
+    MiniPnLCard.tsx          # the Revenue/Ad Spend/Fees/Margin card content
+    Testimonials.tsx         # 6-card quote grid
+    BottomCTA.tsx            # "Get your free margin audit"
+    Footer.tsx
+    SectionLabel.tsx         # small uppercase eyebrow used between sections
+    AnarixWordmark.tsx       # "Anarix" + ".ai" in primary
   pages/
     Home.tsx
-    Product.tsx
-    AanPage.tsx
+    AanAI.tsx                # uses real AanMascot + mockAanEngine chat
     Pricing.tsx
-    Customers.tsx
-    About.tsx
-    Contact.tsx
-    docs/
-      DocsHome.tsx
-      DocPage.tsx
-      content/
-        getting-started.tsx
-        profitability.tsx
-        advertising.tsx
-        aan.tsx
-        ... (one per module)
-src/assets/website/
-  hero-profitability.png
-  hero-advertising.png
-  hero-aan.png
-  ... (captured via browser--screenshot)
+    Documentation.tsx
+    Company.tsx
+    Demo.tsx
+    products/
+      ProductTemplate.tsx    # shared shell
+      Profitability.tsx
+      Advertising.tsx
+      RuleAutomation.tsx
+      CampaignManager.tsx
+      ImpactAnalysis.tsx
+      ShareOfVoice.tsx
+      MasterDashboard.tsx
+      EnterpriseReporting.tsx
+  aan/
+    mockAanEngine.ts         # KEEP — used on AanAI page only
 ```
 
-## 10. Profile dropdown change
+## Aan motion
 
-In whichever component renders the avatar menu (likely `AppTaskbar.tsx` — will confirm by reading at build time), insert a new `DropdownMenuItem`:
-- Label: "Anarix Website"
-- Icon: Globe (lucide)
-- Action: `navigate('/website')`
-- Placed above "Account Settings".
+The reference site has no Aan animation — it's a marketing surface. Per the user's earlier request to "bring in actual Aan's motion and ui and shape", we keep `AanMascot` + `FloatingDots` on **the dedicated `/website/aan-ai` page** (live demo with mock streaming). The home page does not auto-play Aan motion (matches the reference exactly).
 
-## 11. Out of scope
+## Theme toggle
 
-- No real LLM, no Lovable Cloud, no auth changes.
-- No new color tokens or fonts.
-- No changes to existing app modules beyond the single dropdown item.
-- No SEO/SSR work beyond `<title>`/meta tags per page (SPA only).
-- No CMS — all content lives in TSX files, easy to edit later.
+A small sun/moon button placed in the navbar between "Sign In" and "Schedule Demo". Reuses `useTheme()` from `src/contexts/ThemeContext.tsx`. Tokens already work in dark mode, so the whole site flips correctly. The dotted background pattern uses `--border` opacity so it adapts.
 
-## 12. Build order
+## Out of scope
 
-1. Route + profile dropdown link + empty `WebsiteLayout` skeleton.
-2. Theme toggle, nav, footer.
-3. Home page with live Aan hero + mock chat engine.
-4. Capture app screenshots, build Product / Aan / Pricing / Customers / About / Contact pages.
-5. Docs hub + 6–8 doc pages with `AskAanWidget`.
-6. Polish pass: motion timing, mobile responsiveness, empty states.
+- No new color tokens, no new fonts beyond existing Satoshi/Noto/Allura.
+- No backend, no real LLM, no Lovable Cloud.
+- The italic underline swash on "profitability" — use an existing italic serif (system serif fallback or `font-serif italic`) styled with `text-primary` and an SVG underline. Not a custom font file.
+- Sub-pages are themed shells, not 9 fully-designed product deep dives.
 
-Approve and I'll build it end-to-end.
+## Build order
+
+1. Wipe old `src/website/components` + `src/website/pages` (keep `aan/`).
+2. Build `WebsiteLayout`, `DottedBackground`, `PillNav` (with dropdowns + ThemeToggle), `Footer`.
+3. Build Home: Hero → ChannelsMarquee → StatsGrid → CapabilitiesGrid (with MiniPnLCard) → Testimonials → BottomCTA.
+4. Build AanAI page reusing `AanMascot` + `mockAanEngine`.
+5. Build Pricing, Documentation, Company, Demo, and 8 product shells via `ProductTemplate`.
+6. Update `src/App.tsx` routes.
+7. QA in light + dark at 1463px (current viewport).
+
+Approve and I'll build it.
