@@ -96,16 +96,14 @@ import WebsiteHome from "./website/pages/Home";
 import WebsiteAanAI from "./website/pages/AanAI";
 import WebsitePricing from "./website/pages/Pricing";
 import WebsiteDocumentation from "./website/pages/Documentation";
-import WebsiteCompany from "./website/pages/Company";
+import WebsiteAbout from "./website/pages/company/About";
+import WebsiteCareer from "./website/pages/company/Career";
+import WebsiteContact from "./website/pages/company/Contact";
 import WebsiteDemo from "./website/pages/Demo";
 import WebsiteProductProfitability from "./website/pages/products/Profitability";
 import WebsiteProductAdvertising from "./website/pages/products/Advertising";
-import WebsiteProductRuleAutomation from "./website/pages/products/RuleAutomation";
-import WebsiteProductCampaignManager from "./website/pages/products/CampaignManager";
-import WebsiteProductImpactAnalysis from "./website/pages/products/ImpactAnalysis";
-import WebsiteProductShareOfVoice from "./website/pages/products/ShareOfVoice";
-import WebsiteProductMasterDashboard from "./website/pages/products/MasterDashboard";
-import WebsiteProductEnterpriseReporting from "./website/pages/products/EnterpriseReporting";
+import WebsiteProductAutomation from "./website/pages/products/Automation";
+import WebsiteProductManagedServices from "./website/pages/products/ManagedServices";
 
 const queryClient = new QueryClient();
 
