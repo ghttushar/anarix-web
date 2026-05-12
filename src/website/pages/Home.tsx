@@ -1,19 +1,27 @@
-import { Hero } from "../components/Hero";
-import { ChannelsMarquee } from "../components/ChannelsMarquee";
-import { StatsGrid } from "../components/StatsGrid";
-import { CapabilitiesGrid } from "../components/CapabilitiesGrid";
-import { Testimonials } from "../components/Testimonials";
-import { BottomCTA } from "../components/BottomCTA";
+import Navbar from "@/website/components/Navbar";
+import HeroSection from "@/website/components/HeroSection";
+import SocialProofSection from "@/website/components/SocialProofSection";
+import ImpactSection from "@/website/components/ImpactSection";
+import SolutionsSection from "@/website/components/SolutionsSection";
+import TestimonialsSection from "@/website/components/TestimonialsSection";
+import AuditCTASection from "@/website/components/AuditCTASection";
+import Footer from "@/website/components/Footer";
+import ScrollToTop from "@/website/components/ScrollToTop";
 
-export default function Home() {
+const Index = () => {
   return (
-    <>
-      <Hero />
-      <ChannelsMarquee />
-      <StatsGrid />
-      <CapabilitiesGrid />
-      <Testimonials />
-      <BottomCTA />
-    </>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <HeroSection />
+      <SocialProofSection />
+      <ImpactSection />
+      <SolutionsSection />
+      <TestimonialsSection />
+      <AuditCTASection />
+      <Footer />
+      <ScrollToTop />
+    </div>
   );
-}
+};
+
+export default Index;

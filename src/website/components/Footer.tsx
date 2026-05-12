@@ -1,67 +1,99 @@
+import { Shield, Lock, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { AnarixWordmark } from "./AnarixWordmark";
 
-const COLS = [
-  {
-    title: "Product",
-    links: [
-      { label: "Profitability", to: "/website/products/profitability" },
-      { label: "Advertising", to: "/website/products/advertising" },
-      { label: "Automation", to: "/website/products/automation" },
-      { label: "Managed Services", to: "/website/products/managed-services" },
-      { label: "Aan AI", to: "/website/aan-ai" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", to: "/website/company/about" },
-      { label: "Career", to: "/website/company/career" },
-      { label: "Contact", to: "/website/company/contact" },
-      { label: "Schedule Demo", to: "/website/demo" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Pricing", to: "/website/pricing" },
-      { label: "Documentation", to: "/website/documentation" },
-      { label: "Open App", to: "/profitability/dashboard" },
-    ],
-  },
+const footerLinks: Record<string, { label: string; href: string }[]> = {
+  Products: [
+    { label: "Profitability", href: "/products/profitability" },
+    { label: "Advertising", href: "/products/advertising" },
+    { label: "Automation", href: "/products/automation" },
+    { label: "Managed Services", href: "/products/managed-services" },
+  ],
+  Platform: [
+    { label: "Aan AI", href: "/aan" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Documentation", href: "/docs" },
+  ],
+  Company: [
+    { label: "About", href: "/about" },
+    { label: "Careers", href: "/careers" },
+    { label: "Contact", href: "/contact" },
+  ],
+  Account: [
+    { label: "Sign In", href: "/login" },
+    { label: "Schedule Demo", href: "/demo" },
+  ],
+};
+
+const badges = [
+  { icon: BadgeCheck, label: "SOC 2 Type II" },
+  { icon: Shield, label: "GDPR" },
+  { icon: Lock, label: "AES-256" },
 ];
 
-export function Footer() {
+const Footer = () => {
   return (
-    <footer className="relative z-10 mt-24 border-t border-border/60 bg-background/40">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-14 md:grid-cols-[1.2fr_repeat(3,1fr)]">
-        <div>
-          <AnarixWordmark />
-          <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-            The AI operating layer for marketplace profitability.
-          </p>
-        </div>
-        {COLS.map((c) => (
-          <div key={c.title}>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{c.title}</div>
-            <ul className="space-y-2">
-              {c.links.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to} className="text-sm text-foreground/80 hover:text-foreground">
-                    {l.label}
-                  </Link>
-                </li>
+    <footer className="px-6 pb-6">
+      <div className="max-w-6xl mx-auto bg-card rounded-3xl border border-border shadow-soft p-10 sm:p-14">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10">
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/website" className="text-2xl font-display font-semibold text-foreground tracking-tight">
+              Anarix<span className="text-coral">.</span>ai
+            </Link>
+            <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+              The complete growth platform for marketplace profitability.
+            </p>
+            <div className="flex gap-2 mt-5 flex-wrap">
+              {badges.map((b) => (
+                <div
+                  key={b.label}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-muted/60 border border-border/50"
+                  title={b.label}
+                >
+                  <b.icon className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[10px] font-medium text-muted-foreground tracking-wide">{b.label}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-        ))}
-      </div>
-      <div className="border-t border-border/60">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-5 text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} Anarix. All rights reserved.</span>
-          <span>Made for operators.</span>
+
+          {Object.entries(footerLinks).map(([category, links]) => (
+            <div key={category}>
+              <h4 className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wider">{category}</h4>
+              <ul className="space-y-2">
+                {links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Anarix. All rights reserved.
+          </p>
+          <div className="flex gap-4">
+            {["Privacy", "Terms", "Security"].map((link) => (
+              <a
+                key={link}
+                href="#"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300"
+              >
+                {link}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

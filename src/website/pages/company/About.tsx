@@ -1,37 +1,112 @@
-import { SectionLabel } from "../../components/SectionLabel";
-import { Reveal } from "../../components/Reveal";
+import { motion } from "framer-motion";
+import { Target, Heart, Eye, Rocket, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import PageLayout from "@/website/components/PageLayout";
 
-export default function About() {
-  return (
-    <section className="px-6 pb-24">
-      <div className="mx-auto max-w-5xl">
-        <Reveal>
-          <div className="text-center">
-            <SectionLabel>About</SectionLabel>
-            <h1 className="mt-3 font-[Satoshi] text-5xl font-semibold tracking-tight text-foreground md:text-6xl">
-              We're building the operating layer for marketplace commerce.
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-              Anarix is built by a team of operators, engineers, and ML researchers who've run the spend, written the rules, and lost the sleep.
-            </p>
-          </div>
-        </Reveal>
+const values = [
+  { icon: Target, title: "Outcome Obsessed", desc: "We measure success by your revenue, not our features." },
+  { icon: Heart, title: "Radically Transparent", desc: "Every action logged, every decision visible. No black boxes." },
+  { icon: Eye, title: "Data First", desc: "Opinions are cheap. We make decisions with evidence." },
+  { icon: Rocket, title: "Relentlessly Iterative", desc: "Ship fast, learn faster. Perfection is the enemy of progress." },
+];
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {[
-            { v: "$200M+", l: "Ad spend under management" },
-            { v: "500+", l: "Brands served" },
-            { v: "12+", l: "Marketplaces supported" },
-          ].map((s, i) => (
-            <Reveal key={s.l} delay={i * 0.06}>
-              <div className="rounded-2xl border border-border bg-card p-6 text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                <div className="font-[Satoshi] text-3xl font-bold text-foreground">{s.v}</div>
-                <div className="mt-2 text-xs text-muted-foreground">{s.l}</div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+const milestones = [
+  { year: "2019", event: "Founded in New York. First Amazon brand onboarded." },
+  { year: "2020", event: "Expanded to Walmart. $10M ad spend managed." },
+  { year: "2021", event: "Launched automation engine. 50+ brands." },
+  { year: "2022", event: "Aan AI copilot beta. $100M ad spend milestone." },
+  { year: "2023", event: "Series A funding. Global expansion." },
+  { year: "2024", event: "$200M+ ad spend. $1.2B GMV driven." },
+];
+
+const About = () => (
+  <PageLayout>
+    <div className="max-w-6xl mx-auto px-6">
+      {/* Hero — large typography */}
+      <motion.div
+        className="mb-24"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-[1.1] mb-8">
+          We Understand
+          <br />
+          <span className="text-gradient-primary">Your Chaos</span>
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+          Built by operators who've managed millions in ad spend.
+          We know the pain because we've lived it.
+        </p>
+      </motion.div>
+
+      {/* Values — large typography blocks */}
+      <div className="grid md:grid-cols-2 gap-12 mb-24">
+        {values.map((v, i) => (
+          <motion.div
+            key={v.title}
+            className="group"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+          >
+            <v.icon className="w-8 h-8 text-primary mb-4" />
+            <h3 className="text-2xl font-bold text-foreground mb-2">{v.title}</h3>
+            <p className="text-muted-foreground text-lg leading-relaxed">{v.desc}</p>
+          </motion.div>
+        ))}
       </div>
-    </section>
-  );
-}
+
+      {/* Timeline — horizontal scroll */}
+      <motion.div
+        className="mb-24"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className="text-3xl font-bold text-foreground mb-8">Our Journey</h2>
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute top-5 left-0 right-0 h-px bg-border" />
+          <div className="flex gap-0 overflow-x-auto pb-4 scrollbar-none">
+            {milestones.map((m, i) => (
+              <motion.div
+                key={m.year}
+                className="flex-shrink-0 w-48 relative pt-10"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + i * 0.08, duration: 0.4 }}
+              >
+                {/* Dot */}
+                <div className="absolute top-3 left-0 w-4 h-4 rounded-full bg-primary border-4 border-background" />
+                <div className="font-bold text-primary text-lg mb-1">{m.year}</div>
+                <p className="text-sm text-muted-foreground leading-relaxed pr-4">{m.event}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Team stats */}
+      <motion.div
+        className="bg-gradient-to-r from-primary/5 via-accent/30 to-primary/5 rounded-2xl p-12 mb-16 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
+        <h2 className="text-2xl font-bold text-foreground mb-6">Powered by 40+ experts across 8 countries</h2>
+        <p className="text-muted-foreground max-w-lg mx-auto mb-6">
+          Engineers, strategists, designers, and account managers — united by a mission to make e-commerce advertising work.
+        </p>
+        <Link to="/website/company/career">
+          <Button className="rounded-pill px-6 bg-primary text-primary-foreground btn-shine">
+            Join Our Team <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </Link>
+      </motion.div>
+    </div>
+  </PageLayout>
+);
+
+export default About;

@@ -1,81 +1,87 @@
+import { motion } from "framer-motion";
+import { BookOpen, Rocket, Plug, Code2, GitBranch } from "lucide-react";
 import { Link } from "react-router-dom";
-import { SectionLabel } from "../components/SectionLabel";
+import PageLayout from "@/website/components/PageLayout";
 
-const SECTIONS = [
+const sections = [
   {
+    icon: Rocket,
     title: "Getting Started",
-    docs: [
-      { label: "Welcome to Anarix", to: "#" },
-      { label: "Connecting Amazon", to: "#" },
-      { label: "Connecting Walmart", to: "#" },
-      { label: "Inviting your team", to: "#" },
-    ],
+    items: ["Create your workspace", "Connect your first marketplace", "Invite your team", "Set spend guardrails"],
   },
   {
-    title: "Modules",
-    docs: [
-      { label: "Profitability", to: "/website/products/profitability" },
-      { label: "Advertising", to: "/website/products/advertising" },
-      { label: "Automation", to: "/website/products/automation" },
-      { label: "Managed Services", to: "/website/products/managed-services" },
-    ],
+    icon: Plug,
+    title: "Integrations",
+    items: ["Amazon Ads (SP, SB, SD, AMC)", "Walmart Connect", "Shopify", "Meta & Google Ads", "BigQuery & Snowflake"],
   },
   {
-    title: "Aan AI",
-    docs: [
-      { label: "What Aan can do", to: "/website/aan-ai" },
-      { label: "Safety model", to: "#" },
-      { label: "Drafts vs. Apply", to: "#" },
-    ],
+    icon: Code2,
+    title: "API Reference",
+    items: ["Authentication", "Campaigns endpoint", "Reports endpoint", "Webhooks", "Rate limits"],
   },
   {
-    title: "Reference",
-    docs: [
-      { label: "Keyboard shortcuts", to: "#" },
-      { label: "API & integrations", to: "#" },
-      { label: "Changelog", to: "#" },
-    ],
+    icon: GitBranch,
+    title: "Glossary",
+    items: ["TACoS vs ACoS", "Contribution margin", "Dayparting", "Sponsored Brand budgeting", "AMC audiences"],
   },
 ];
 
-export default function Documentation() {
-  return (
-    <section className="px-6 pb-24">
-      <div className="mx-auto max-w-6xl">
-        <div className="text-center">
-          <SectionLabel>Documentation</SectionLabel>
-          <h1 className="mt-3 font-[Satoshi] text-5xl font-semibold tracking-tight text-foreground md:text-6xl">
-            Learn how to operate Anarix.
+const Docs = () => (
+  <PageLayout>
+    <section className="px-6">
+      <div className="max-w-6xl mx-auto">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-sm font-medium">
+            <BookOpen className="w-4 h-4" /> Documentation
+          </div>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+            Everything you need to <span className="text-gradient-primary">ship</span>.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-            Step-by-step guides for every module, with Aan available on every page to answer questions.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Practical guides, API references, and integration recipes for the Anarix platform.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-2">
-          {SECTIONS.map((s) => (
-            <div key={s.title} className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="font-[Satoshi] text-lg font-semibold text-foreground">{s.title}</h2>
-              <ul className="mt-4 space-y-2">
-                {s.docs.map((d) => (
-                  <li key={d.label}>
-                    <Link to={d.to} className="text-sm text-foreground/80 hover:text-primary">
-                      {d.label}
+        <div className="grid md:grid-cols-2 gap-6 mb-20">
+          {sections.map((s, i) => (
+            <motion.div
+              key={s.title}
+              className="p-8 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all duration-300"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ delay: i * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <s.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground">{s.title}</h3>
+              </div>
+              <ul className="space-y-2.5">
+                {s.items.map((item) => (
+                  <li key={item}>
+                    <Link
+                      to="#"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 group"
+                    >
+                      <span className="w-1 h-1 rounded-full bg-coral group-hover:scale-150 transition-transform" />
+                      {item}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
-        </div>
-
-        <div className="mt-12 rounded-2xl border border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Can't find what you need?</p>
-          <Link to="/website/aan-ai" className="mt-3 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            Ask Aan
-          </Link>
         </div>
       </div>
     </section>
-  );
-}
+  </PageLayout>
+);
+
+export default Docs;

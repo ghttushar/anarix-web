@@ -1,85 +1,59 @@
-## Note on the GitHub repo
+## Source of truth
 
-`https://github.com/ghttushar/anarix-insight-engine` returns 404 (private or doesn't exist). I'll work from the live reference site (`retail-growth-engine.vercel.app`) plus the existing `/website` code. If you can make the repo public or paste a zip, I'll mirror its exact code instead.
+The uploaded `Retail_Growth_Engine.zip` is the reference. Its `src/` is a complete React + Tailwind + framer-motion site with ~24 animated section components. Current `/website` is a simplified rewrite that lost the motion. I will replace `/website` with a near-1:1 port of the zip.
 
-## 1. Navigation cleanup (`PillNav.tsx`)
+## What gets ported (copy from zip → `src/website/`)
 
-Replace current nav with exactly:
+**Sections / animations (verbatim, only renamed imports):**
+- `HeroSection.tsx` — animated headline, swash, gradient orbs
+- `CycloneScrollSection.tsx` — scroll-driven cyclone
+- `TypographyTransition.tsx` — large kinetic type
+- `KaleidoscopeSection.tsx` — rotating kaleidoscope
+- `StatementSection.tsx`
+- `SolutionsSection.tsx` — pinned multi-panel
+- `FeaturePanels.tsx` — 494-line feature reveal
+- `ImpactSection.tsx`, `TrustScaleSection.tsx`, `SocialProofSection.tsx`
+- `IntegrationOrbit.tsx` — orbiting logos
+- `TacosSection.tsx` — taco visual / TACoS metric
+- `HappyUsersSection.tsx`, `TestimonialsSection.tsx`, `HallOfFame.tsx`
+- `AanIntroSection.tsx`, `AuditCTASection.tsx`
+- `Footer.tsx`, `Navbar.tsx`, `NavLink.tsx`, `PageLayout.tsx`, `ScrollToTop.tsx`, `ScheduleDemoModal.tsx`
 
-- **Products ▾** — Profitability, Advertising, Automation, Managed Services
-- **Aan AI**
-- **Pricing**
-- **Documentation**
-- **Company ▾** — About, Career, Contact
-- **Sign In** (text link)
-- **Schedule a Demo** (pill button)
+**Pages (verbatim):**
+- `Index.tsx` (Home composition) → `Home.tsx`
+- `AanAI.tsx`, `Pricing.tsx`, `Docs.tsx` (→ `Documentation.tsx`)
+- `About.tsx`, `Careers.tsx`, `Contact.tsx`
+- `ProductProfitability.tsx`, `ProductAdvertising.tsx`, `ProductAutomation.tsx`, `ProductManagedServices.tsx`
+- `Demo.tsx`, `Login.tsx` (Login routes to existing `/login`)
 
-Remove: Rule Automation (renamed → Automation), Campaign Manager, Impact Analysis, Share of Voice, Master Dashboard, Enterprise Reporting from nav. Their route files stay deleted.
+## Integration plan
 
-## 2. Pages — add / rename / delete
+1. **Wipe current `src/website/`** (components + pages) — full reset, no half-merging.
+2. **Copy the zip's `src/components/` → `src/website/components/`** and `src/pages/*` → `src/website/pages/` (keep filenames).
+3. **CSS / tokens**: append zip's animation keyframes + utilities (Fraunces font import, gradient utilities, marquee, cyclone, kaleidoscope keyframes) into a new `src/website/website.css`, imported only by `WebsiteLayout`. Do **not** touch global `index.css` or `tailwind.config.ts` (preserves Periwinkle app theme).
+4. **Fonts**: add Fraunces + Inter `<link>` to `index.html` (already there per upload). No change.
+5. **WebsiteLayout**: render zip's `Navbar` + `Footer` + `<Outlet/>` + `ScrollToTop`. Remove current `PillNav`, `DottedBackground`.
+6. **Routes** (`src/App.tsx`): keep `/website` parent, children:
+   - `/website` → Home
+   - `/website/aan-ai` → AanAI
+   - `/website/pricing`, `/website/documentation`, `/website/demo`
+   - `/website/products/{profitability,advertising,automation,managed-services}`
+   - `/website/company/{about,career,contact}`
+7. **Internal links** in copied files: rewrite `to="/about"` etc → `/website/...` via single sed pass (deterministic table).
+8. **Floating Action Island** guard already excludes `/website` — leave as is.
+9. **Aan AI page**: keep zip's `AanAI.tsx` exactly (it's the "mockup" surface user approved earlier).
 
-**Add** (use `ProductTemplate` shell, copy tone from reference site):
-- `pages/products/Automation.tsx` — rules + scheduling + audit log
-- `pages/products/ManagedServices.tsx` — done-for-you operator team offering
-- `pages/company/Career.tsx` — open roles, culture, values
-- `pages/company/Contact.tsx` — email, support, office; reuses Demo form pattern but lighter
+## Out of scope
 
-**Rename**: `RuleAutomation.tsx` → folded into `Automation.tsx` (delete old file).
+- No changes to app shell (`AppLayout`, sidebar, etc.).
+- No new fonts beyond what the zip uses.
+- No backend / form submission.
+- No edits to Periwinkle tokens used by the analytical app.
 
-**Delete** (no longer linked): `CampaignManager.tsx`, `ImpactAnalysis.tsx`, `ShareOfVoice.tsx`, `MasterDashboard.tsx`, `EnterpriseReporting.tsx`, `Advertising.tsx` stays (linked).
+## Risks / notes
 
-**Update** `Company.tsx` → becomes About-only content (drop the customers grid duplication).
+- Zip components import `@/components/ui/*` (shadcn) — already present in this project, so they resolve unchanged.
+- Zip uses `framer-motion` (already installed).
+- A few zip components may reference assets in `public/` — I'll copy any referenced files from `/tmp/rge/public/` into this project's `public/` if missing.
 
-## 3. Routes (`src/App.tsx`)
-
-```text
-/website
-/website/aan-ai
-/website/pricing
-/website/documentation
-/website/company/about        (was /website/company)
-/website/company/career
-/website/company/contact
-/website/products/profitability
-/website/products/advertising
-/website/products/automation
-/website/products/managed-services
-/website/demo                 (Schedule a Demo form, kept)
-```
-
-Old product routes removed.
-
-## 4. Hide Floating Action Island on `/website/*`
-
-In `src/features/creative/FloatingActionIsland.tsx` (or wherever it mounts in `AppLayout`), add a `useLocation()` guard: if `pathname.startsWith('/website')`, return `null`. Same for any other app-chrome (CommandPalette, AppSidebar, AppTaskbar) that may be leaking — verify by reading `AppLayout.tsx` and `App.tsx`. The website routes already render under `WebsiteLayout` outside `AppLayout`, so the island shouldn't appear; if it does, it's mounted at a higher level and needs the route guard.
-
-## 5. Motion / transitions parity with reference site
-
-Reference site uses subtle scroll-reveal, marquee, hover lifts, and a hero swash underline animation. Add via existing tools (framer-motion is already installed):
-
-- **`components/Reveal.tsx`** — wrap sections in `motion.div` with `whileInView={{opacity:1, y:0}}` from `{opacity:0, y:24}`, `viewport={{once:true, margin:"-80px"}}`, duration 0.5, ease "easeOut". Apply to Hero children, StatsGrid items (staggered 0.05s), CapabilitiesGrid cards (staggered), Testimonials cards, BottomCTA.
-- **`ChannelsMarquee`** — confirm CSS infinite scroll keyframe, slow it to 40s linear infinite, pause on hover.
-- **`Hero`** — animate the italic "profitability" word: fade-in + the SVG underline swash draws via `pathLength` 0→1 over 0.8s after headline mounts.
-- **`PillNav`** — add a 0.4s fade+slide-down on mount; dropdowns use existing Radix-style fade/scale (already smooth via `NavDropdown`).
-- **CapabilityCard hover** — `hover:-translate-y-0.5 hover:shadow-md transition-all duration-200`.
-- **CTA buttons** — `transition-transform active:scale-[0.98]`.
-
-All motion respects project rule: ≤ 240ms interactions, ≤ 500ms reveals, easeOut only, no infinite pulses outside marquee.
-
-## 6. Out of scope
-
-- No new color tokens, no new fonts.
-- No real backend / forms still mock-submit.
-- No GitHub repo mirroring (404). Working from live site + current code.
-- Aan AI page keeps current `AanMascot` + `mockAanEngine` setup.
-
-## Build order
-
-1. Nav rewrite + create new page files (Automation, ManagedServices, Career, Contact, About split).
-2. Route table update in `App.tsx`.
-3. Floating Action Island route guard.
-4. `Reveal` component + apply across Home + product pages.
-5. Hero swash animation + marquee tuning.
-6. QA at 1668px, light + dark, scroll through Home + each new page; confirm no app chrome leaks onto `/website`.
-
-Approve and I'll build.
+Approve and I will execute the port in one pass.
