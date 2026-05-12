@@ -6,7 +6,7 @@ import {
   CalendarClock, History, ListTodo, Settings, Users, ChevronDown,
   ChevronRight, Layers, Image, FlaskConical, PackageCheck,
   Send, Sun, Moon, User, LogOut, PanelLeft,
-  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug
+  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug, Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
