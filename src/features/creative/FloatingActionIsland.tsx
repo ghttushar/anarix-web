@@ -129,9 +129,19 @@ export function FloatingActionIsland() {
               <GripVertical className="h-3.5 w-3.5" />
             </button>
             <div className="h-5 w-px bg-border" />
+            {newBranding && (
+              <button
+                type="button"
+                onClick={openCopilot}
+                className="group flex items-center gap-2 h-12 pl-1.5 pr-3.5 rounded-full bg-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
+                title="Ask Aan"
+              >
+                <AanMascot size={44} state="idle" interactive floating />
+                <span className="text-sm font-medium text-foreground whitespace-nowrap">Ask Aan</span>
+              </button>
+            )}
             <div className="flex items-center gap-0.5">
               {actions.map((action, index) => {
-                const isAskAan = index === 0 && newBranding;
                 return (
                 <Button
                   key={index}
@@ -139,17 +149,12 @@ export function FloatingActionIsland() {
                   size="sm"
                   onClick={action.onClick}
                   className={cn(
-                    "rounded-full transition-all duration-200 relative",
-                    isAskAan ? "h-10 px-2.5 gap-2" : "h-8",
-                    !isAskAan && ((isExpanded || action.alwaysShowLabel) ? "px-3 gap-1.5" : "px-2"),
+                    "rounded-full transition-all duration-200 relative h-8",
+                    (isExpanded || action.alwaysShowLabel) ? "px-3 gap-1.5" : "px-2",
                     action.highlight && "text-destructive"
                   )}
                 >
-                  {isAskAan ? (
-                    <AanMascot size={32} state="idle" interactive floating />
-                  ) : (
-                    <action.icon className="h-3.5 w-3.5 shrink-0" />
-                  )}
+                  <action.icon className="h-3.5 w-3.5 shrink-0" />
                   {(isExpanded || action.alwaysShowLabel) && (
                     <span className="text-xs whitespace-nowrap animate-in fade-in duration-200">{action.label}</span>
                   )}
