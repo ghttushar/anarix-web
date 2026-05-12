@@ -10,6 +10,7 @@ import { useInsights } from "@/components/insights";
 import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useAan } from "@/components/aan/AanContext";
 import html2canvas from "html2canvas";
 
 interface ActionItem {
