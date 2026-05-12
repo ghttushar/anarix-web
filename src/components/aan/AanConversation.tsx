@@ -104,7 +104,7 @@ export function AanConversation() {
       {/* Generation Progress Indicator */}
       {isGenerating && (
         <div className="flex justify-center py-2">
-          <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-start justify-start">
+          <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-center justify-start">
             {newBranding ? (
               <div
                 ref={setGenerationAnchorEl}
