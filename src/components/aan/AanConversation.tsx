@@ -104,7 +104,7 @@ export function AanConversation() {
       {/* Generation Progress Indicator */}
       {isGenerating && (
         <div className="flex justify-center py-2">
-          <div className="flex flex-col items-center gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px]">
+          <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-start justify-start">
             {newBranding ? (
               <div
                 ref={setGenerationAnchorEl}
@@ -115,7 +115,7 @@ export function AanConversation() {
             ) : (
               <CircularProgress progress={generationProgress} size={56} />
             )}
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-start text-left">
               <p className="font-medium text-foreground text-sm leading-tight">
                 {generationType === "report" ? "Generating Report" : "Running Audit"}
               </p>
