@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import WebsiteThemeToggle from "./WebsiteThemeToggle";
 
 const navItems: Array<{
   label: string;
@@ -12,21 +13,21 @@ const navItems: Array<{
   {
     label: "Products",
     dropdown: [
-      { label: "Profitability", href: "/products/profitability" },
-      { label: "Advertising", href: "/products/advertising" },
-      { label: "Automation", href: "/products/automation" },
-      { label: "Managed Services", href: "/products/managed-services" },
+      { label: "Profitability", href: "/website/products/profitability" },
+      { label: "Advertising", href: "/website/products/advertising" },
+      { label: "Automation", href: "/website/products/automation" },
+      { label: "Managed Services", href: "/website/products/managed-services" },
     ],
   },
-  { label: "Aan AI", href: "/aan" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Documentation", href: "/docs" },
+  { label: "Aan AI", href: "/website/aan" },
+  { label: "Pricing", href: "/website/pricing" },
+  { label: "Documentation", href: "/website/docs" },
   {
     label: "Company",
     dropdown: [
-      { label: "About", href: "/about" },
-      { label: "Careers", href: "/careers" },
-      { label: "Contact", href: "/contact" },
+      { label: "About", href: "/website/company/about" },
+      { label: "Careers", href: "/website/company/career" },
+      { label: "Contact", href: "/website/company/contact" },
     ],
   },
 ];
@@ -128,10 +129,11 @@ const Navbar = () => {
         </div>
 
         {/* Right side */}
-        <div className="hidden lg:flex items-center gap-3 justify-end">
+        <div className="hidden lg:flex items-center gap-2 justify-end">
+          <WebsiteThemeToggle />
           <Link
             to="/login"
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 group"
+            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 group px-2"
           >
             Sign In
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
