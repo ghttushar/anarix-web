@@ -1,20 +1,49 @@
 ## Goal
-Make the Ask Aan mascot fit the pill more snugly, and have the entire Ask Aan pill disappear from the Floating Action Island the moment the Aan Copilot side panel opens — reinforcing the idea that the mascot "lives" and travels to wherever Aan is currently working.
+Shrink the Ask Aan mascot in the Floating Action Island pill, and fix the eye-to-body ratio across the entire app so the eyes scale evenly at every size — including the small mascots used in the left sidebar.
+
+## Root cause of oversized eyes (sidebar)
+In `AanMascot.tsx`:
+```ts
+const eyeSize = Math.max(4, size * 0.13);
+```
+The `Math.max(4, ...)` floor clamps the eyes to **4px** for any mascot ≤ ~30px. For the sidebar glyph (size 16) this means eyes are 25% of body — far too large. The proper proportional ratio (~13–16%) is overridden by the floor.
 
 ## Changes
 
-### `src/features/creative/FloatingActionIsland.tsx`
-- Read `mode` from `useAan()` alongside `openCopilot`.
-- Shrink the mascot inside the Ask Aan pill from `size={44}` to `size={32}`, and tighten the pill: `h-10 pl-1 pr-3 gap-1.5` (was `h-12 pl-1.5 pr-3.5 gap-2`). This keeps the coral diamond comfortably inside the capsule with even vertical padding.
-  - Note: at size 32 the mascot is in "compact" tier and won't run cursor-sway. To preserve the live mouse-tracking behavior the user just approved, I'll bump to `size={36}` instead — still visually smaller than the current 44, but inside the "full" tier (>= 32 with floating; tier threshold is `size <= 40 → compact`, so I'll use `size={42}` with tighter pill padding `h-11 pl-1 pr-3.5`). Choosing **size 42 + h-11 pill** to keep the live sway intact while reducing visual heft.
-- Wrap the Ask Aan pill render in `{newBranding && mode !== "copilot" && (...)}` so it disappears when the Copilot panel is active. When the user closes the Copilot panel, the pill reappears in the island.
+### 1. `src/components/aan/AanMascot.tsx` — proportional eyes
+- Remove the `Math.max(4, …)` floor. Use a single proportional ratio that holds across all sizes:
+  - `eyeSize = size * 0.16` (slightly tighter at large sizes, but uniform).
+  - `eyeOffsetX = (shape === "circle" ? size * 0.20 : size * 0.18)` (currently 0.18/0.16) — nudged so eyes sit symmetrically with the new eye size.
+  - `eyeY = shape === "diamond" ? size * 0.04 : 0` (unchanged).
+- Result by size:
+  - 16px → eyes 2.56px (sidebar/navbar — small, proportional)
+  - 24px → eyes 3.84px (Ask Aan tooltip)
+  - 36px → eyes 5.76px (new pill mascot)
+  - 64px → eyes 10.24px (workspace anchor)
 
-### Out of scope
-- No changes to the mascot component itself.
-- No changes to other action island buttons.
-- No changes to the Copilot panel — its existing internal mascot (input anchor) already represents the "moved" Aan.
+- Also relax `trackCursor` so the mouse-sway works on compact tier when `interactive` is true:
+  ```ts
+  const trackCursor = interactive && !isStatic && tier !== "micro" && shape !== "bar";
+  ```
+  This lets the smaller pill mascot still sway toward the cursor.
 
-## Behavior summary
-- Default state: Ask Aan pill visible in the island, mascot lives there with cursor sway.
-- Click Ask Aan → Copilot panel opens → pill instantly hides from the island (mascot has "moved" into the Copilot input).
-- Close Copilot → pill returns to the island.
+- Allow `showEyes` for compact tier on idle/listening/speaking states (currently only full tier renders animated eyes). With proportional sizing this is now safe at small sizes.
+
+### 2. `src/features/creative/FloatingActionIsland.tsx` — smaller pill mascot
+- Drop mascot from `size={42}` to `size={32}`.
+- Tighten pill: `h-9 pl-1 pr-3 gap-1.5` (was `h-11 pl-1 pr-3.5`).
+- Cursor sway is preserved via the relaxed `trackCursor` rule above.
+
+### 3. App-wide audit (no further edits required)
+The fix is centralized in `AanMascot.tsx`, so all consumers automatically benefit:
+- `AppSidebar` — `AanGlyph` at h-4 (size 16) → eyes now ~2.5px instead of 4px.
+- `AppTaskbar` — same proportional improvement.
+- `AanWorkspaceSidebar` — same.
+- `AskAanTooltip` — size 24 mascot → eyes ~3.8px instead of 4px (small change, more harmonious).
+- `AanLogo` — same.
+- `AanConversation` generation loader, `AanPresencePortal` anchors — unchanged behavior, eyes scale proportionally.
+- `AanMascotShowcase` — visual showcase reflects the new scaling automatically.
+
+## Out of scope
+- No changes to mascot shape morphing, aura, blink timing, or color tokens.
+- No changes to mascot states or any other component logic.
