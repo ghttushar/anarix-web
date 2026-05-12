@@ -115,7 +115,7 @@ export function AanConversation() {
             ) : (
               <CircularProgress progress={generationProgress} size={56} />
             )}
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-start text-left">
               <p className="font-medium text-foreground text-sm leading-tight">
                 {generationType === "report" ? "Generating Report" : "Running Audit"}
               </p>
