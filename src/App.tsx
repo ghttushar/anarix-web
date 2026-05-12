@@ -90,6 +90,18 @@ import Integrations from "./pages/settings/Integrations";
 // Brand
 import AanMascotShowcase from "./pages/brand/AanMascotShowcase";
 
+// Website
+import WebsiteLayout from "./website/WebsiteLayout";
+import WebsiteHome from "./website/pages/Home";
+import WebsiteProduct from "./website/pages/Product";
+import WebsiteAan from "./website/pages/AanPage";
+import WebsitePricing from "./website/pages/Pricing";
+import WebsiteCustomers from "./website/pages/Customers";
+import WebsiteAbout from "./website/pages/About";
+import WebsiteContact from "./website/pages/Contact";
+import WebsiteDocsHome from "./website/pages/docs/DocsHome";
+import WebsiteDocPage from "./website/pages/docs/DocPage";
+
 const queryClient = new QueryClient();
 
 function WelcomeToasts() {
