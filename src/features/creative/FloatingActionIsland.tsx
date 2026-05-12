@@ -133,10 +133,10 @@ export function FloatingActionIsland() {
               <button
                 type="button"
                 onClick={openCopilot}
-                className="group flex items-center gap-1.5 h-11 pl-1 pr-3.5 rounded-full bg-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
+                className="group flex items-center gap-1.5 h-9 pl-1 pr-3 rounded-full bg-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
                 title="Ask Aan"
               >
-                <AanMascot size={42} state="idle" interactive floating />
+                <AanMascot size={32} state="idle" interactive floating />
                 <span className="text-sm font-medium text-foreground whitespace-nowrap">Ask Aan</span>
               </button>
             )}

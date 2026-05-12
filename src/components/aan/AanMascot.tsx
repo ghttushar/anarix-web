@@ -59,10 +59,10 @@ export function AanMascot({
   const rawTier: "micro" | "compact" | "full" = size < 24 ? "micro" : size <= 40 ? "compact" : "full";
   const tier: "micro" | "compact" | "full" = staticEyes && size >= 16 && rawTier === "micro" ? "compact" : rawTier;
   const isStatic = staticEyes || state === "anchor" || reduceMotion;
-  const trackCursor = interactive && !isStatic && tier === "full" && shape !== "bar";
+  const trackCursor = interactive && !isStatic && tier !== "micro" && shape !== "bar";
   const showEyes = staticEyes
     ? size >= 16 && shape !== "bar"
-    : tier === "full" &&
+    : tier !== "micro" &&
       !reduceMotion &&
       shape !== "bar" &&
       (state === "idle" || state === "listening" || state === "speaking");
@@ -203,11 +203,11 @@ export function AanMascot({
   const containerW = slotW + (floating && tier === "full" ? 8 : 0);
   const containerH = slotH + (floating && tier === "full" ? 14 : 0);
 
-  // Eyes
-  const eyeSize = Math.max(4, size * 0.13);
-  const eyeOffsetX = shape === "circle" ? size * 0.18 : size * 0.16;
+  // Eyes — fully proportional to body, no min-size floor (prevents oversized eyes at small sizes)
+  const eyeSize = size * 0.16;
+  const eyeOffsetX = shape === "circle" ? size * 0.20 : size * 0.18;
   const eyeY = shape === "diamond" ? size * 0.04 : 0;
-  const eyeTravel = Math.max(1.5, size * 0.05);
+  const eyeTravel = Math.max(1, size * 0.05);
 
   // Bar progress fill (working state)
   const barProgress = Math.max(0, Math.min(100, progress));
