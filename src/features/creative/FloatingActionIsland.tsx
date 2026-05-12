@@ -33,6 +33,7 @@ export function FloatingActionIsland() {
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { openCopilot } = useAan();
   const { openPanel: openInsights, criticalCount } = useInsights();
   const { newBranding } = useBranding();
 
