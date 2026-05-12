@@ -101,27 +101,41 @@ export function AanConversation() {
         </div>
       ))}
 
-      {/* Generation Progress Indicator */}
+      {/* Generation Progress Indicator — rendered like an assistant message */}
       {isGenerating && (
-        <div className="flex justify-center py-2">
-          <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-center justify-start">
-            {newBranding ? (
-              <div
-                ref={setGenerationAnchorEl}
-                aria-hidden
-                data-aan-anchor="generation"
-                className="w-[110px] h-12 shrink-0 flex items-center justify-center"
-              />
-            ) : (
-              <CircularProgress progress={generationProgress} size={56} />
+        <div className="flex flex-row gap-3">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center",
+              newBranding ? "text-foreground" : "rounded-full aan-gradient text-white"
             )}
-            <div className="flex flex-col items-start text-left">
-              <p className="font-medium text-foreground text-sm leading-tight">
-                {generationType === "report" ? "Generating Report" : "Running Audit"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {Math.max(1, Math.ceil((100 - generationProgress) * 0.3))}s remaining
-              </p>
+          >
+            {newBranding ? (
+              <AanMascot size={20} state="anchor" interactive={false} />
+            ) : (
+              <AanGlyph className="h-4 w-4" />
+            )}
+          </div>
+          <div className="flex max-w-[80%] flex-col gap-2 items-start">
+            <div className="flex-col gap-3 px-6 py-5 rounded-2xl border border-border bg-card shadow-sm w-fit min-w-[280px] flex items-center justify-start">
+              {newBranding ? (
+                <div
+                  ref={setGenerationAnchorEl}
+                  aria-hidden
+                  data-aan-anchor="generation"
+                  className="w-[110px] h-12 shrink-0 flex items-center justify-center"
+                />
+              ) : (
+                <CircularProgress progress={generationProgress} size={56} />
+              )}
+              <div className="flex flex-col items-start text-left">
+                <p className="font-medium text-foreground text-sm leading-tight">
+                  {generationType === "report" ? "Generating Report" : "Running Audit"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {Math.max(1, Math.ceil((100 - generationProgress) * 0.3))}s remaining
+                </p>
+              </div>
             </div>
           </div>
         </div>
