@@ -237,16 +237,15 @@ function AppRoutes() {
         <Route path="aan-ai" element={<WebsiteAanAI />} />
         <Route path="pricing" element={<WebsitePricing />} />
         <Route path="documentation" element={<WebsiteDocumentation />} />
-        <Route path="company" element={<WebsiteCompany />} />
+        <Route path="company" element={<Navigate to="/website/company/about" replace />} />
+        <Route path="company/about" element={<WebsiteAbout />} />
+        <Route path="company/career" element={<WebsiteCareer />} />
+        <Route path="company/contact" element={<WebsiteContact />} />
         <Route path="demo" element={<WebsiteDemo />} />
         <Route path="products/profitability" element={<WebsiteProductProfitability />} />
         <Route path="products/advertising" element={<WebsiteProductAdvertising />} />
-        <Route path="products/rule-automation" element={<WebsiteProductRuleAutomation />} />
-        <Route path="products/campaign-manager" element={<WebsiteProductCampaignManager />} />
-        <Route path="products/impact-analysis" element={<WebsiteProductImpactAnalysis />} />
-        <Route path="products/share-of-voice" element={<WebsiteProductShareOfVoice />} />
-        <Route path="products/master-dashboard" element={<WebsiteProductMasterDashboard />} />
-        <Route path="products/enterprise-reporting" element={<WebsiteProductEnterpriseReporting />} />
+        <Route path="products/automation" element={<WebsiteProductAutomation />} />
+        <Route path="products/managed-services" element={<WebsiteProductManagedServices />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
