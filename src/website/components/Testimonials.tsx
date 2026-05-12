@@ -1,3 +1,5 @@
+import { Reveal } from "./Reveal";
+
 const QUOTES = [
   { quote: "Anarix consolidated our entire Amazon and Walmart strategy into one view. We saved 15 hours a week.", role: "Marketing Director", brand: "DTC Brand" },
   { quote: "The AI copilot caught a bid inefficiency that was costing us $12K/month. Paid for itself in a week.", role: "VP of Growth", brand: "Consumer Electronics" },
@@ -11,21 +13,25 @@ export function Testimonials() {
   return (
     <section className="relative px-6 py-20">
       <div className="mx-auto max-w-7xl">
-        <h2 className="text-center font-[Satoshi] text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-          What Our Partners Say
-        </h2>
+        <Reveal>
+          <h2 className="text-center font-[Satoshi] text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
+            What Our Partners Say
+          </h2>
+        </Reveal>
 
         <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {QUOTES.map((q) => (
-            <figure key={q.quote} className="rounded-2xl border border-border bg-card p-6">
-              <blockquote className="text-base leading-relaxed text-foreground">
-                "{q.quote}"
-              </blockquote>
-              <figcaption className="mt-5 border-t border-border/60 pt-4">
-                <div className="text-sm font-medium text-foreground">{q.role}</div>
-                <div className="text-xs text-muted-foreground">{q.brand}</div>
-              </figcaption>
-            </figure>
+          {QUOTES.map((q, i) => (
+            <Reveal key={q.quote} delay={i * 0.05}>
+              <figure className="h-full rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                <blockquote className="text-base leading-relaxed text-foreground">
+                  "{q.quote}"
+                </blockquote>
+                <figcaption className="mt-5 border-t border-border/60 pt-4">
+                  <div className="text-sm font-medium text-foreground">{q.role}</div>
+                  <div className="text-xs text-muted-foreground">{q.brand}</div>
+                </figcaption>
+              </figure>
+            </Reveal>
           ))}
         </div>
       </div>

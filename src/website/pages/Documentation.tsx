@@ -16,9 +16,8 @@ const SECTIONS = [
     docs: [
       { label: "Profitability", to: "/website/products/profitability" },
       { label: "Advertising", to: "/website/products/advertising" },
-      { label: "Rule Automation", to: "/website/products/rule-automation" },
-      { label: "Campaign Manager", to: "/website/products/campaign-manager" },
-      { label: "Impact Analysis", to: "/website/products/impact-analysis" },
+      { label: "Automation", to: "/website/products/automation" },
+      { label: "Managed Services", to: "/website/products/managed-services" },
     ],
   },
   {

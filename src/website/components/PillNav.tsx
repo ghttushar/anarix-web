@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { AnarixWordmark } from "./AnarixWordmark";
 import { ThemeToggle } from "./ThemeToggle";
@@ -6,25 +7,26 @@ import { NavDropdown } from "./NavDropdown";
 import { cn } from "@/lib/utils";
 
 const PRODUCTS = [
-  { label: "Profitability Dashboard", to: "/website/products/profitability", description: "SKU-level contribution margin" },
-  { label: "Advertising Intelligence", to: "/website/products/advertising", description: "Bids, budgets, pacing" },
-  { label: "Rule Automation", to: "/website/products/rule-automation", description: "Approve, schedule, audit" },
-  { label: "Campaign Manager", to: "/website/products/campaign-manager", description: "Table-first control" },
-  { label: "Impact Analysis", to: "/website/products/impact-analysis", description: "What actually moved" },
-  { label: "Share of Voice", to: "/website/products/share-of-voice", description: "Visibility and ranking" },
-  { label: "Master Dashboard", to: "/website/products/master-dashboard", description: "Compose your own view" },
-  { label: "Enterprise Reporting", to: "/website/products/enterprise-reporting", description: "Audit-ready deliveries" },
+  { label: "Profitability", to: "/website/products/profitability", description: "SKU-level contribution margin" },
+  { label: "Advertising", to: "/website/products/advertising", description: "Bids, budgets, pacing" },
+  { label: "Automation", to: "/website/products/automation", description: "Rules, schedules, audit log" },
+  { label: "Managed Services", to: "/website/products/managed-services", description: "Done-for-you operator team" },
 ];
 
 const COMPANY = [
-  { label: "About", to: "/website/company", description: "Mission and team" },
-  { label: "Customers", to: "/website/company#customers", description: "Brands using Anarix" },
-  { label: "Contact", to: "/website/demo", description: "Talk to us" },
+  { label: "About", to: "/website/company/about", description: "Mission and team" },
+  { label: "Career", to: "/website/company/career", description: "Open roles" },
+  { label: "Contact", to: "/website/company/contact", description: "Get in touch" },
 ];
 
 export function PillNav() {
   return (
-    <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+    <motion.header
+      initial={{ opacity: 0, y: -12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.2, 0, 0, 1] }}
+      className="fixed inset-x-0 top-4 z-50 flex justify-center px-4"
+    >
       <div className="flex w-full max-w-[1120px] items-center justify-between gap-4 rounded-full border border-border/60 bg-card/95 px-3 py-2 shadow-[0_4px_24px_-8px_rgba(15,16,32,0.12)]">
         <div className="pl-3">
           <AnarixWordmark />
@@ -48,13 +50,13 @@ export function PillNav() {
           </Link>
           <Link
             to="/website/demo"
-            className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 active:scale-[0.98]"
           >
-            Schedule Demo
+            Schedule a Demo
           </Link>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }
 

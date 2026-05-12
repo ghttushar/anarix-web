@@ -96,16 +96,14 @@ import WebsiteHome from "./website/pages/Home";
 import WebsiteAanAI from "./website/pages/AanAI";
 import WebsitePricing from "./website/pages/Pricing";
 import WebsiteDocumentation from "./website/pages/Documentation";
-import WebsiteCompany from "./website/pages/Company";
+import WebsiteAbout from "./website/pages/company/About";
+import WebsiteCareer from "./website/pages/company/Career";
+import WebsiteContact from "./website/pages/company/Contact";
 import WebsiteDemo from "./website/pages/Demo";
 import WebsiteProductProfitability from "./website/pages/products/Profitability";
 import WebsiteProductAdvertising from "./website/pages/products/Advertising";
-import WebsiteProductRuleAutomation from "./website/pages/products/RuleAutomation";
-import WebsiteProductCampaignManager from "./website/pages/products/CampaignManager";
-import WebsiteProductImpactAnalysis from "./website/pages/products/ImpactAnalysis";
-import WebsiteProductShareOfVoice from "./website/pages/products/ShareOfVoice";
-import WebsiteProductMasterDashboard from "./website/pages/products/MasterDashboard";
-import WebsiteProductEnterpriseReporting from "./website/pages/products/EnterpriseReporting";
+import WebsiteProductAutomation from "./website/pages/products/Automation";
+import WebsiteProductManagedServices from "./website/pages/products/ManagedServices";
 
 const queryClient = new QueryClient();
 
@@ -239,16 +237,15 @@ function AppRoutes() {
         <Route path="aan-ai" element={<WebsiteAanAI />} />
         <Route path="pricing" element={<WebsitePricing />} />
         <Route path="documentation" element={<WebsiteDocumentation />} />
-        <Route path="company" element={<WebsiteCompany />} />
+        <Route path="company" element={<Navigate to="/website/company/about" replace />} />
+        <Route path="company/about" element={<WebsiteAbout />} />
+        <Route path="company/career" element={<WebsiteCareer />} />
+        <Route path="company/contact" element={<WebsiteContact />} />
         <Route path="demo" element={<WebsiteDemo />} />
         <Route path="products/profitability" element={<WebsiteProductProfitability />} />
         <Route path="products/advertising" element={<WebsiteProductAdvertising />} />
-        <Route path="products/rule-automation" element={<WebsiteProductRuleAutomation />} />
-        <Route path="products/campaign-manager" element={<WebsiteProductCampaignManager />} />
-        <Route path="products/impact-analysis" element={<WebsiteProductImpactAnalysis />} />
-        <Route path="products/share-of-voice" element={<WebsiteProductShareOfVoice />} />
-        <Route path="products/master-dashboard" element={<WebsiteProductMasterDashboard />} />
-        <Route path="products/enterprise-reporting" element={<WebsiteProductEnterpriseReporting />} />
+        <Route path="products/automation" element={<WebsiteProductAutomation />} />
+        <Route path="products/managed-services" element={<WebsiteProductManagedServices />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

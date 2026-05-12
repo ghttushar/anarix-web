@@ -7,25 +7,25 @@ const COLS = [
     links: [
       { label: "Profitability", to: "/website/products/profitability" },
       { label: "Advertising", to: "/website/products/advertising" },
-      { label: "Rule Automation", to: "/website/products/rule-automation" },
-      { label: "Campaign Manager", to: "/website/products/campaign-manager" },
+      { label: "Automation", to: "/website/products/automation" },
+      { label: "Managed Services", to: "/website/products/managed-services" },
       { label: "Aan AI", to: "/website/aan-ai" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "About", to: "/website/company" },
-      { label: "Pricing", to: "/website/pricing" },
-      { label: "Documentation", to: "/website/documentation" },
+      { label: "About", to: "/website/company/about" },
+      { label: "Career", to: "/website/company/career" },
+      { label: "Contact", to: "/website/company/contact" },
       { label: "Schedule Demo", to: "/website/demo" },
     ],
   },
   {
     title: "Resources",
     links: [
+      { label: "Pricing", to: "/website/pricing" },
       { label: "Documentation", to: "/website/documentation" },
-      { label: "Aan AI", to: "/website/aan-ai" },
       { label: "Open App", to: "/profitability/dashboard" },
     ],
   },

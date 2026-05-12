@@ -22,7 +22,7 @@ interface ActionItem {
   alwaysShowLabel?: boolean;
 }
 
-const hiddenRoutes = ["/login", "/onboarding", "/settings"];
+const hiddenRoutes = ["/login", "/onboarding", "/settings", "/website"];
 
 export function FloatingActionIsland() {
   const [isExpanded, setIsExpanded] = useState(false);
