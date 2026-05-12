@@ -406,6 +406,10 @@ export function AppSidebar() {
                     <p className="text-xs text-muted-foreground">john@anarix.com</p>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/website")}>
+                    <Globe className="h-4 w-4" /><span>Anarix Website</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/appearance")}>
                     <Settings className="h-4 w-4" /><span>Preferences</span>
                   </DropdownMenuItem>
