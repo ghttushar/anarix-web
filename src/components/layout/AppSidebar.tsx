@@ -6,7 +6,7 @@ import {
   CalendarClock, History, ListTodo, Settings, Users, ChevronDown,
   ChevronRight, Layers, Image, FlaskConical, PackageCheck,
   Send, Sun, Moon, User, LogOut, PanelLeft,
-  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug
+  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug, Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -343,6 +343,10 @@ export function AppSidebar() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-[220px]">
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/website")}>
+                    <Globe className="h-4 w-4" /><span>Anarix Website</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/appearance")}>
                     <Settings className="h-4 w-4" /><span>Preferences</span>
                   </DropdownMenuItem>
@@ -401,6 +405,10 @@ export function AppSidebar() {
                     <p className="text-sm font-medium">John Doe</p>
                     <p className="text-xs text-muted-foreground">john@anarix.com</p>
                   </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/website")}>
+                    <Globe className="h-4 w-4" /><span>Anarix Website</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/appearance")}>
                     <Settings className="h-4 w-4" /><span>Preferences</span>
