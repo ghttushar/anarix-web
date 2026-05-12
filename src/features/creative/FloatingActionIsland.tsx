@@ -77,7 +77,6 @@ export function FloatingActionIsland() {
   const { setDataPanel } = useActivePanel();
 
   const actions: ActionItem[] = [
-    { icon: AanGlyph, label: "Ask Aan", onClick: () => navigate("/aan"), alwaysShowLabel: true },
     { icon: Bell, label: criticalCount > 0 ? `Alerts (${criticalCount})` : "Alerts", onClick: () => setDataPanel("notifications"), highlight: criticalCount > 0, badge: criticalCount > 0 ? criticalCount : undefined },
     { icon: Lightbulb, label: "Insights", onClick: openInsights },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
