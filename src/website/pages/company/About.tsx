@@ -108,6 +108,32 @@ const About = () => (
       </motion.div>
     </div>
 
+    {/* Principles - operating beliefs */}
+    <section className="py-16 px-6 border-t border-border">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+            How we operate
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground leading-[1.1]">
+            Three principles. <span className="text-gradient-primary">Held loudly.</span>
+          </h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { t: "Operators first", d: "Every feature is reviewed by the people who'd use it under pressure. If it doesn't survive a Monday morning, it doesn't ship." },
+            { t: "Reversible by default", d: "Nothing irreversible without a preview, a confirmation, and a rollback window. Mistakes should be cheap." },
+            { t: "Numbers don't lie. They whisper.", d: "We design for the person reading the dashboard at 11pm. Hierarchy, sources, and severity, always." },
+          ].map((p) => (
+            <div key={p.t} className="rounded-2xl border border-border bg-card p-6">
+              <h3 className="text-lg font-bold text-foreground mb-2">{p.t}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{p.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
     {/* Teams - full-width section */}
     <TeamsSection />
   </PageLayout>
