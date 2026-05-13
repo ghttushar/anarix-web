@@ -174,7 +174,7 @@ export default function WebsiteAanChat({
             <button
               key={q}
               onClick={() => send(q)}
-              className="text-[11px] px-2.5 py-1 rounded-pill bg-accent text-foreground hover:bg-primary/10 hover:text-primary text-[#f26e76] transition-colors"
+              className="text-[11px] px-2.5 py-1 rounded-pill bg-accent text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
             >
               {q}
             </button>
