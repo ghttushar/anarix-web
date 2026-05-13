@@ -58,8 +58,8 @@ const AanAI = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Your second analyst. Aan reads your data, diagnoses issues, drafts rules, and explains every decision - so you can move fast without flying blind.
             </p>
-            <p className="font-aan text-2xl sm:text-3xl text-primary/80 mt-5 italic">
-              Our AI glows, what else you need.
+            <p className="font-aan sm:text-3xl text-primary/80 mt-5 italic text-5xl">
+              Our AI glows
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
               {["Reads 47 data sources", "Drafts in <8s", "100% auditable"].map((c) => (
