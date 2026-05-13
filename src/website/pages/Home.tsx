@@ -26,11 +26,7 @@ const Index = () => {
       <WorkflowSection />
       <ImpactSection />
       <TestimonialsSection />
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <IntegrationOrbit />
-        </div>
-      </section>
+      <IntegrationOrbit />
       <AuditCTASection />
       <Footer />
       <ScrollToTop />
