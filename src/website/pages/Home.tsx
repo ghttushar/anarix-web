@@ -10,7 +10,7 @@ import WorkflowSection from "@/website/components/home/WorkflowSection";
 import CycloneScrollSection from "@/website/components/CycloneScrollSection";
 import AuditCTASection from "@/website/components/AuditCTASection";
 import Footer from "@/website/components/Footer";
-
+import ScrollToTop from "@/website/components/ScrollToTop";
 
 const Index = () => {
   return (
@@ -27,6 +27,7 @@ const Index = () => {
       <WorkflowSection />
       <AuditCTASection />
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
