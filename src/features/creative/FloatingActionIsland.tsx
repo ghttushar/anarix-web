@@ -37,7 +37,7 @@ export function FloatingActionIsland() {
   const { openCopilot, mode } = useAan();
   const { openPanel: openInsights, criticalCount } = useInsights();
   const { newBranding } = useBranding();
-  const { resolvedTheme, setTheme } = useTheme();
+  
   const isWebsite = location.pathname.startsWith("/website");
   const [scrolled, setScrolled] = useState(false);
 
