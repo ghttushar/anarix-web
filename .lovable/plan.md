@@ -1,62 +1,111 @@
-## Goal
+# Plan: Legal Pages, Taco V3, Product Page Differentiation
 
-The current taco reads flat and small in a centered column. The user wants the visual energy of the attached 3D taco reference (volumetric shell, plump fillings, soft studio lighting) — but executed as a mature, editorial illustration that fits Anarix's serious analytical platform tone.
+## 1. Legal pages (new)
 
-## Visual concept
+Add two routes scraped from anarix.ai (full content preserved verbatim, paragraph by paragraph — long-form policy text, not summarized):
 
-**Bigger, dimensional, asymmetric.** Replace the small flat side-profile with a large 3/4-view taco rendered as layered SVG with soft gradient shading to simulate volume — inspired by the 3D reference but kept as a refined 2D illustration (no photoreal, no glossy plastic look).
+- `/website/privacy-policy` → `src/website/pages/legal/PrivacyPolicy.tsx`
+- `/website/terms-and-conditions` → `src/website/pages/legal/TermsAndConditions.tsx`
 
-**Side-by-side editorial layout** (replaces the current centered stack):
-- Left (60%): the taco illustration, ~520px tall, sitting on a soft pedestal of light. Bite removed from upper-right ~30%.
-- Right (40%): typographic poster — eyebrow, large headline with morphing 30%, supporting paragraph, and a small stat strip ("avg TACoS reduction · 30%" / "across 100+ brands" / "in first 90 days").
-- On narrow viewports, stacks vertically, taco first.
+Both use existing `PageLayout`, calm document tone (Section 10, Zone 2):
+- Single-column max-w-3xl, prose typography (Noto Sans body, Satoshi headings)
+- H1 page title, H2 numbered sections, bullet/numbered lists
+- `text.muted` for meta lines (effective date, contact)
+- No animations, no expressive elements
 
-## Illustration upgrades (within current single SVG)
+Wire footer links in `Footer.tsx` to point to these routes (currently likely placeholder/anchor).
 
-1. **Dimensional shell** — replace flat shell fills with layered paths:
-   - Back rim (darker ochre)
-   - Mid shell body (warm gradient: hsl(36 55% 72%) → hsl(32 48% 52%))
-   - Inner shell shadow (deep umber crescent on the inside curve)
-   - Highlight sheen (soft cream gradient along upper edge, ~12% opacity)
-2. **Plump fillings** — lettuce ribbon gets a second darker layer behind for depth; tomato cubes get a tiny highlight dot; cheese strands get one warm-shadow stroke beneath.
-3. **Soft contact shadow** — wider, softer radial ellipse beneath the taco (currently too thin).
-4. **Ambient floor glow** — a very faint warm radial gradient *behind* the taco at ~6% opacity so it sits in a quiet "studio" environment without breaking the calm app palette.
-5. **Bite refinement** — keep the animated mask, but add:
-   - A subtle inner darker rim along the bite edge (1.5px stroke at 22% foreground) to suggest the shell's cross-section thickness.
-   - 5 crumbs instead of 3, with varied sizes (1.6–2.6px).
-6. **30% badge** — promote to a circular medallion with a thin ring outline anchored at the bite, with a hairline leader line pointing to the bite edge. Still uses tabular nums + count-up.
+Routes registered in `src/App.tsx` under the `/website` block.
 
-## Typography & copy (right column)
+## 2. Taco animation v3 — use uploaded SVG
 
-- Eyebrow: `TACoS · TOTAL ADVERTISING COST OF SALES` (existing styling)
-- Headline (Satoshi 600, 48–56px): "We take a **30%** bite out of yours."
-- Sub (Noto, 16–18px, muted): "One bite for us. The rest stays on your plate. TACoS is the only ad-spend ratio your CFO actually cares about — and we're built to shrink it."
-- Stat strip (3 inline mini-stats, 12px label / 20px value, separated by hairline dividers):
-  - `30%` avg TACoS reduction
-  - `90 days` typical timeline
-  - `100+` brands operated
+Replace hand-drawn SVG in `TacosSection.tsx` with the uploaded illustration (`user-uploads://7694390_copy.svg`, 500×500 viewBox, full taco with shell + lettuce + cheese + tomato + onion + ingredient orbit).
 
-## Motion (unchanged constraints)
+Steps:
+- Copy file to `src/assets/illustrations/taco.svg` (so it can be inlined as a React component via `?react` query or fetched and inlined at build).
+- Approach: inline the SVG paths directly into a React component `TacoIllustration.tsx` so we can apply an SVG `<mask>` to the entire taco group for the bite effect. Inlining is required because external `<img>` tags cannot have masks applied to inner paths.
+- Bite mechanic: 
+  - SVG mask covers the whole 500×500 canvas white, then a dark `ellipse` (rotated ~-20°) centered at upper-right of the taco shell (approx 360, 240) grows from 0 → 110×95 over 1.4s → masks out roughly 30% of the taco from the upper-right.
+  - Bite edge gets a subtle inner ring (dashed `2 4`, brown stroke `#381F0E` at 30% opacity) following the ellipse.
+- Crumbs: 6 small circles using the shell color `#FFC629` and `#F2721B`, falling from the bite radius with staggered opacity/translate (uses existing rAF easing).
+- Ingredient orbit lines (the dashed lines at the bottom of the SVG) animate in via stroke-dashoffset over 0.8s after the bite settles.
+- 30% medallion: keep the existing circular badge with `Math.round(progress*30)%` + hairline leader line to bite edge. Reposition for the new viewBox.
+- Soft drop shadow ellipse beneath taco at 8% opacity.
+- Single-pass 1.4s easeOut (existing constraint from Section 9, ≤240ms forbidden — but this is in marketing zone, not analytics; keep current 1.4s scroll-triggered narrative).
 
-- Single-pass bite animation, 1.4s, easeOutQuart, triggered on scroll-reveal.
-- Number morphs with bite progress.
-- Stat strip fades in at delay 0.85s, opacity-only, 600ms.
-- No loops, no pulsing, no parallax. Respects Section 9.
+Layout stays side-by-side: SVG ~55%, editorial poster ~45% with eyebrow/headline/sub/3 stat blocks.
 
-## Palette discipline
+## 3. Product page differentiation + content + hero-top fun
 
-- Taco uses *illustrative* warm palette (ochre/sage/tomato) — these are illustration colors, not data-viz tokens. They live only inside this one section, fully scoped to the SVG.
-- All text, dividers, and the medallion ring use design-system tokens (`foreground`, `muted-foreground`, `border`).
-- No brand gradient leaks outside Aan zones; the medallion uses neutral foreground only.
+Currently `Advertising`, `Automation`, `ManagedServices`, `Profitability` share the same skeleton: centered hero pill → 2-col problem/stat → 4-feature grid → splits → 3-stat band → CTA. Per Section 0/Section 11, no creative reflowing — but the user explicitly asked for differentiation, so propose **distinct hero + section sequences per product**, all built from existing marketing components (no new component types).
 
-## Files touched
+Per Section 10.5, fun/quirky content allowed in marketing only. Per user: keep puns + animations at TOP (hero zone) on every product page. Home page exempt (its existing flow stays).
 
-- `src/website/components/TacosSection.tsx` — single file rewrite. No new components, no new dependencies, no other files touched.
+### Profitability — “Profit you can prove”
+Hero (top): full-bleed `TacosSection` moves to TOP (above the centered title block). Headline becomes the taco hero.
+Below hero:
+- Eyebrow "The hidden tax" + 14% margin StatBlock (kept)
+- 4 feature cards (kept)
+- New section: **"Where the money actually goes"** — text-heavy 2-column with 6 bullet items mapping marketplace fee categories to recovery patterns
+- 2 split features (kept)
+- New section: **"How we calculate margin"** — methodology callout, formula presented monospace
+- 3-stat outcome band → CTA
 
-## QA checklist
+### Advertising — “Ads that earn their spend”
+Hero (top): new `AdHeroAnimation` — animated KPI scoreboard showing ROAS climbing 2.1x → 3.4x (uses existing `MorphingNumber` from `src/features/creative/`). Pun: **"We don't chase impressions. We hunt margin."**
+Below:
+- Problem 2-col (kept)
+- 4 feature cards (kept)
+- 2 split features (kept)
+- New section: **"What we automate, what we don't"** — 2-column comparison list (Automated / You decide)
+- New section: **"Glossary for the CFO"** — 5 acronyms (ROAS, ACoS, TACoS, CPC, RPC) defined plainly
+- 3-stat band → CTA
 
-- Verify in light + dark themes (taco palette stays warm, surrounding chrome inverts via tokens).
-- Verify illustration scales cleanly from 320px → 720px wide.
-- Verify text never overlaps illustration at 768px breakpoint.
-- Verify bite mask renders cleanly (no jagged edge) at full size.
-- Verify count-up reaches exactly 30 at progress=1.
+### Automation — “Rules that run”
+Hero (top): new `AutomationHeroAnimation` — animated 4-step pipeline (Draft → Simulate → Approve → Execute) with traveling pulse dot. Pun: **"Automation with a brake pedal."** (existing copy promoted to hero).
+Below:
+- Problem 2-col (kept)
+- 4 feature cards (kept)
+- Rule split (kept)
+- WorkflowDiagram (kept, but moved earlier, right after hero scaffolding)
+- New section: **"Anatomy of a rule"** — labeled IF/THEN/GUARDRAIL example block in mono
+- New section: **"What can go wrong (and how we stop it)"** — 4-card guardrail grid
+- 3-stat band → CTA
+
+### Managed Services — “Your team, amplified”
+Hero (top): new `MSHeroAnimation` — soft animated handshake/team avatar cluster (3 stacked avatar circles + ROAS arrow). Pun: **"Senior strategists. Junior egos."**
+Below:
+- Problem 2-col (kept)
+- 4 feature cards (kept)
+- Insight split (kept)
+- New section: **"A week with us"** — 5-row Mon–Fri timetable (table-style)
+- New section: **"What we don't do"** — explicit list (no SEO, no content writing, no email marketing)
+- 3-stat band → CTA
+
+Each new hero animation lives in its own file under `src/website/components/products/heroes/` (modular per Section 5). All use only allowed motion types (opacity, translate ≤8px, scale ≤1.02 in marketing zone — looser than analytics but no parallax/loops).
+
+## 4. Files
+
+New:
+- `src/website/pages/legal/PrivacyPolicy.tsx`
+- `src/website/pages/legal/TermsAndConditions.tsx`
+- `src/assets/illustrations/taco.svg` (copied from upload)
+- `src/website/components/products/TacoIllustration.tsx` (inlined SVG + mask + crumbs)
+- `src/website/components/products/heroes/AdHeroAnimation.tsx`
+- `src/website/components/products/heroes/AutomationHeroAnimation.tsx`
+- `src/website/components/products/heroes/MSHeroAnimation.tsx`
+
+Edited:
+- `src/App.tsx` — add 2 legal routes
+- `src/website/components/Footer.tsx` — wire footer legal links
+- `src/website/components/TacosSection.tsx` — replace illustration with `TacoIllustration`, retain layout/poster
+- `src/website/pages/products/Profitability.tsx` — move TacosSection to top, add 2 new content sections
+- `src/website/pages/products/Advertising.tsx` — add hero animation, 2 new content sections
+- `src/website/pages/products/Automation.tsx` — add hero animation, 2 new content sections
+- `src/website/pages/products/ManagedServices.tsx` — add hero animation, 2 new content sections
+
+## 5. Out of scope
+- No changes to home page hero/sections
+- No changes to AanAI page (already has its own hero structure)
+- No changes to analytics app (Sections 1–11 of locked spec untouched)
+- No design tokens, theme, or navigation changes
