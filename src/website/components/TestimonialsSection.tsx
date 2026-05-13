@@ -1,6 +1,10 @@
 import { useRef, useState } from "react";
 import { Play, Quote, Sparkles } from "lucide-react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import firatImg from "@/assets/testimonials/firat.png";
+import jamesImg from "@/assets/testimonials/james.jpg";
+import nausilImg from "@/assets/testimonials/nausil.png";
 
 const TESTIMONIALS = [
   {
@@ -9,6 +13,7 @@ const TESTIMONIALS = [
     author: "Firat Ozkan",
     role: "Co-Founder, CMO & CSO",
     company: "Mount-It!",
+    image: firatImg,
   },
 ];
 
@@ -18,13 +23,16 @@ const BOTTOM_TESTIMONIAL = {
   author: "James Ellington",
   role: "Sr. Director of Sales, Retail Division",
   company: "Drive Medical",
+  image: jamesImg,
 };
 
 const VIDEO_TESTIMONIAL = {
   src: "/testimonials/video.mp4",
-  poster: "/testimonials/poster.jpg",
-  author: "James Ellington",
-  role: "Sr. Director of Sales, Drive Medical",
+  quote:
+    "Working with Anarix has been a game changer. In just my second month, I've already seen a 20–22% increase in sales. They're rebuilding my website, helping grow my Amazon presence, and now expanding into Walmart and TikTok Shop. Excited for what's next!",
+  author: "Nausil Zaheer (Nas)",
+  role: "Owner, Karma Organics",
+  image: nausilImg,
 };
 
 const LOGO_WALL = ["Mount-It!", "Drive Medical", "Aurelius", "Northwind", "Halcyon", "Verata"];
@@ -35,7 +43,11 @@ export default function TestimonialsSection() {
   const [playing, setPlaying] = useState(false);
 
   const play = () => {
-    videoRef.current?.play();
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = false;
+    v.currentTime = 0;
+    v.play();
     setPlaying(true);
   };
 
@@ -113,9 +125,12 @@ export default function TestimonialsSection() {
               "{TESTIMONIALS[0].quote}"
             </p>
             <div className="flex items-center gap-3 border-t border-border pt-5">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-periwinkle flex items-center justify-center text-primary-foreground font-bold">
-                {TESTIMONIALS[0].author[0]}
-              </div>
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={TESTIMONIALS[0].image} alt={TESTIMONIALS[0].author} className="object-cover" />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-periwinkle text-primary-foreground font-bold">
+                  {TESTIMONIALS[0].author[0]}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <div className="text-sm font-semibold text-foreground">{TESTIMONIALS[0].author}</div>
                 <div className="text-xs text-muted-foreground">
@@ -125,7 +140,7 @@ export default function TestimonialsSection() {
             </div>
           </article>
 
-          {/* Video testimonial card - top right */}
+          {/* Video testimonial card - top right (vertical) */}
           <article
             className={`lg:col-span-5 relative rounded-3xl border border-border shadow-medium overflow-hidden transition-all duration-500 flex flex-col ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
@@ -135,12 +150,13 @@ export default function TestimonialsSection() {
               background: "linear-gradient(140deg, hsl(var(--foreground)) 0%, hsl(var(--periwinkle-dark, var(--primary))) 100%)",
             }}
           >
-            <div className="relative aspect-video bg-foreground/20">
+            <div className="relative aspect-[9/16] bg-foreground/20">
               <video
                 ref={videoRef}
                 src={VIDEO_TESTIMONIAL.src}
-                poster={VIDEO_TESTIMONIAL.poster}
                 controls={playing}
+                playsInline
+                onEnded={() => setPlaying(false)}
                 className="absolute inset-0 w-full h-full object-cover"
                 preload="metadata"
               />
@@ -160,16 +176,24 @@ export default function TestimonialsSection() {
                 </button>
               )}
               <div className="absolute top-4 left-4 px-2.5 py-1 rounded-pill bg-background/85 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground">
-                Customer Story · 02:14
+                Customer Story
               </div>
             </div>
-            <div className="p-6 flex items-center gap-3 text-background">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-periwinkle to-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
-                {VIDEO_TESTIMONIAL.author[0]}
-              </div>
-              <div>
-                <div className="text-sm font-semibold">{VIDEO_TESTIMONIAL.author}</div>
-                <div className="text-xs opacity-70">{VIDEO_TESTIMONIAL.role}</div>
+            <div className="p-6 flex flex-col gap-5 text-background">
+              <p className="text-base sm:text-lg leading-[1.5] italic opacity-95">
+                "{VIDEO_TESTIMONIAL.quote}"
+              </p>
+              <div className="flex items-center gap-3 pt-4 border-t border-background/15">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={VIDEO_TESTIMONIAL.image} alt={VIDEO_TESTIMONIAL.author} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-br from-periwinkle to-primary text-primary-foreground font-bold">
+                    {VIDEO_TESTIMONIAL.author[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="text-sm font-semibold">{VIDEO_TESTIMONIAL.author}</div>
+                  <div className="text-xs opacity-70">{VIDEO_TESTIMONIAL.role}</div>
+                </div>
               </div>
             </div>
           </article>
@@ -190,9 +214,12 @@ export default function TestimonialsSection() {
               "{BOTTOM_TESTIMONIAL.quote}"
             </p>
             <div className="flex items-center gap-3 border-t border-border pt-5">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-periwinkle to-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
-                {BOTTOM_TESTIMONIAL.author[0]}
-              </div>
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage src={BOTTOM_TESTIMONIAL.image} alt={BOTTOM_TESTIMONIAL.author} className="object-cover" />
+                <AvatarFallback className="bg-gradient-to-br from-periwinkle to-primary text-primary-foreground font-bold">
+                  {BOTTOM_TESTIMONIAL.author[0]}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <div className="text-sm font-semibold text-foreground">{BOTTOM_TESTIMONIAL.author}</div>
                 <div className="text-xs text-muted-foreground">
