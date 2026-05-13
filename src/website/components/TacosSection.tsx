@@ -62,7 +62,7 @@ const TacosSection = () => {
               animate={isVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.2, duration: 0.6, ease: [0.2, 0, 0, 1] }}
             >
-              We take a{" "}
+              We help you take a{" "}
               <span className="text-gradient-primary tabular-nums">
                 {Math.round(progress * 30)}%
               </span>{" "}
@@ -75,9 +75,9 @@ const TacosSection = () => {
               animate={isVisible ? { opacity: 1 } : {}}
               transition={{ delay: 0.5, duration: 0.6 }}
             >
-              One bite for us. The rest stays on your plate. TACoS is the
+              Less spend wasted, more margin on your plate. TACoS is the
               ad-spend ratio your CFO actually cares about - and we're built
-              to shrink it.
+              to shrink yours.
             </motion.p>
 
             <motion.div
