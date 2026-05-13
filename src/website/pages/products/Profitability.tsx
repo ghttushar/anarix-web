@@ -24,8 +24,8 @@ const moneyGoes = [
   { label: "Long-term storage", body: "Inventory aged > 365 days bleeds margin silently. We flag and rank by recovery $." },
   { label: "Returns & refunds", body: "Reimbursements rarely match what you lost. We reconcile every settlement line." },
   { label: "Ad-allocated COGS", body: "Sponsored Display attribution overlaps with organic. We de-duplicate revenue properly." },
-  { label: "FX & marketplace fees", body: "Multi-currency normalised. Marketplace commissions tracked per category change." },
-  { label: "Promo & coupon stacking", body: "Lightning Deals + Subscribe & Save + clip coupon = quietly negative margin. We unstack it." },
+  { label: "FX & marketplace fees", body: "Selling in multiple currencies hides margin drift, and marketplace commissions shift by category, FBA vs FBM, Brand Registry, and Vine. We normalize FX daily and track every fee change so per-SKU margin reflects what actually landed in the bank." },
+  { label: "Promo & coupon stacking", body: "Lightning Deals, Subscribe & Save, clip-coupons, and Vine credits often stack on the same order. The combined discount can quietly push a SKU below break-even - we unstack each promo and flag SKUs whose effective margin turns negative." },
 ];
 
 const ProductProfitability = () => (

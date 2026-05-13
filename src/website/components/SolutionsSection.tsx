@@ -44,17 +44,29 @@ const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 /* ---------- Mockups ---------- */
 const MockBars = () => (
-  <div className="h-full w-full flex items-end justify-around gap-1.5 px-2">
-    {[40, 65, 50, 80, 35, 70, 55, 90].map((h, i) => (
-      <div
-        key={i}
-        className="flex-1 rounded-t-md"
-        style={{
-          height: `${h}%`,
-          background: `linear-gradient(180deg, hsl(var(--periwinkle)) 0%, hsl(var(--periwinkle) / 0.5) 100%)`,
-        }}
-      />
-    ))}
+  <div className="h-full w-full flex flex-col gap-2 p-1">
+    <div className="flex items-center justify-between text-[9px] uppercase tracking-wider text-muted-foreground">
+      <span>Spend vs ROAS · 7d</span>
+      <span style={{ color: "hsl(var(--periwinkle))" }}>↑ 18%</span>
+    </div>
+    <div className="flex items-end justify-around gap-1.5 px-1 flex-1">
+      {[40, 65, 50, 80, 35, 70, 55, 90].map((h, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+          <div
+            className="w-full rounded-t-md"
+            style={{
+              height: `${h}%`,
+              background: `linear-gradient(180deg, hsl(var(--periwinkle)) 0%, hsl(var(--periwinkle) / 0.4) 100%)`,
+            }}
+          />
+        </div>
+      ))}
+    </div>
+    <div className="flex flex-wrap gap-1 pt-1">
+      {["nike air", "wireless buds", "yoga mat"].map((k) => (
+        <span key={k} className="text-[8px] px-1.5 py-0.5 rounded-full bg-card border" style={{ borderColor: "hsl(var(--periwinkle) / 0.2)", color: "hsl(var(--periwinkle))" }}>{k}</span>
+      ))}
+    </div>
   </div>
 );
 

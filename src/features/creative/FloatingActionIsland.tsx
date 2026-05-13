@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell, CalendarPlus, ArrowUp, BookOpen, Sun, Moon } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell, CalendarPlus, ArrowUp } from "lucide-react";
+
 import { AanGlyph } from "@/components/aan/AanGlyph";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ export function FloatingActionIsland() {
   const { openCopilot, mode } = useAan();
   const { openPanel: openInsights, criticalCount } = useInsights();
   const { newBranding } = useBranding();
-  const { resolvedTheme, setTheme } = useTheme();
+  
   const isWebsite = location.pathname.startsWith("/website");
   const [scrolled, setScrolled] = useState(false);
 
@@ -96,8 +96,6 @@ export function FloatingActionIsland() {
 
   const websiteActions: ActionItem[] = [
     { icon: CalendarPlus, label: "Book a demo", onClick: () => navigate("/website/demo") },
-    { icon: BookOpen, label: "Docs", onClick: () => navigate("/website/documentation") },
-    { icon: resolvedTheme === "dark" ? Sun : Moon, label: resolvedTheme === "dark" ? "Light" : "Dark", onClick: () => setTheme(resolvedTheme === "dark" ? "light" : "dark") },
     ...(scrolled ? [{ icon: ArrowUp, label: "Top", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) }] : []),
   ];
 

@@ -18,13 +18,13 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <ImpactSection />
+      <CycloneScrollSection />
       <TestimonialsSection />
       <ProblemSection />
       <SolutionsSection />
       <ProductPreviewBand />
       <InnovationBand />
       <WorkflowSection />
-      <CycloneScrollSection />
       <AuditCTASection />
       <Footer />
       <ScrollToTop />

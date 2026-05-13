@@ -1,4 +1,3 @@
-import { Shield, Lock, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const footerLinks: Record<string, { label: string; href: string }[]> = {
@@ -24,11 +23,6 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
   ],
 };
 
-const badges = [
-  { icon: BadgeCheck, label: "SOC 2 Type II" },
-  { icon: Shield, label: "GDPR" },
-  { icon: Lock, label: "AES-256" },
-];
 
 const Footer = () => {
   return (
@@ -42,18 +36,6 @@ const Footer = () => {
             <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
               The complete growth platform for marketplace profitability.
             </p>
-            <div className="flex gap-2 mt-5 flex-wrap">
-              {badges.map((b) => (
-                <div
-                  key={b.label}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-muted/60 border border-border/50"
-                  title={b.label}
-                >
-                  <b.icon className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[10px] font-medium text-muted-foreground tracking-wide">{b.label}</span>
-                </div>
-              ))}
-            </div>
           </div>
 
           {Object.entries(footerLinks).map(([category, links]) => (

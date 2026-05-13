@@ -179,36 +179,10 @@ const HeroSection = () => {
           </Link>
         </motion.div>
 
-        {/* Hero metrics */}
-        <motion.div
-          className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {[
-            { label: "Ad Spend Managed", value: "$200M+" },
-            { label: "GMV Driven", value: "$1.2B+" },
-            { label: "Avg. ROAS Lift", value: "3.2x" },
-            { label: "TACoS Reduced", value: "30%" },
-          ].map((metric, i) => (
-            <motion.div
-              key={metric.label}
-              className="text-center"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 + i * 0.1, duration: 0.5 }}
-            >
-              <div className="text-2xl sm:text-3xl font-bold text-foreground">
-                {metric.value}
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">{metric.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
     </section>
   );
 };
 
 export default HeroSection;
+

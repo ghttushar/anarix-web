@@ -40,7 +40,7 @@ const ProductManagedServices = () => (
           <Users className="w-3.5 h-3.5" /> Managed Services
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-          Senior strategists. <span className="text-gradient-primary">Junior egos.</span>
+          Senior strategists. <span className="text-gradient-primary">Zero ego.</span>
         </h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">Expert strategy and execution, fully transparent and aligned to your growth.</p>
       </motion.div>
