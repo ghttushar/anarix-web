@@ -32,13 +32,6 @@ const safetyPillars = [
   { icon: Lock, title: "Full audit log", desc: "Who approved what, when, and why. Exportable for compliance and client reporting." },
 ];
 
-const promptChips = [
-  "Why did ROAS drop on Sponsored Brands last week?",
-  "Find search terms wasting more than $50 with zero orders.",
-  "Draft a dayparting rule for our hero ASIN.",
-  "Summarise this month's profitability for the leadership review.",
-];
-
 const AanAI = () => {
   return (
     <PageLayout>
