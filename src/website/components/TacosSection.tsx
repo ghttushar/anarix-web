@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import TacoIllustration from "./products/TacoIllustration";
 
-/**
- * Editorial 3/4-view taco illustration with a soft, dimensional quality
- * inspired by sculpted 3D references but executed as refined layered SVG.
- * A bite is removed from the upper-right (~30% of the silhouette) via an
- * animated mask. Sits in a side-by-side layout with a typographic poster.
- */
-const BittenTaco = ({ progress }: { progress: number }) => {
+const _UnusedBittenTaco = ({ progress }: { progress: number }) => {
   const biteRx = 96 * progress;
   const biteRy = 86 * progress;
   const crumbT = Math.max(0, (progress - 0.55) / 0.45);
