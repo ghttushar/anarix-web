@@ -96,8 +96,6 @@ export function FloatingActionIsland() {
 
   const websiteActions: ActionItem[] = [
     { icon: CalendarPlus, label: "Book a demo", onClick: () => navigate("/website/demo") },
-    { icon: BookOpen, label: "Docs", onClick: () => navigate("/website/documentation") },
-    { icon: resolvedTheme === "dark" ? Sun : Moon, label: resolvedTheme === "dark" ? "Light" : "Dark", onClick: () => setTheme(resolvedTheme === "dark" ? "light" : "dark") },
     ...(scrolled ? [{ icon: ArrowUp, label: "Top", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) }] : []),
   ];
 
