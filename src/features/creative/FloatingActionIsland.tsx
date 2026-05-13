@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell } from "lucide-react";
+import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell, CalendarPlus, ArrowUp, BookOpen, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { AanGlyph } from "@/components/aan/AanGlyph";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ interface ActionItem {
   alwaysShowLabel?: boolean;
 }
 
-const hiddenRoutes = ["/login", "/onboarding", "/settings", "/website"];
+const hiddenRoutes = ["/login", "/onboarding", "/settings"];
 
 export function FloatingActionIsland() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -36,6 +37,16 @@ export function FloatingActionIsland() {
   const { openCopilot, mode } = useAan();
   const { openPanel: openInsights, criticalCount } = useInsights();
   const { newBranding } = useBranding();
+  const { theme, setTheme } = useTheme();
+  const isWebsite = location.pathname.startsWith("/website");
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isWebsite) return;
+    const onScroll = () => setScrolled(window.scrollY > 800);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isWebsite]);
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
