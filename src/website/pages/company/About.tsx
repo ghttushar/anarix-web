@@ -3,6 +3,7 @@ import { Target, Heart, Eye, Rocket, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import PageLayout from "@/website/components/PageLayout";
+import TeamsSection from "@/website/components/company/TeamsSection";
 
 const values = [
   { icon: Target, title: "Outcome Obsessed", desc: "We measure success by your revenue, not our features." },
