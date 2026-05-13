@@ -186,19 +186,21 @@ export function FloatingActionIsland() {
                 </Button>
                 );
               })}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={takeScreenshot}
-                disabled={isCapturing}
-                className={cn("rounded-full transition-all duration-200 h-8", isExpanded ? "px-3 gap-1.5" : "px-2")}
-              >
-                <Camera className={cn("h-3.5 w-3.5 shrink-0", isCapturing && "animate-pulse")} />
-                {isExpanded && <span className="text-xs whitespace-nowrap animate-in fade-in duration-200">{isCapturing ? "Capturing..." : "Screenshot"}</span>}
-              </Button>
+              {!isWebsite && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={takeScreenshot}
+                  disabled={isCapturing}
+                  className={cn("rounded-full transition-all duration-200 h-8", isExpanded ? "px-3 gap-1.5" : "px-2")}
+                >
+                  <Camera className={cn("h-3.5 w-3.5 shrink-0", isCapturing && "animate-pulse")} />
+                  {isExpanded && <span className="text-xs whitespace-nowrap animate-in fade-in duration-200">{isCapturing ? "Capturing..." : "Screenshot"}</span>}
+                </Button>
+              )}
             </div>
 
-            {isExpanded && (
+            {isExpanded && !isWebsite && (
               <div className="pl-1.5 border-l border-border">
                 <span className="text-xs text-muted-foreground"><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">⌘K</kbd></span>
               </div>
