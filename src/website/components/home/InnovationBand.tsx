@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bot, MousePointerClick, Maximize2, Compass, Lightbulb, Command, Clock, LayoutDashboard } from "lucide-react";
+import { Bot, Command, Clock, LayoutDashboard, Lightbulb } from "lucide-react";
 
 const features = [
   {
@@ -7,24 +7,6 @@ const features = [
     name: "Aan Copilot",
     pun: "A second brain. No second guessing.",
     desc: "A right-side workspace that reads the page you're on, drafts the next action, and waits for your nod before anything ships.",
-  },
-  {
-    icon: MousePointerClick,
-    name: "Ask Aan",
-    pun: "Highlight. Ask. Move on.",
-    desc: "Select any number, chart, or row. A floating tooltip explains the why, the source, and the next-best step - without leaving the page.",
-  },
-  {
-    icon: Maximize2,
-    name: "Full-Screen Workspace",
-    pun: "When the question is bigger than a sidebar.",
-    desc: "A dedicated /aan route with multi-artifact reasoning, version history, and long-context briefs for week-long investigations.",
-  },
-  {
-    icon: Compass,
-    name: "Floating Action Island",
-    pun: "Always nearby. Never in the way.",
-    desc: "A persistent dock for alerts, refresh, export, and quick jumps. Drag it where you want; it remembers.",
   },
   {
     icon: Lightbulb,
@@ -67,14 +49,14 @@ export default function InnovationBand() {
             What's inside
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-[1.1]">
-            Eight surfaces. <span className="text-gradient-primary">One workflow.</span>
+            Five surfaces. <span className="text-gradient-primary">One workflow.</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             Built for operators who don't have time to learn another tool. Most of these you'll find within the first ten minutes. The rest you'll discover the day they save you.
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {features.map((f, i) => (
             <motion.article
               key={f.name}
@@ -97,3 +79,4 @@ export default function InnovationBand() {
     </section>
   );
 }
+
