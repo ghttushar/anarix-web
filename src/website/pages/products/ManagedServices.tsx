@@ -7,24 +7,46 @@ import SectionHeader from "@/website/components/marketing/SectionHeader";
 import StatBlock from "@/website/components/marketing/StatBlock";
 import SplitFeature from "@/website/components/marketing/SplitFeature";
 import EmbedInsightCard from "@/website/components/embeds/EmbedInsightCard";
+import MSHeroAnimation from "@/website/components/products/heroes/MSHeroAnimation";
 
 const features = [
   { icon: Users, title: "Dedicated Team", desc: "Senior account managers and strategists assigned to your brand. Not a call centre, not a junior shuffle. The same humans week after week." },
-  { icon: Handshake, title: "Hybrid Model", desc: "Our experts use the Anarix platform alongside your team. Same dashboards, same insights, same audit trail. Full transparency on every action taken." },
-  { icon: Eye, title: "Complete Visibility", desc: "Every action logged, every decision documented, every rule traceable. You see exactly what we did, when, and why — without asking." },
-  { icon: LineChart, title: "Performance Guarantees", desc: "We tie our compensation to your outcomes. Aligned incentives, not hourly billing. Skin in the game from day one." },
+  { icon: Handshake, title: "Hybrid Model", desc: "Our experts use the Anarix platform alongside your team. Same dashboards, same insights, same audit trail." },
+  { icon: Eye, title: "Complete Visibility", desc: "Every action logged, every decision documented, every rule traceable. You see exactly what we did, when, and why." },
+  { icon: LineChart, title: "Performance Guarantees", desc: "We tie our compensation to your outcomes. Aligned incentives, not hourly billing." },
+];
+
+const week = [
+  { day: "Mon", title: "Aan-generated audit", body: "Strategist annotates the week's anomalies. You receive a 5-minute read by 9am." },
+  { day: "Tue", title: "Action queue published", body: "Drafted rules and bid changes are queued for your review with projected impact." },
+  { day: "Wed", title: "Working session", body: "30 minutes on the top three opportunities. Decisions, not status updates." },
+  { day: "Thu", title: "Execution + monitoring", body: "Approved actions execute. Real-time anomaly alerts on shared Slack channel." },
+  { day: "Fri", title: "Results review", body: "Projected vs actual lift. Documented learnings carried into next week." },
+];
+
+const wontDo = [
+  "SEO services or organic content writing",
+  "Email marketing or lifecycle CRM",
+  "Influencer or affiliate program management",
+  "Anything we can't measure with marketplace data",
 ];
 
 const ProductManagedServices = () => (
   <PageLayout>
     <div className="max-w-6xl mx-auto px-6">
-      <motion.div className="text-center mb-20" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+      <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
           <Users className="w-3.5 h-3.5" /> Managed Services
         </div>
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">Your team, <span className="text-gradient-primary">amplified</span>.</h1>
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+          Senior strategists. <span className="text-gradient-primary">Junior egos.</span>
+        </h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">Expert strategy and execution, fully transparent and aligned to your growth.</p>
       </motion.div>
+
+      <div className="mb-24">
+        <MSHeroAnimation />
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
         <SectionHeader eyebrow="The agency problem" title="Most agencies sell hours. We sell outcomes." lead="The traditional agency model rewards activity, not results. Anarix Managed Services flips that: our compensation is tied to the metrics that matter to your business, and every action we take is visible to you in real time." />
@@ -45,15 +67,41 @@ const ProductManagedServices = () => (
         <SplitFeature
           eyebrow="What it looks like"
           title="A weekly cadence built around decisions, not status."
-          body={<><p>Monday: Aan-generated audit with our strategist's commentary. Wednesday: working session on the week's top three opportunities. Friday: results review with projected vs actual impact. No 90-minute "alignment" calls.</p><p>You always know what's being worked on, why, and what changed.</p></>}
+          body={<><p>Monday: Aan-generated audit with our strategist's commentary. Wednesday: working session on the week's top three opportunities. Friday: results review with projected vs actual impact. No 90-minute "alignment" calls.</p></>}
           visual={
             <div className="space-y-3">
-              <EmbedInsightCard severity="high" title="Sponsored Brands ROAS dropped 22% in 7 days" body="Strategist note: tied to a Q4 competitor launch. Drafted a defensive bid + creative refresh. Reviewing with you Wed." />
-              <EmbedInsightCard severity="medium" title="Two SKUs ready to graduate from manual to auto" body="Aan flagged consistent ROAS > 5x for 21 days. We'll move them under the standard auto-bid envelope this Friday." />
+              <EmbedInsightCard severity="high" title="Sponsored Brands ROAS dropped 22% in 7 days" body="Strategist note: tied to a Q4 competitor launch. Drafted a defensive bid + creative refresh." />
+              <EmbedInsightCard severity="medium" title="Two SKUs ready to graduate from manual to auto" body="Aan flagged consistent ROAS > 5x for 21 days. We'll move them this Friday." />
               <EmbedInsightCard severity="low" title="Q1 budget pacing on track" body="92% of plan, 8% headroom for a Black Friday push. No action needed." />
             </div>
           }
         />
+      </div>
+
+      {/* A week with us */}
+      <div className="mb-24">
+        <SectionHeader eyebrow="Cadence" title="A week with us." className="mb-12" />
+        <div className="rounded-2xl border border-border bg-card divide-y divide-border">
+          {week.map((w) => (
+            <div key={w.day} className="grid grid-cols-[80px,180px,1fr] gap-6 px-6 py-4 items-start">
+              <div className="text-sm font-bold text-primary uppercase tracking-[0.14em]">{w.day}</div>
+              <div className="text-sm font-semibold text-foreground">{w.title}</div>
+              <div className="text-sm text-muted-foreground leading-relaxed">{w.body}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* What we don't do */}
+      <div className="mb-24">
+        <SectionHeader eyebrow="Honesty" title="What we don't do." lead="If it's not in the marketplace, it's not in our scope. We'd rather say no than half-deliver." className="mb-10" />
+        <ul className="grid md:grid-cols-2 gap-3">
+          {wontDo.map((w) => (
+            <li key={w} className="p-4 rounded-xl border border-border bg-card text-sm text-foreground flex items-start gap-3">
+              <span className="mt-1 text-muted-foreground">×</span>{w}
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 py-20 border-y border-border mb-16">
