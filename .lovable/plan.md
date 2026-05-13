@@ -1,121 +1,102 @@
-## Scope
 
-Frontend-only edits to website pages, product pages, the TACoS section, and the website's Aan panel. No backend / route / data changes.
+## 1. Aan Website Copilot — match in-app behavior
 
-Note on the "two numbers section": there are two on the Home page — `StatBand` (compact 4-stat strip) and `ImpactSection` ("Real impact. By the numbers." — 6 large cards). I can't see the attached image, so I'm assuming you want `StatBand` removed and `ImpactSection` promoted right after the hero. If it's the reverse, say so before approving.
+Rewrite `src/website/components/AanWebsitePanel.tsx` so the chrome mirrors `AanCopilotPanel` + `AanInput`:
 
----
+- Move the morphing `AanMascot` out of the chat bubbles and into a **fixed slot directly above the input field** (left-aligned, 52×52, same `pl-3 mb-2 h-[52px]` slot used in `AanInput`).
+- Wrap the panel in `AanPresenceProvider`; register the new slot as the `"input"` anchor via `useAanPresence().registerAnchor("input", el, 44)`.
+- Render `<AanPresencePortal />` inside the panel so the same shape-morphing mascot travels between idle/listening/thinking states (circle ↔ blob) exactly like the app.
+- States wire-up: `inputFocused → listening`, while loading → `thinking`, after assistant reply → `speaking` briefly. Use the existing `useAan()` setters (`setInputFocused`, plus a local `isGenerating` flag passed via context state).
+- Remove the per-message mascot avatars in conversation bubbles (chat in app doesn't render mascot per message either — only the persistent one).
+- Keep the suggestion chip pattern from `AanInput` (small "Suggested" pill animating in next to the mascot).
+- Input chrome stays identical: rounded card, paperclip + textarea + gradient send.
 
-## Home page (`src/website/pages/Home.tsx`)
+This makes the website panel visually and behaviorally a 1:1 thin-client of the app's copilot, except it talks to `website-aan` edge function and never executes app actions.
 
-New section order:
+## 2. Teams section on About page
 
-1. `HeroSection`
-2. `ImpactSection` ("Real impact. By the numbers." — moved up, becomes the post-hero impact block)
-3. `TestimonialsSection` (third section as requested)
-4. `ProblemSection`
-5. `SolutionsSection`
-6. `ProductPreviewBand` (enhanced — see below)
-7. `WorkflowSection`
-8. `AuditCTASection`
-9. `Footer`
+New file: `src/website/components/company/TeamsSection.tsx`. Mounted inside `src/website/pages/company/About.tsx` (between existing intro and footer regions).
 
-Removed from Home:
-- `SocialProofSection` ("Connects to every channel you sell on")
-- `IntegrationOrbit` ("Connects With Your Entire Stack")
-- The original `StatBand` placement (the smaller of the two number strips)
+Structure:
 
-## Enhance "Built like a trading desk, not a dashboard." (`ProductPreviewBand`)
+```text
+[Eyebrow] The People
+[H2] One team. Five departments. Zero silos.
+[Lead] Short paragraph (~2 lines) about culture.
 
-Upgrade from a static preview band to a higher-fidelity, denser composition while staying inside Section 9 motion limits:
+  Leadership          [Sunil — CEO]
+  Account Management  [Bharath, Naveen, Rakesh C, Tarun Kumar, Nishith]
+  Service             [Milu, Venky, Kartik, Vardhan]
+  Tech                [Aman, Rajveer, Samarth, Samim, Vikas, Mohan, Rohit, Ben, Lipsa, Archana, Loges, Sam]
+  Design              [Anubhav, Tushar]
+  Marketing           [Jasleen, Devyanshi, Nandan]
+```
 
-- Editorial split: left column = bolder eyebrow + 56–64px headline + supporting copy + 3 trust chips (Latency, Audit log, Reversible). Right column = layered "trading-desk" mock built from real tokens — sticky-column data table, mini KPI ticker strip with monospaced numbers, and a thin sparkline rail.
-- Replace flat bg with `bg-card` panel + 1px `ui.secondary` border + 1px hairline grid overlay at 4% opacity.
-- One controlled motion: ticker numbers `MorphingNumber` count-up on `whileInView` (≤220ms, ease per Section 9). No loops, no parallax.
-- Mobile: stack columns; mock collapses to KPI ticker + 4-row table.
+Card behavior (per attached layout reference):
+- Default: small square card, initials monogram on a soft `bg-card` tile, name underneath, role under name in muted text.
+- Hover/focus (and tap on mobile): card scales `1.0 → 1.08`, raises shadow, swaps the monogram for a **caricature mockup** (placeholder SVG component `CaricatureMockup.tsx` that draws a stylized head silhouette with a department-tinted background — easy to swap for real art later), and reveals a one-line bio chip.
+- Grid: `grid-cols-2 sm:grid-cols-3 md:grid-cols-5` per department row, dept heading is a sticky-ish left rail on `md+` and a stacked H3 on mobile.
+- Motion: `framer-motion` `whileHover={{ scale: 1.08 }}`, 180ms cubic-bezier(0.2,0,0,1) — within design system limits.
 
-## Remove "Connects With Your Entire Stack"
+Data lives inline in `TeamsSection.tsx` as a typed array; each member `{ name, role, dept, bioLine }`.
 
-Delete `IntegrationOrbit` from Home. Keep the file for now (not used elsewhere — confirm before deleting source).
+## 3. Testimonials — 3 quotes + 1 video
 
-## TACoS section — refine shadow/glow (`TacoIllustration.tsx`)
+Update `src/website/components/TestimonialsSection.tsx`:
 
-Replace the current crude radial glow with a calmer, layered ground shadow:
+- Replace existing copy with the three real quotes:
+  1. **Firat Ozkan** — Co-Founder & CMO/CSO, Mount-It! (Walmart full-funnel quote).
+  2. **James Ellington** — Sr. Director of Sales, Retail Division, Drive Medical.
+  3. **Video testimonial** card paired with the third quote — renders a `<video>` element with `poster` and `controls`; src defaults to `/testimonials/video.mp4` (placeholder path) so the user can drop the file later. Tile shows a "Play" overlay until clicked.
+- Layout: 2-column grid on desktop with the video card spanning a wider tile; stacked on mobile.
+- Add an "Important voices, not many — but the ones that matter" eyebrow line per the user's framing.
 
-- Drop the orange `taco-floor-glow` radial gradient entirely.
-- Replace the contact ellipse with a 3-layer shadow stack, all using `hsl(var(--foreground))`:
-  1. Tight contact: `rx=120 ry=6 opacity 0.28 blur 2`
-  2. Mid soft: `rx=170 ry=14 opacity 0.14 blur 8`
-  3. Wide ambient: `rx=220 ry=22 opacity 0.06 blur 18`
-- Use `<filter id="taco-shadow-blur">` with `feGaussianBlur`.
-- Anchor the stack 6px below the taco baseline; no warm color, no halo.
-- Result: a clean editorial drop-shadow consistent with token system.
+## 4. Creative website background
 
-## "From scattered spreadsheets to one source of truth" (`CycloneScrollSection`)
+New `src/website/components/AmbientBackdropV2.tsx` replacing/upgrading the current `AmbientBackdrop`:
 
-Remove this section from the AanAI page and place it on the Home page **between** `WorkflowSection` and `AuditCTASection`. Its scroll-driven typography belongs in the Home narrative, not on the Aan product page.
+- Layered, low-opacity composition: 
+  - Soft periwinkle radial bloom in the upper-left, drifting via `framer-motion` (240ms ease, ≤8px motion per system rules — drift is via slow CSS transform with very low amplitude).
+  - Hairline grid overlay (1px `currentColor` at 4% opacity) for analytical texture.
+  - Floating geometric "data shards" (3–5 thin SVG chevrons / sparkline fragments) parked in negative space, fading in on scroll with `useScrollReveal`.
+  - Dotted "constellation" pattern in the footer band.
+- All effects are CSS/SVG only — no `backdrop-filter`, no infinite pulse, no parallax > 8px. Respects motion rules in section 9 of project knowledge.
+- Mounted once in `WebsiteLayout.tsx` behind `<main>` with `pointer-events-none`.
 
-## Product pages — add "big bold number" cards
+## 5. App-accurate visuals + more copy
 
-For each of: `Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `Profitability.tsx`.
+Audit pass across product pages (`Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `Profitability.tsx`) and `Home.tsx`:
 
-Insertion point: immediately after the hero animation / pun block, before the next section.
+- Replace generic chart placeholders with **distinct, page-appropriate mocks** that mirror the actual app components:
+  - Advertising: campaign table mock (uses real column headers from the Advertising module memory: Campaign / Spend / Sales / ROAS / TACoS) + a small bid-history sparkline.
+  - Automation: rule-card mock (matches `EmbedRuleCard` styling) + a guardrail diagram.
+  - Managed Services: pod-roster card + onboarding timeline.
+  - Profitability: scatter-chart preview (margin vs units) + nested P&L row mock — both already exist conceptually in app, ports a static SVG version.
+- Add 1–2 paragraphs of supporting body copy under each section header (currently many sections are headline-only). Tone follows zone rules: Core/Reports = clinical, Aan page = lightly witty.
 
-New shared component `src/website/components/products/BigNumberStrip.tsx`:
+## 6. Files
 
-- 3 oversized number cards in a `grid-cols-1 md:grid-cols-3` layout.
-- Each card: 72–96px Satoshi number (tabular-nums), 11px uppercase tracked label, one-line supporting fact.
-- `bg-card`, 1px border, 16px padding, no gradient blobs, hover `-translate-y-0.5` (≤1.02 scale rule respected).
-- `MorphingNumber` count-up on `whileInView`, single pass.
+**New**
+- `src/website/components/company/TeamsSection.tsx`
+- `src/website/components/company/CaricatureMockup.tsx`
+- `src/website/components/AmbientBackdropV2.tsx`
+- `src/website/components/products/mocks/CampaignTableMock.tsx`
+- `src/website/components/products/mocks/RuleCardMock.tsx`
+- `src/website/components/products/mocks/PodRosterMock.tsx`
+- `src/website/components/products/mocks/PnlScatterMock.tsx`
 
-Per-page numbers (placeholder, easy to edit later):
-- Advertising: `4.2x` Median ROAS · `−38%` Wasted spend · `<8s` Time to draft a rule
-- Automation: `1,200+` Rules running · `99.4%` Reversible · `24/7` Guardrailed
-- Managed Services: `120+` Brands · `7d` Onboarding · `1` Dedicated pod
-- Profitability: `30%` TACoS reduction · `$1.2B` GMV tracked · `100%` SKU-level P&L
+**Edited**
+- `src/website/components/AanWebsitePanel.tsx` — full rewrite for app parity.
+- `src/website/components/TestimonialsSection.tsx` — new content + video tile.
+- `src/website/pages/company/About.tsx` — mount `TeamsSection`.
+- `src/website/WebsiteLayout.tsx` — swap to `AmbientBackdropV2`.
+- `src/website/pages/products/*.tsx` (4 files) — drop in mocks + body copy.
+- `src/website/pages/Home.tsx` — add supporting paragraphs to thin sections.
 
-## AanAI page (`src/website/pages/AanAI.tsx`)
+**Deleted**
+- `src/website/components/AmbientBackdrop.tsx` (replaced).
 
-- Add pun line under the hero subhead, in muted Allura accent: *"Because our AI glows."* (single line, italic, `text-muted-foreground`).
-- Add second pun line near the "What else do you need?" / capabilities header: *"Okayyy… here are the other boring things Aan also does."*
-- **Delete** the entire "Try it now / Ask Aan anything" section (the inline `WebsiteAanChat` block, lines ~135–149). The Action Island remains the single Ask-Aan entry point.
-- Remove the `WebsiteAanChat` import.
+## Open questions
 
-## AanWebsitePanel — parity with app Copilot
-
-Update `src/website/components/AanWebsitePanel.tsx` so Aan's placement, interactions, motion, and reactions match `AanCopilotPanel`:
-
-- **Header**: replace the custom `AanMascot + Aan / Anarix Assistant` block with the app's `AanLogo` component. Use the same header chrome: 4px vertical padding, border-bottom, context bar below header showing `Context: Anarix.ai · <current page>`.
-- **Mascot states**: drive `AanMascot` (or whatever `AanLogo` already wraps) with the app's `AanPresenceProvider` so idle / thinking / responding states fire identically. Wrap the panel in `<AanPresenceProvider>` and render `<AanPresencePortal />` like the app does.
-- **Conversation surface**: use `<ScrollArea>` from `@/components/ui/scroll-area` instead of a raw scroll div, matching Copilot's `flex-1 min-h-0` setup.
-- **Input**: swap the bespoke input form for the app's `AanInput` component (chatbot mode — file upload + model selector hidden via a `mode="chatbot"` prop passthrough; no rule drafts, no app actions). Reuse the same key handlers, send animation, and disabled states.
-- **Motion**: panel open/close keeps the existing 220ms slide+fade (within Section 9 limits). Typing-dots animation replaced with the app's standard "thinking" presence so the mascot reacts the same way.
-- **Position**: keep fixed right-rail on desktop (`right-4 top-4 bottom-4 w-[400px]`) and bottom-sheet on mobile — unchanged.
-- **No app actions**: chatbot mode strictly Q&A. Any tool/action calls returned by the edge function are rendered as plain text only.
-
----
-
-## Technical notes
-
-Files edited:
-- `src/website/pages/Home.tsx` (reorder + remove)
-- `src/website/components/home/ProductPreviewBand.tsx` (enhance)
-- `src/website/components/products/TacoIllustration.tsx` (shadow rework)
-- `src/website/pages/AanAI.tsx` (remove chat, add pun lines, remove CycloneScrollSection)
-- `src/website/pages/products/Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `Profitability.tsx` (insert `BigNumberStrip`)
-- `src/website/components/AanWebsitePanel.tsx` (Copilot parity refactor)
-
-Files added:
-- `src/website/components/products/BigNumberStrip.tsx`
-
-Files no longer used on Home (kept on disk unless you say delete):
-- `SocialProofSection.tsx`
-- `IntegrationOrbit.tsx`
-- `home/StatBand.tsx`
-- `WebsiteAanChat.tsx` (no other consumers — safe to delete; will delete)
-
-Tokens / motion: all changes stay within Periwinkle System 01 tokens and Section 9 motion limits (≤240ms, ≤1.02 scale, no loops, no parallax).
-
-## Open question (please confirm before I build)
-
-Which of the two Home number sections should be removed — the small 4-stat `StatBand` (my assumption) or the large 6-card `ImpactSection`? If it's `ImpactSection`, I'll promote `StatBand` after the hero instead.
+1. **Testimonial video file** — should I leave a placeholder path (`/testimonials/firat.mp4`) and a poster image slot for you to upload later, or do you want to attach the file now?
+2. **Caricatures** — confirm placeholder monogram/silhouette is fine for now (real art swapped later by replacing `CaricatureMockup.tsx`)?

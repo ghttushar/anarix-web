@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { X, Send, Calendar, User, Square } from "lucide-react";
+import { X, Send, Calendar, User, Square, Paperclip } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { AanLogo } from "@/components/aan/AanLogo";
-import { AanMascot } from "@/components/aan/AanMascot";
 import { useAan } from "@/components/aan/AanContext";
+import { AanPresenceProvider, useAanPresence } from "@/components/aan/AanPresenceContext";
+import { AanPresencePortal } from "@/components/aan/AanPresencePortal";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,13 +39,21 @@ const PAGE_LABELS: Record<string, string> = {
 };
 
 /**
- * Right-side fixed-position Aan chatbot for the website.
- * Mirrors the app's Copilot panel chrome (AanLogo header, context bar,
- * ScrollArea, mascot avatars, mascot "thinking" presence) but routes to
- * the website-aan edge function and is strictly Q&A — no app actions.
+ * Right-side fixed Aan chatbot for the website. Internally provides its own
+ * AanPresenceProvider so the morphing mascot from the app travels into the
+ * input slot above the textarea — exact same shape-morph behavior as the
+ * in-app AanCopilotPanel + AanInput.
  */
 export default function AanWebsitePanel() {
-  const { mode, closeAan } = useAan();
+  return (
+    <AanPresenceProvider>
+      <PanelInner />
+    </AanPresenceProvider>
+  );
+}
+
+function PanelInner() {
+  const { mode, closeAan, setInputFocused, setGenerationState } = useAan();
   const location = useLocation();
   const isOpen = mode === "copilot";
 
@@ -56,7 +65,21 @@ export default function AanWebsitePanel() {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const { registerAnchor } = useAanPresence();
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
+
   const pageLabel = PAGE_LABELS[location.pathname] ?? "Anarix.ai";
+
+  // Register the input slot as the resting anchor for the travelling mascot.
+  useEffect(() => {
+    registerAnchor("input", anchorEl, 44);
+    return () => registerAnchor("input", null);
+  }, [anchorEl, registerAnchor]);
+
+  // Drive the mascot "thinking" state via the shared Aan context.
+  useEffect(() => {
+    setGenerationState(loading, null, 0);
+  }, [loading, setGenerationState]);
 
   // Lock body scroll on mobile when open
   useEffect(() => {
@@ -138,9 +161,7 @@ export default function AanWebsitePanel() {
         }
       }
     } catch (e) {
-      if ((e as Error).name === "AbortError") {
-        // user stopped
-      } else {
+      if ((e as Error).name !== "AbortError") {
         setError(e instanceof Error ? e.message : "Something went wrong");
       }
     } finally {
@@ -160,14 +181,10 @@ export default function AanWebsitePanel() {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Mobile backdrop */}
           <motion.div
             className="sm:hidden fixed inset-0 z-[55] bg-foreground/30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={closeAan}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }} onClick={closeAan}
           />
           <motion.aside
             initial={{ x: 24, opacity: 0 }}
@@ -182,7 +199,7 @@ export default function AanWebsitePanel() {
             role="dialog"
             aria-label="Chat with Aan"
           >
-            {/* App-parity header */}
+            {/* Header — AanLogo + context bar (mirrors AanCopilotPanel) */}
             <div className="border-b border-border shrink-0">
               <div className="flex items-center justify-between px-4 py-4">
                 <AanLogo />
@@ -195,8 +212,6 @@ export default function AanWebsitePanel() {
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-
-              {/* Context bar — matches AanCopilotPanel */}
               <div className="flex items-center gap-4 border-t border-border/50 bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <span className="font-medium">Context:</span>
@@ -209,64 +224,33 @@ export default function AanWebsitePanel() {
               </div>
             </div>
 
-            {/* Conversation — independent scroll, app pattern */}
+            {/* Conversation — no per-message mascot, mirrors app pattern */}
             <ScrollArea className="flex-1 min-h-0">
               <div className="p-4 space-y-4">
                 {messages.map((m, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex gap-3",
-                      m.role === "user" ? "flex-row-reverse" : "flex-row"
-                    )}
-                  >
-                    {/* Avatar — matches AanConversation */}
-                    <div
-                      className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center",
-                        m.role === "assistant"
-                          ? "text-foreground"
-                          : "rounded-full bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {m.role === "assistant" ? (
-                        <AanMascot
-                          size={20}
-                          state={loading && i === messages.length - 1 ? "thinking" : "anchor"}
-                          interactive={false}
-                        />
-                      ) : (
-                        <User className="h-4 w-4" />
-                      )}
+                  <div key={i} className={cn("flex gap-3", m.role === "user" ? "flex-row-reverse" : "flex-row")}>
+                    <div className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center",
+                      m.role === "assistant" ? "" : "rounded-full bg-muted text-muted-foreground"
+                    )}>
+                      {m.role === "user" && <User className="h-4 w-4" />}
                     </div>
-
-                    {/* Bubble */}
-                    <div
-                      className={cn(
-                        "flex max-w-[80%] flex-col gap-2",
-                        m.role === "user" ? "items-end" : "items-start"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "rounded-2xl px-4 py-2.5 text-sm",
-                          m.role === "assistant"
-                            ? "bg-card text-foreground border border-border prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-1 prose-strong:text-foreground"
-                            : "bg-primary text-primary-foreground whitespace-pre-wrap"
-                        )}
-                      >
+                    <div className={cn("flex max-w-[80%] flex-col gap-2", m.role === "user" ? "items-end" : "items-start")}>
+                      <div className={cn(
+                        "rounded-2xl px-4 py-2.5 text-sm",
+                        m.role === "assistant"
+                          ? "bg-card text-foreground border border-border prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-1 prose-strong:text-foreground"
+                          : "bg-primary text-primary-foreground whitespace-pre-wrap"
+                      )}>
                         {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
                       </div>
                     </div>
                   </div>
                 ))}
 
-                {/* Thinking indicator — uses live mascot, app pattern */}
                 {loading && messages[messages.length - 1]?.role === "user" && (
                   <div className="flex flex-row gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
-                      <AanMascot size={20} state="thinking" interactive={false} />
-                    </div>
+                    <div className="h-8 w-8 shrink-0" />
                     <div className="flex max-w-[80%] flex-col gap-2 items-start">
                       <div className="rounded-2xl px-4 py-2.5 text-sm bg-card text-muted-foreground border border-border flex gap-1">
                         {[0, 1, 2].map((d) => (
@@ -305,37 +289,50 @@ export default function AanWebsitePanel() {
               </div>
             )}
 
-            {/* Input — chrome matches AanInput */}
+            {/* Input area — mascot anchor lives ABOVE the textarea (app parity) */}
             <div className="shrink-0 bg-background border-t border-border">
-              <div className="px-4 py-3">
-                <div className="relative flex items-end rounded-lg border border-border bg-card focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+              <div className="px-4 pb-4 pt-3">
+                {/* Mascot slot (left-aligned, 52x52). The travelling AanMascot
+                    portals into this element via AanPresencePortal. */}
+                <div className="flex items-center gap-3 pl-3 mb-2 h-[52px]">
+                  <div
+                    ref={setAnchorEl}
+                    data-aan-anchor="input"
+                    className="w-[52px] h-[52px] flex items-center justify-center shrink-0"
+                  />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                    {loading ? "Thinking…" : "Ask Aan"}
+                  </span>
+                </div>
+
+                {/* Input container — chrome matches AanInput */}
+                <div className="relative flex items-end gap-0 rounded-lg border border-border bg-card focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+                  <button
+                    type="button"
+                    className="shrink-0 p-2.5 pb-3 text-muted-foreground/40 cursor-not-allowed"
+                    title="Attachments not available in website chat"
+                    disabled
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </button>
                   <Textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKey}
+                    onFocus={() => setInputFocused(true)}
+                    onBlur={() => setInputFocused(input.trim().length > 0)}
                     placeholder="Ask Aan anything…"
                     rows={1}
                     disabled={loading}
-                    className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-12"
+                    className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-12 pl-0"
                   />
                   <div className="absolute right-2 bottom-2">
                     {loading ? (
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        onClick={stop}
-                        className="h-8 w-8 rounded-lg"
-                        title="Stop"
-                      >
+                      <Button size="icon" variant="destructive" onClick={stop} className="h-8 w-8 rounded-lg" title="Stop">
                         <Square className="h-3.5 w-3.5" />
                       </Button>
                     ) : (
-                      <Button
-                        size="icon"
-                        onClick={() => send(input)}
-                        disabled={!input.trim()}
-                        className="h-8 w-8 rounded-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-30"
-                      >
+                      <Button size="icon" onClick={() => send(input)} disabled={!input.trim()} className="h-8 w-8 rounded-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-30">
                         <Send className="h-3.5 w-3.5" />
                       </Button>
                     )}
@@ -343,6 +340,9 @@ export default function AanWebsitePanel() {
                 </div>
               </div>
             </div>
+
+            {/* Travelling mascot — portals into the input slot above */}
+            <AanPresencePortal />
           </motion.aside>
         </>
       )}
