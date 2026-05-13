@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell } from "lucide-react";
+import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell, CalendarPlus, ArrowUp, BookOpen, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { AanGlyph } from "@/components/aan/AanGlyph";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ interface ActionItem {
   alwaysShowLabel?: boolean;
 }
 
-const hiddenRoutes = ["/login", "/onboarding", "/settings", "/website"];
+const hiddenRoutes = ["/login", "/onboarding", "/settings"];
 
 export function FloatingActionIsland() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -36,6 +37,16 @@ export function FloatingActionIsland() {
   const { openCopilot, mode } = useAan();
   const { openPanel: openInsights, criticalCount } = useInsights();
   const { newBranding } = useBranding();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isWebsite = location.pathname.startsWith("/website");
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isWebsite) return;
+    const onScroll = () => setScrolled(window.scrollY > 800);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isWebsite]);
 
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -76,12 +87,21 @@ export function FloatingActionIsland() {
 
   const { setDataPanel } = useActivePanel();
 
-  const actions: ActionItem[] = [
+  const appActions: ActionItem[] = [
     { icon: Bell, label: criticalCount > 0 ? `Alerts (${criticalCount})` : "Alerts", onClick: () => setDataPanel("notifications"), highlight: criticalCount > 0, badge: criticalCount > 0 ? criticalCount : undefined },
     { icon: Lightbulb, label: "Insights", onClick: openInsights },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
     { icon: Download, label: "Export", onClick: () => toast.success("Export started") },
   ];
+
+  const websiteActions: ActionItem[] = [
+    { icon: CalendarPlus, label: "Book a demo", onClick: () => navigate("/website/demo") },
+    { icon: BookOpen, label: "Docs", onClick: () => navigate("/website/documentation") },
+    { icon: resolvedTheme === "dark" ? Sun : Moon, label: resolvedTheme === "dark" ? "Light" : "Dark", onClick: () => setTheme(resolvedTheme === "dark" ? "light" : "dark") },
+    ...(scrolled ? [{ icon: ArrowUp, label: "Top", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) }] : []),
+  ];
+
+  const actions = isWebsite ? websiteActions : appActions;
 
   const takeScreenshot = async () => {
     setIsCapturing(true);
@@ -166,19 +186,21 @@ export function FloatingActionIsland() {
                 </Button>
                 );
               })}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={takeScreenshot}
-                disabled={isCapturing}
-                className={cn("rounded-full transition-all duration-200 h-8", isExpanded ? "px-3 gap-1.5" : "px-2")}
-              >
-                <Camera className={cn("h-3.5 w-3.5 shrink-0", isCapturing && "animate-pulse")} />
-                {isExpanded && <span className="text-xs whitespace-nowrap animate-in fade-in duration-200">{isCapturing ? "Capturing..." : "Screenshot"}</span>}
-              </Button>
+              {!isWebsite && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={takeScreenshot}
+                  disabled={isCapturing}
+                  className={cn("rounded-full transition-all duration-200 h-8", isExpanded ? "px-3 gap-1.5" : "px-2")}
+                >
+                  <Camera className={cn("h-3.5 w-3.5 shrink-0", isCapturing && "animate-pulse")} />
+                  {isExpanded && <span className="text-xs whitespace-nowrap animate-in fade-in duration-200">{isCapturing ? "Capturing..." : "Screenshot"}</span>}
+                </Button>
+              )}
             </div>
 
-            {isExpanded && (
+            {isExpanded && !isWebsite && (
               <div className="pl-1.5 border-l border-border">
                 <span className="text-xs text-muted-foreground"><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">⌘K</kbd></span>
               </div>

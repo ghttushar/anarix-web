@@ -3,24 +3,24 @@ import { Link } from "react-router-dom";
 
 const footerLinks: Record<string, { label: string; href: string }[]> = {
   Products: [
-    { label: "Profitability", href: "/products/profitability" },
-    { label: "Advertising", href: "/products/advertising" },
-    { label: "Automation", href: "/products/automation" },
-    { label: "Managed Services", href: "/products/managed-services" },
+    { label: "Profitability", href: "/website/products/profitability" },
+    { label: "Advertising", href: "/website/products/advertising" },
+    { label: "Automation", href: "/website/products/automation" },
+    { label: "Managed Services", href: "/website/products/managed-services" },
   ],
   Platform: [
-    { label: "Aan AI", href: "/aan" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "Documentation", href: "/docs" },
+    { label: "Aan AI", href: "/website/aan-ai" },
+    { label: "Pricing", href: "/website/pricing" },
+    { label: "Documentation", href: "/website/documentation" },
   ],
   Company: [
-    { label: "About", href: "/about" },
-    { label: "Careers", href: "/careers" },
-    { label: "Contact", href: "/contact" },
+    { label: "About", href: "/website/company/about" },
+    { label: "Careers", href: "/website/company/career" },
+    { label: "Contact", href: "/website/company/contact" },
   ],
   Account: [
     { label: "Sign In", href: "/login" },
-    { label: "Schedule Demo", href: "/demo" },
+    { label: "Schedule Demo", href: "/website/demo" },
   ],
 };
 
