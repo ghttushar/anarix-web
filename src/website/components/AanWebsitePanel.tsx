@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { X, Send, Sparkles } from "lucide-react";
+import { X, Send, Calendar, User, Square } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { AanLogo } from "@/components/aan/AanLogo";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { useAan } from "@/components/aan/AanContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -17,13 +22,30 @@ const SUGGESTED = [
   "Which marketplaces?",
 ];
 
+const PAGE_LABELS: Record<string, string> = {
+  "/website": "Home",
+  "/website/products/profitability": "Profitability",
+  "/website/products/advertising": "Advertising",
+  "/website/products/automation": "Automation",
+  "/website/products/managed-services": "Managed Services",
+  "/website/aan-ai": "Aan AI",
+  "/website/pricing": "Pricing",
+  "/website/about": "About",
+  "/website/contact": "Contact",
+  "/website/career": "Careers",
+  "/website/demo": "Book a demo",
+  "/website/documentation": "Documentation",
+};
+
 /**
  * Right-side fixed-position Aan chatbot for the website.
- * Mirrors the app's Copilot panel chrome but uses the website-aan
- * edge function. No app actions, no rule drafting — Q&A only.
+ * Mirrors the app's Copilot panel chrome (AanLogo header, context bar,
+ * ScrollArea, mascot avatars, mascot "thinking" presence) but routes to
+ * the website-aan edge function and is strictly Q&A — no app actions.
  */
 export default function AanWebsitePanel() {
   const { mode, closeAan } = useAan();
+  const location = useLocation();
   const isOpen = mode === "copilot";
 
   const [messages, setMessages] = useState<Msg[]>([
@@ -32,11 +54,9 @@ export default function AanWebsitePanel() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading]);
+  const pageLabel = PAGE_LABELS[location.pathname] ?? "Anarix.ai";
 
   // Lock body scroll on mobile when open
   useEffect(() => {
@@ -48,6 +68,12 @@ export default function AanWebsitePanel() {
     return () => { document.body.style.overflow = prev; };
   }, [isOpen]);
 
+  const stop = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setLoading(false);
+  };
+
   const send = async (text: string) => {
     if (!text.trim() || loading) return;
     setError(null);
@@ -57,20 +83,24 @@ export default function AanWebsitePanel() {
     setLoading(true);
 
     let buf = "";
+    let pushedAssistant = false;
     const upsert = (chunk: string) => {
       buf += chunk;
       setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant" && prev.length > next.length) {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: buf } : m));
+        if (!pushedAssistant) {
+          pushedAssistant = true;
+          return [...prev, { role: "assistant", content: buf }];
         }
-        return [...prev, { role: "assistant", content: buf }];
+        return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: buf } : m));
       });
     };
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       const resp = await fetch(CHAT_URL, {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
@@ -108,9 +138,21 @@ export default function AanWebsitePanel() {
         }
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      if ((e as Error).name === "AbortError") {
+        // user stopped
+      } else {
+        setError(e instanceof Error ? e.message : "Something went wrong");
+      }
     } finally {
       setLoading(false);
+      abortRef.current = null;
+    }
+  };
+
+  const handleKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send(input);
     }
   };
 
@@ -128,33 +170,22 @@ export default function AanWebsitePanel() {
             onClick={closeAan}
           />
           <motion.aside
-            initial={{ x: 32, opacity: 0 }}
+            initial={{ x: 24, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 32, opacity: 0 }}
+            exit={{ x: 24, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
             className={cn(
               "fixed z-[56] bg-background border border-border shadow-strong flex flex-col overflow-hidden",
-              // Mobile: bottom sheet. Desktop: right rail.
               "inset-x-3 bottom-3 top-20 rounded-2xl",
               "sm:inset-auto sm:right-4 sm:top-4 sm:bottom-4 sm:w-[400px] sm:rounded-2xl"
             )}
             role="dialog"
             aria-label="Chat with Aan"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 shrink-0">
-              <div className="flex items-center gap-3">
-                <AanMascot state={loading ? "thinking" : "idle"} size={32} interactive={false} />
-                <div className="flex flex-col leading-tight">
-                  <span className="text-sm font-semibold text-foreground">Aan</span>
-                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    <span className={cn("w-1.5 h-1.5 rounded-full", loading ? "bg-yellow-500" : "bg-green-500")} />
-                    {loading ? "Thinking…" : "Anarix Assistant"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
+            {/* App-parity header */}
+            <div className="border-b border-border shrink-0">
+              <div className="flex items-center justify-between px-4 py-4">
+                <AanLogo />
                 <button
                   type="button"
                   onClick={closeAan}
@@ -164,58 +195,109 @@ export default function AanWebsitePanel() {
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
+
+              {/* Context bar — matches AanCopilotPanel */}
+              <div className="flex items-center gap-4 border-t border-border/50 bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-medium">Context:</span>
+                  <span>{pageLabel}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" />
+                  <span>anarix.ai</span>
+                </div>
+              </div>
             </div>
 
-            {/* Conversation */}
-            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
-              {messages.map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
-                >
+            {/* Conversation — independent scroll, app pattern */}
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="p-4 space-y-4">
+                {messages.map((m, i) => (
                   <div
+                    key={i}
                     className={cn(
-                      "max-w-[88%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed",
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap"
-                        : "bg-accent text-foreground rounded-bl-sm prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-1 prose-strong:text-foreground"
+                      "flex gap-3",
+                      m.role === "user" ? "flex-row-reverse" : "flex-row"
                     )}
                   >
-                    {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
+                    {/* Avatar — matches AanConversation */}
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center",
+                        m.role === "assistant"
+                          ? "text-foreground"
+                          : "rounded-full bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {m.role === "assistant" ? (
+                        <AanMascot
+                          size={20}
+                          state={loading && i === messages.length - 1 ? "thinking" : "anchor"}
+                          interactive={false}
+                        />
+                      ) : (
+                        <User className="h-4 w-4" />
+                      )}
+                    </div>
+
+                    {/* Bubble */}
+                    <div
+                      className={cn(
+                        "flex max-w-[80%] flex-col gap-2",
+                        m.role === "user" ? "items-end" : "items-start"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "rounded-2xl px-4 py-2.5 text-sm",
+                          m.role === "assistant"
+                            ? "bg-card text-foreground border border-border prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-1 prose-strong:text-foreground"
+                            : "bg-primary text-primary-foreground whitespace-pre-wrap"
+                        )}
+                      >
+                        {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
+                      </div>
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-              {loading && messages[messages.length - 1]?.role === "user" && (
-                <div className="flex justify-start">
-                  <div className="bg-accent rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1">
-                    {[0, 1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
-                        animate={{ y: [0, -4, 0] }}
-                        transition={{ duration: 0.6, delay: i * 0.15, repeat: Infinity }}
-                      />
-                    ))}
+                ))}
+
+                {/* Thinking indicator — uses live mascot, app pattern */}
+                {loading && messages[messages.length - 1]?.role === "user" && (
+                  <div className="flex flex-row gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center text-foreground">
+                      <AanMascot size={20} state="thinking" interactive={false} />
+                    </div>
+                    <div className="flex max-w-[80%] flex-col gap-2 items-start">
+                      <div className="rounded-2xl px-4 py-2.5 text-sm bg-card text-muted-foreground border border-border flex gap-1">
+                        {[0, 1, 2].map((d) => (
+                          <motion.span
+                            key={d}
+                            className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
+                            animate={{ y: [0, -3, 0] }}
+                            transition={{ duration: 0.6, delay: d * 0.15, repeat: Infinity }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
-              {error && (
-                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
-                  {error}
-                </div>
-              )}
-            </div>
+                )}
+
+                {error && (
+                  <div className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
+                    {error}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
 
             {/* Suggestions */}
-            {messages.length <= 1 && (
+            {messages.length <= 1 && !loading && (
               <div className="px-3 pb-2 flex flex-wrap gap-1.5 shrink-0">
                 {SUGGESTED.map((q) => (
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    className="text-[11px] px-2.5 py-1 rounded-pill bg-accent text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                    className="text-[11px] px-2.5 py-1 rounded-pill bg-card border border-border text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                   >
                     {q}
                   </button>
@@ -223,27 +305,44 @@ export default function AanWebsitePanel() {
               </div>
             )}
 
-            {/* Input */}
-            <form
-              onSubmit={(e) => { e.preventDefault(); send(input); }}
-              className="border-t border-border p-3 flex gap-2 shrink-0"
-            >
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Aan…"
-                disabled={loading}
-                className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-              <button
-                type="submit"
-                disabled={loading || !input.trim()}
-                className="px-3 rounded-xl bg-primary text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition-colors"
-                aria-label="Send"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+            {/* Input — chrome matches AanInput */}
+            <div className="shrink-0 bg-background border-t border-border">
+              <div className="px-4 py-3">
+                <div className="relative flex items-end rounded-lg border border-border bg-card focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+                  <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKey}
+                    placeholder="Ask Aan anything…"
+                    rows={1}
+                    disabled={loading}
+                    className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pr-12"
+                  />
+                  <div className="absolute right-2 bottom-2">
+                    {loading ? (
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        onClick={stop}
+                        className="h-8 w-8 rounded-lg"
+                        title="Stop"
+                      >
+                        <Square className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="icon"
+                        onClick={() => send(input)}
+                        disabled={!input.trim()}
+                        className="h-8 w-8 rounded-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-30"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.aside>
         </>
       )}
