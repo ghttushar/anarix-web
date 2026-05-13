@@ -1,126 +1,121 @@
+## Scope
 
-## Goals
+Frontend-only edits to website pages, product pages, the TACoS section, and the website's Aan panel. No backend / route / data changes.
 
-1. Fix the broken navbar on the website.
-2. One AI surface on the website: the Floating Action Island, with an "Ask Aan" button that opens the same Copilot-style panel used in the app — but in chatbot mode (no app actions).
-3. Remove all other live chat surfaces from the app and website.
-4. Add background graphics (non-chart) and mobile-first polish.
-5. Repair animations broken in the last edit.
-6. Propose 10 new sections, 10 creative animations, and additional Action Island features.
+Note on the "two numbers section": there are two on the Home page — `StatBand` (compact 4-stat strip) and `ImpactSection` ("Real impact. By the numbers." — 6 large cards). I can't see the attached image, so I'm assuming you want `StatBand` removed and `ImpactSection` promoted right after the hero. If it's the reverse, say so before approving.
 
 ---
 
-## Part A — Fixes (deterministic, will implement on approval)
+## Home page (`src/website/pages/Home.tsx`)
 
-### A1. Navbar repair (`src/website/components/Navbar.tsx`)
-- Current route prefix in `App.tsx` is `/website/...`, but Profitability page renders at `/products/profitability` (the user's current route), meaning some product pages are mounted **outside** `WebsiteLayout`. Audit `App.tsx` route table and either:
-  - Move all product pages under `/website/products/*` (preferred, single source of truth), **or**
-  - Render `<Navbar />` + `<Footer />` inside the affected pages.
-- Add `min-w-0` to the centered nav container to stop overflow on mid-width viewports.
-- Mobile drawer: anchor inside header (`absolute top-full left-4 right-4`) so it doesn't push layout.
-- Replace gradient text in logo with token color (Section 3 forbids gradient on text).
+New section order:
 
-### A2. Action Island on website
-- Remove `"/website"` from `hiddenRoutes` in `src/features/creative/FloatingActionIsland.tsx`.
-- Add a **website mode** prop: when on website routes, show only:
-  - Ask Aan (primary)
-  - Theme toggle
-  - Book a demo
-  - Help / Docs
-  - Drag handle
-- Hide app-only actions (Refresh, Export, Screenshot, Insights, Alerts) on website routes.
+1. `HeroSection`
+2. `ImpactSection` ("Real impact. By the numbers." — moved up, becomes the post-hero impact block)
+3. `TestimonialsSection` (third section as requested)
+4. `ProblemSection`
+5. `SolutionsSection`
+6. `ProductPreviewBand` (enhanced — see below)
+7. `WorkflowSection`
+8. `AuditCTASection`
+9. `Footer`
 
-### A3. Unify Aan into one chatbot
-- Delete `src/website/components/WebsiteAanLauncher.tsx` from `WebsiteLayout`.
-- Reuse `AanCopilotPanel` as the single right-side panel, opened by Action Island "Ask Aan".
-- Add a `mode: "chatbot" | "copilot"` flag in `AanContext`. In chatbot mode:
-  - Hide artifact creation / rule drafting tools.
-  - Route messages to the existing `website-aan` edge function instead of the app gateway.
-  - Header label: "Aan — Anarix Assistant".
-- Remove any remaining floating chat buttons inside the app (audit `WebsiteAanChat` usage; keep the component only for embedded sections like `/aan-ai` page).
+Removed from Home:
+- `SocialProofSection` ("Connects to every channel you sell on")
+- `IntegrationOrbit` ("Connects With Your Entire Stack")
+- The original `StatBand` placement (the smaller of the two number strips)
 
-### A4. Animation repairs (from last edit)
-- `TacosSection`: bite mask uses ellipse rx/ry tied to scroll progress — verify `useScrollReveal(0.3)` returns `0..1` not boolean (current bug suspect). Replace with a controlled progress hook driven by `IntersectionObserver` + `requestAnimationFrame` 0→1 over 1400ms once visible. Crumbs and medallion read same progress.
-- `AdHeroAnimation`, `AutomationHeroAnimation`, `MSHeroAnimation`: wrap each in `motion.div` with `whileInView` + `viewport={{ once: true, amount: 0.4 }}` so they trigger on mobile scroll, not just desktop hero load.
-- Honor `prefers-reduced-motion` in all three.
+## Enhance "Built like a trading desk, not a dashboard." (`ProductPreviewBand`)
 
-### A5. Background graphics (non-chart, on-brand)
-Add a shared `<AmbientBackdrop variant="grid|orbits|noise|topography">` component used behind hero sections:
-- Subtle dotted grid (SVG, 6% opacity)
-- Periwinkle orbit rings (SVG, parallax ≤8px)
-- Soft noise texture (SVG turbulence, 4% opacity)
-- Topographic contour lines (SVG paths, 5% opacity)
-All token-driven, no decorative loops, respect Section 9 motion limits.
+Upgrade from a static preview band to a higher-fidelity, denser composition while staying inside Section 9 motion limits:
 
-### A6. Mobile polish
-- All hero animations: cap SVG viewBox so they scale to 100% width; stack illustration above copy under `md:`.
-- Touch target ≥44px on Action Island; island docks bottom-center on `<sm` with safe-area padding.
-- Section paddings: `py-16 md:py-24` everywhere; remove fixed `min-h-screen` heroes on mobile.
+- Editorial split: left column = bolder eyebrow + 56–64px headline + supporting copy + 3 trust chips (Latency, Audit log, Reversible). Right column = layered "trading-desk" mock built from real tokens — sticky-column data table, mini KPI ticker strip with monospaced numbers, and a thin sparkline rail.
+- Replace flat bg with `bg-card` panel + 1px `ui.secondary` border + 1px hairline grid overlay at 4% opacity.
+- One controlled motion: ticker numbers `MorphingNumber` count-up on `whileInView` (≤220ms, ease per Section 9). No loops, no parallax.
+- Mobile: stack columns; mock collapses to KPI ticker + 4-row table.
 
----
+## Remove "Connects With Your Entire Stack"
 
-## Part B — Suggestions (need your pick before building)
+Delete `IntegrationOrbit` from Home. Keep the file for now (not used elsewhere — confirm before deleting source).
 
-### B1. Ten new sections (proposed)
+## TACoS section — refine shadow/glow (`TacoIllustration.tsx`)
 
-| # | Section | Best page |
-|---|---------|-----------|
-| 1 | "Anatomy of a TACoS" interactive breakdown | Profitability |
-| 2 | Live ROI calculator (sliders → savings) | Pricing / Home |
-| 3 | "A day in the life of Aan" timeline | Aan AI |
-| 4 | Marketplace coverage map (Amazon/Walmart regions) | Home |
-| 5 | Comparison table: Anarix vs in-house vs agency | Pricing |
-| 6 | Customer story carousel with metric deltas | Home |
-| 7 | Security & compliance trust strip (SOC2, GDPR) | Footer-of-every-page |
-| 8 | "Built for operators" workflow gallery | Products |
-| 9 | Changelog / "Shipped this month" feed | Home + Docs |
-| 10 | FAQ accordion grouped by persona | Pricing + Products |
+Replace the current crude radial glow with a calmer, layered ground shadow:
 
-### B2. Ten creative animations (on-brand, Section 9 compliant)
+- Drop the orange `taco-floor-glow` radial gradient entirely.
+- Replace the contact ellipse with a 3-layer shadow stack, all using `hsl(var(--foreground))`:
+  1. Tight contact: `rx=120 ry=6 opacity 0.28 blur 2`
+  2. Mid soft: `rx=170 ry=14 opacity 0.14 blur 8`
+  3. Wide ambient: `rx=220 ry=22 opacity 0.06 blur 18`
+- Use `<filter id="taco-shadow-blur">` with `feGaussianBlur`.
+- Anchor the stack 6px below the taco baseline; no warm color, no halo.
+- Result: a clean editorial drop-shadow consistent with token system.
 
-1. Cursor-follow periwinkle spotlight on hero (radial gradient, 12% opacity).
-2. Scroll-driven horizontal "campaign timeline" reveal.
-3. Number count-up on KPIs entering viewport.
-4. SVG line-draw on section dividers (stroke-dashoffset).
-5. Magnetic hover on CTAs (≤4px pull, easing 180ms).
-6. Ingredient-orbit rings around the taco that ease in on scroll.
-7. Card tilt on hover (≤2°, no parallax).
-8. Marquee logo strip with hover-pause.
-9. Word-by-word fade-in for hero headline.
-10. Section-enter "ink wash" mask reveal (clip-path, single pass).
+## "From scattered spreadsheets to one source of truth" (`CycloneScrollSection`)
 
-### B3. Additional Action Island ideas (website)
+Remove this section from the AanAI page and place it on the Home page **between** `WorkflowSection` and `AuditCTASection`. Its scroll-driven typography belongs in the Home narrative, not on the Aan product page.
 
-- **Ask Aan** (default open chat)
-- **Book a demo** (deep-link to `/website/demo`)
-- **Theme toggle** (light/dark)
-- **Currency / region** (USD/EUR/INR display only)
-- **Pricing calculator** quick-open
-- **Changelog** popover ("What's new")
-- **Status indicator** (green dot → uptime page)
-- **Share this page** (copy link / X / LinkedIn)
-- **Keyboard shortcuts** overlay (⌘K)
-- **Back to top** when scrolled >800px
+## Product pages — add "big bold number" cards
+
+For each of: `Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `Profitability.tsx`.
+
+Insertion point: immediately after the hero animation / pun block, before the next section.
+
+New shared component `src/website/components/products/BigNumberStrip.tsx`:
+
+- 3 oversized number cards in a `grid-cols-1 md:grid-cols-3` layout.
+- Each card: 72–96px Satoshi number (tabular-nums), 11px uppercase tracked label, one-line supporting fact.
+- `bg-card`, 1px border, 16px padding, no gradient blobs, hover `-translate-y-0.5` (≤1.02 scale rule respected).
+- `MorphingNumber` count-up on `whileInView`, single pass.
+
+Per-page numbers (placeholder, easy to edit later):
+- Advertising: `4.2x` Median ROAS · `−38%` Wasted spend · `<8s` Time to draft a rule
+- Automation: `1,200+` Rules running · `99.4%` Reversible · `24/7` Guardrailed
+- Managed Services: `120+` Brands · `7d` Onboarding · `1` Dedicated pod
+- Profitability: `30%` TACoS reduction · `$1.2B` GMV tracked · `100%` SKU-level P&L
+
+## AanAI page (`src/website/pages/AanAI.tsx`)
+
+- Add pun line under the hero subhead, in muted Allura accent: *"Because our AI glows."* (single line, italic, `text-muted-foreground`).
+- Add second pun line near the "What else do you need?" / capabilities header: *"Okayyy… here are the other boring things Aan also does."*
+- **Delete** the entire "Try it now / Ask Aan anything" section (the inline `WebsiteAanChat` block, lines ~135–149). The Action Island remains the single Ask-Aan entry point.
+- Remove the `WebsiteAanChat` import.
+
+## AanWebsitePanel — parity with app Copilot
+
+Update `src/website/components/AanWebsitePanel.tsx` so Aan's placement, interactions, motion, and reactions match `AanCopilotPanel`:
+
+- **Header**: replace the custom `AanMascot + Aan / Anarix Assistant` block with the app's `AanLogo` component. Use the same header chrome: 4px vertical padding, border-bottom, context bar below header showing `Context: Anarix.ai · <current page>`.
+- **Mascot states**: drive `AanMascot` (or whatever `AanLogo` already wraps) with the app's `AanPresenceProvider` so idle / thinking / responding states fire identically. Wrap the panel in `<AanPresenceProvider>` and render `<AanPresencePortal />` like the app does.
+- **Conversation surface**: use `<ScrollArea>` from `@/components/ui/scroll-area` instead of a raw scroll div, matching Copilot's `flex-1 min-h-0` setup.
+- **Input**: swap the bespoke input form for the app's `AanInput` component (chatbot mode — file upload + model selector hidden via a `mode="chatbot"` prop passthrough; no rule drafts, no app actions). Reuse the same key handlers, send animation, and disabled states.
+- **Motion**: panel open/close keeps the existing 220ms slide+fade (within Section 9 limits). Typing-dots animation replaced with the app's standard "thinking" presence so the mascot reacts the same way.
+- **Position**: keep fixed right-rail on desktop (`right-4 top-4 bottom-4 w-[400px]`) and bottom-sheet on mobile — unchanged.
+- **No app actions**: chatbot mode strictly Q&A. Any tool/action calls returned by the edge function are rendered as plain text only.
 
 ---
 
-## Files affected (Part A only)
+## Technical notes
 
-- edit: `src/App.tsx` (route consolidation under `/website`)
-- edit: `src/website/WebsiteLayout.tsx` (remove launcher)
-- edit: `src/features/creative/FloatingActionIsland.tsx` (website mode)
-- edit: `src/components/aan/AanContext.tsx` + `AanCopilotPanel.tsx` (chatbot mode)
-- edit: `src/website/components/Navbar.tsx` (overflow + token logo)
-- edit: `src/website/components/TacosSection.tsx` + 3 hero animations (progress hook + reduced-motion)
-- new: `src/website/components/AmbientBackdrop.tsx`
-- delete: `src/website/components/WebsiteAanLauncher.tsx`
+Files edited:
+- `src/website/pages/Home.tsx` (reorder + remove)
+- `src/website/components/home/ProductPreviewBand.tsx` (enhance)
+- `src/website/components/products/TacoIllustration.tsx` (shadow rework)
+- `src/website/pages/AanAI.tsx` (remove chat, add pun lines, remove CycloneScrollSection)
+- `src/website/pages/products/Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `Profitability.tsx` (insert `BigNumberStrip`)
+- `src/website/components/AanWebsitePanel.tsx` (Copilot parity refactor)
 
-Out of scope: app analytics screens, design tokens, edge function logic.
+Files added:
+- `src/website/components/products/BigNumberStrip.tsx`
 
----
+Files no longer used on Home (kept on disk unless you say delete):
+- `SocialProofSection.tsx`
+- `IntegrationOrbit.tsx`
+- `home/StatBand.tsx`
+- `WebsiteAanChat.tsx` (no other consumers — safe to delete; will delete)
 
-## Questions before I build
+Tokens / motion: all changes stay within Periwinkle System 01 tokens and Section 9 motion limits (≤240ms, ≤1.02 scale, no loops, no parallax).
 
-1. For Part B1 (sections) and B2 (animations) — pick any subset to include in this build, or say "all" / "skip for now".
-2. For Part B3 (island additions) — which extras beyond Ask Aan + Demo + Theme should ship?
-3. Confirm: chatbot mode should **not** be able to navigate the user or trigger any app action — purely Q&A. Correct?
+## Open question (please confirm before I build)
+
+Which of the two Home number sections should be removed — the small 4-stat `StatBand` (my assumption) or the large 6-card `ImpactSection`? If it's `ImpactSection`, I'll promote `StatBand` after the hero instead.
