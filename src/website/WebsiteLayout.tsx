@@ -1,12 +1,13 @@
 import { Outlet } from "react-router-dom";
 import "./website.css";
-import WebsiteAanLauncher from "./components/WebsiteAanLauncher";
+import AanWebsitePanel from "./components/AanWebsitePanel";
 
 export default function WebsiteLayout() {
   return (
     <div className="website-scope min-h-screen bg-background text-foreground antialiased">
       <Outlet />
-      <WebsiteAanLauncher />
+      {/* Single Aan surface for the website — opened from the Floating Action Island */}
+      <AanWebsitePanel />
     </div>
   );
 }
