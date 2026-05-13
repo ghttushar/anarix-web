@@ -38,7 +38,7 @@ const AuditCTASection = () => {
             Get your <span className="text-gradient-primary italic">free margin audit</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-10">
-            See exactly where your marketplace P&amp;L is leaking. Takes 30 seconds.
+            See exactly where your marketplace P&amp;L is leaking - in less time than a pizza delivery, slice by slice.
           </p>
         </div>
 
