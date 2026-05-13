@@ -50,9 +50,17 @@ const ProductAdvertising = () => (
           </p>
         </motion.div>
 
-        <div className="mb-24">
+        <div className="mb-16">
           <AdHeroAnimation />
         </div>
+
+        <BigNumberStrip
+          items={[
+            { value: "4.2x", label: "Median ROAS", caption: "Across 100+ managed accounts." },
+            { value: "−38%", label: "Wasted spend", caption: "Cut in the first 30 days." },
+            { value: "<8s", label: "Time to draft a rule", caption: "Aan reads, diagnoses, drafts." },
+          ]}
+        />
 
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
           <SectionHeader eyebrow="The problem" title="Most ad tools optimise for the wrong thing." lead="Bid platforms chase impressions. Agencies chase ACoS. Aan chases contribution margin — the only number your CFO actually cares about." />

@@ -44,9 +44,17 @@ const ProductManagedServices = () => (
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">Expert strategy and execution, fully transparent and aligned to your growth.</p>
       </motion.div>
 
-      <div className="mb-24">
+      <div className="mb-16">
         <MSHeroAnimation />
       </div>
+
+      <BigNumberStrip
+        items={[
+          { value: "120+", label: "Brands operated", caption: "Across 4 marketplaces." },
+          { value: "7d", label: "Onboarding", caption: "From contract to live decisions." },
+          { value: "1", label: "Dedicated pod", caption: "Same humans, every week." },
+        ]}
+      />
 
       <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
         <SectionHeader eyebrow="The agency problem" title="Most agencies sell hours. We sell outcomes." lead="The traditional agency model rewards activity, not results. Anarix Managed Services flips that: our compensation is tied to the metrics that matter to your business, and every action we take is visible to you in real time." />

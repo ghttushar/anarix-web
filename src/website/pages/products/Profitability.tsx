@@ -33,6 +33,13 @@ const ProductProfitability = () => (
     <TacosSection />
 
     <div className="max-w-6xl mx-auto px-6">
+      <BigNumberStrip
+        items={[
+          { value: "30%", label: "TACoS reduction", caption: "Average across 100+ brands." },
+          { value: "$1.2B", label: "GMV tracked", caption: "Settlement-level reconciliation." },
+          { value: "100%", label: "SKU-level P&L", caption: "Contribution margin, line by line." },
+        ]}
+      />
       <motion.div className="text-center mb-20" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
           <BarChart3 className="w-3.5 h-3.5" /> Profitability

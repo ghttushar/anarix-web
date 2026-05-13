@@ -45,9 +45,17 @@ const ProductAutomation = () => (
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">Rules that run. Guardrails that protect. Nothing executes without your eyes on it.</p>
       </motion.div>
 
-      <div className="mb-24">
+      <div className="mb-16">
         <AutomationHeroAnimation />
       </div>
+
+      <BigNumberStrip
+        items={[
+          { value: "1,200+", label: "Rules running", caption: "Across all managed accounts." },
+          { value: "99.4%", label: "Reversible", caption: "Every action, every time." },
+          { value: "24/7", label: "Guardrailed", caption: "Daily caps, blast-radius, rollback." },
+        ]}
+      />
 
       <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
         <SectionHeader eyebrow="The fear" title="The reason most teams don't automate is fear." lead="Fear of waking up to a six-figure mistake. Anarix solves that with simulation-first execution: every rule is dry-run against historical data, projected impact is shown, and nothing executes until you approve." />
