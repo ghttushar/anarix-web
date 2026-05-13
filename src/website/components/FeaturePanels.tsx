@@ -68,7 +68,7 @@ const DashboardMock = () => (
     <div className="grid grid-cols-3 gap-2 mb-3">
       {[
         { label: "Revenue", value: "$142.8K", color: "text-emerald-600" },
-        { label: "ROAS", value: "4.2x", color: "text-primary text-[#f26e76]" },
+        { label: "ROAS", value: "4.2x", color: "text-primary" },
         { label: "TACoS", value: "12.4%", color: "text-amber-600" },
       ].map((kpi, i) => (
         <div key={i} className="bg-gray-50 rounded-lg p-2.5 fp-kpi-pop" style={{ animationDelay: `${i * 0.3}s` }}>
@@ -240,7 +240,7 @@ const TeamDashboardMock = () => (
         { who: "Maya", action: "exported weekly report", time: "15m ago" },
       ].map((item, i) => (
         <div key={i} className="flex items-start gap-2 fp-activity-row" style={{ animationDelay: `${i * 0.5 + 1}s` }}>
-          <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px] text-primary text-[#f26e76] font-bold mt-0.5">{item.who[0]}</div>
+          <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center text-[8px] text-primary font-bold mt-0.5">{item.who[0]}</div>
           <div>
             <div className="text-[10px] text-gray-700"><span className="font-semibold">{item.who}</span> {item.action}</div>
             <div className="text-[8px] text-gray-400">{item.time}</div>

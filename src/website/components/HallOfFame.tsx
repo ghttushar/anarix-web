@@ -37,7 +37,7 @@ const HallOfFame = () => {
               animate={isVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
             >
-              <stat.icon className="w-8 h-8 text-primary text-[#f26e76] mx-auto mb-3" />
+              <stat.icon className="w-8 h-8 text-primary mx-auto mb-3" />
               <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">{stat.value}</div>
               <div className="text-sm text-muted-foreground">{stat.label}</div>
             </motion.div>

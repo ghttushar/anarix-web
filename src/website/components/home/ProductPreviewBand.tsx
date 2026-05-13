@@ -61,7 +61,7 @@ const ProductPreviewBand = () => (
                 key={c.label}
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-pill bg-card border border-border text-muted-foreground"
               >
-                <c.icon className="w-3.5 h-3.5 text-primary text-[#f26e76]" />
+                <c.icon className="w-3.5 h-3.5 text-primary" />
                 {c.label}
               </span>
             ))}

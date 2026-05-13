@@ -19,7 +19,7 @@ const SplitFeature = ({ eyebrow, title, body, visual, reverse, bullets }: SplitF
       transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
     >
       {eyebrow && (
-        <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
+        <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
           {eyebrow}
         </div>
       )}

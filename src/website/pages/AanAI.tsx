@@ -49,7 +49,7 @@ const AanAI = () => {
             <div className="flex justify-center mb-6">
               <AanMascot state="idle" size={180} />
             </div>
-            <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
+            <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
               <Bot className="w-3.5 h-3.5" /> Meet Aan
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-[1.05]">
@@ -85,7 +85,7 @@ const AanAI = () => {
                 transition={{ delay: i * 0.06, duration: 0.4 }}
               >
                 <div className="w-10 h-10 mb-3 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <cap.icon className="w-5 h-5 text-primary text-[#f26e76]" />
+                  <cap.icon className="w-5 h-5 text-primary" />
                 </div>
                 <h4 className="font-bold text-foreground text-sm mb-2">{cap.title}</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">{cap.desc}</p>
@@ -145,7 +145,7 @@ const AanAI = () => {
                 transition={{ delay: i * 0.08, duration: 0.4 }}
               >
                 <div className="w-10 h-10 mb-4 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <p.icon className="w-5 h-5 text-primary text-[#f26e76]" />
+                  <p.icon className="w-5 h-5 text-primary" />
                 </div>
                 <h4 className="font-bold text-foreground mb-2">{p.title}</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
@@ -157,7 +157,7 @@ const AanAI = () => {
 
       <div className="max-w-3xl mx-auto px-6 text-center pt-16 pb-4">
         <p className="text-sm text-muted-foreground">
-          Want to try Aan now? Tap <span className="text-primary text-[#f26e76] font-semibold">Ask Aan</span> in the floating action island - bottom-right of your screen.
+          Want to try Aan now? Tap <span className="text-primary font-semibold">Ask Aan</span> in the floating action island - bottom-right of your screen.
         </p>
       </div>
 

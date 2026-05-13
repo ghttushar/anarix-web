@@ -12,22 +12,22 @@ const EmbedRuleCard = () => (
 
     <div className="space-y-2 text-xs font-mono">
       <div className="px-3 py-2 rounded-md bg-muted/40 border border-border">
-        <span className="text-primary text-[#f26e76] font-semibold">IF</span>{" "}
+        <span className="text-primary font-semibold">IF</span>{" "}
         <span className="text-foreground">spend &gt; $50</span>{" "}
         <span className="text-muted-foreground">AND</span>{" "}
         <span className="text-foreground">orders = 0</span>{" "}
         <span className="text-muted-foreground">in last 14 days</span>
       </div>
       <div className="px-3 py-2 rounded-md bg-muted/40 border border-border">
-        <span className="text-primary text-[#f26e76] font-semibold">THEN</span>{" "}
+        <span className="text-primary font-semibold">THEN</span>{" "}
         <span className="text-foreground">negate as exact match</span>
       </div>
     </div>
 
     <div className="flex flex-wrap gap-1.5 mt-4">
-      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-primary/10 text-primary text-[#f26e76]">Guardrail: max 25/day</span>
-      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-primary/10 text-primary text-[#f26e76]">Reversible</span>
-      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-primary/10 text-primary text-[#f26e76]">Logged</span>
+      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-primary/10 text-primary">Guardrail: max 25/day</span>
+      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-primary/10 text-primary">Reversible</span>
+      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-primary/10 text-primary">Logged</span>
     </div>
 
     <div className="flex gap-2 mt-5 pt-4 border-t border-border">

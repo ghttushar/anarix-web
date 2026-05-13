@@ -100,7 +100,7 @@ export function AanWorkspaceSidebar() {
                   onClick={() => setActiveFilter(isActive ? "all" : section.id)}
                   className={cn(
                     "flex items-center justify-center h-8 w-8 rounded-md transition-colors cursor-pointer",
-                    isActive ? "bg-primary/10 text-primary text-[#f26e76]" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                   title={section.label}
                 >
@@ -150,7 +150,7 @@ export function AanWorkspaceSidebar() {
               onClick={() => setActiveFilter(isActive ? "all" : section.id)}
               className={cn(
                 "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all cursor-pointer",
-                isActive ? "bg-primary/10 text-primary text-[#f26e76]" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />

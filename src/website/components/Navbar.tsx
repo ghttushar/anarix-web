@@ -64,7 +64,7 @@ const Navbar = () => {
       >
         {/* Logo */}
         <Link to="/website" className="text-xl font-bold text-foreground tracking-tight whitespace-nowrap">
-          Anarix<span className="text-primary text-[#f26e76]">.ai</span>
+          Anarix<span className="text-primary">.ai</span>
         </Link>
 
         {/* Desktop Nav - centered */}

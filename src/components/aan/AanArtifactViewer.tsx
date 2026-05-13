@@ -122,7 +122,7 @@ export function AanArtifactViewer({ artifact, onClose }: AanArtifactViewerProps)
                   <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                     Overall ROAS
                   </p>
-                  <p className="text-2xl font-bold text-primary text-[#f26e76]">
+                  <p className="text-2xl font-bold text-primary">
                     {getKpiValue("Overall ROAS")}
                   </p>
                 </div>
@@ -153,7 +153,7 @@ export function AanArtifactViewer({ artifact, onClose }: AanArtifactViewerProps)
                           <TableCell className="text-right text-muted-foreground">{campaign.clicks}</TableCell>
                           <TableCell className="text-right">{campaign.spend}</TableCell>
                           <TableCell className="text-right">{campaign.sales}</TableCell>
-                          <TableCell className="text-right font-semibold text-primary text-[#f26e76]">{campaign.roas}</TableCell>
+                          <TableCell className="text-right font-semibold text-primary">{campaign.roas}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -174,7 +174,7 @@ export function AanArtifactViewer({ artifact, onClose }: AanArtifactViewerProps)
                         className="flex items-center justify-between rounded-md bg-muted/50 px-4 py-3"
                       >
                         <span className="text-sm font-medium">{change.field}</span>
-                        <span className="text-sm text-primary text-[#f26e76] font-medium">{change.after}</span>
+                        <span className="text-sm text-primary font-medium">{change.after}</span>
                       </div>
                     ))}
                   </div>
@@ -203,7 +203,7 @@ export function AanArtifactViewer({ artifact, onClose }: AanArtifactViewerProps)
               {/* Health Score Card */}
               <div className="flex items-center gap-6 rounded-lg border border-border bg-muted/30 p-6">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-primary bg-primary/10">
-                  <span className="text-2xl font-bold text-primary text-[#f26e76]">
+                  <span className="text-2xl font-bold text-primary">
                     {getKpiValue("Health Score").replace("/100", "")}
                   </span>
                 </div>
@@ -240,7 +240,7 @@ export function AanArtifactViewer({ artifact, onClose }: AanArtifactViewerProps)
                         className="flex items-center justify-between rounded-md bg-muted/50 px-4 py-3"
                       >
                         <span className="text-sm font-medium">{change.field}</span>
-                        <span className="text-sm text-primary text-[#f26e76] font-medium">{change.after}</span>
+                        <span className="text-sm text-primary font-medium">{change.after}</span>
                       </div>
                     ))}
                   </div>
@@ -262,7 +262,7 @@ export function AanArtifactViewer({ artifact, onClose }: AanArtifactViewerProps)
                   <span className="text-sm font-medium">{change.field}</span>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground line-through">{change.before}</span>
-                    <span className="text-primary text-[#f26e76] font-medium">→ {change.after}</span>
+                    <span className="text-primary font-medium">→ {change.after}</span>
                   </div>
                 </div>
               ))}

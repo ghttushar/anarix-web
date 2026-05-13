@@ -21,7 +21,7 @@ const EmbedInsightCard = ({ severity = "medium", title, body, source = "Aan · 2
     </div>
     <div className="text-sm font-semibold text-foreground mb-1.5 leading-snug">{title}</div>
     <p className="text-xs text-muted-foreground leading-relaxed">{body}</p>
-    <button className="mt-4 inline-flex items-center gap-1 text-xs text-primary text-[#f26e76] font-medium hover:underline">
+    <button className="mt-4 inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline">
       Open in Aan <ArrowUpRight className="w-3 h-3" />
     </button>
   </div>

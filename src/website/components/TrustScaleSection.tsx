@@ -45,7 +45,7 @@ const TrustScaleSection = () => {
               transition={{ delay: 0.1 + i * 0.08, duration: 0.5 }}
             >
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                <badge.icon className="w-6 h-6 text-primary text-[#f26e76]" />
+                <badge.icon className="w-6 h-6 text-primary" />
               </div>
               <h4 className="font-semibold text-foreground text-sm">{badge.label}</h4>
               <p className="text-xs text-muted-foreground mt-1">{badge.desc}</p>

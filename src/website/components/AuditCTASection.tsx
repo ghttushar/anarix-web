@@ -81,7 +81,7 @@ const AuditCTASection = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="flex flex-col items-center gap-4 py-8"
               >
-                <Loader2 className="w-8 h-8 text-primary text-[#f26e76] animate-spin" />
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 <p className="text-muted-foreground">Analyzing your store...</p>
               </motion.div>
             )}
@@ -123,7 +123,7 @@ const AuditCTASection = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center gap-3 py-8"
               >
-                <CheckCircle2 className="w-10 h-10 text-primary text-[#f26e76]" />
+                <CheckCircle2 className="w-10 h-10 text-primary" />
                 <p className="text-foreground font-semibold">Your audit will be ready in 30 minutes!</p>
                 <p className="text-sm text-muted-foreground">Check your inbox shortly.</p>
               </motion.div>

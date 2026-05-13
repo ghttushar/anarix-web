@@ -46,7 +46,7 @@ export default function TestimonialsSection() {
           className={`mb-14 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
           style={{ transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
         >
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
             Important voices
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-3 leading-[1.1]">
@@ -121,7 +121,7 @@ export default function TestimonialsSection() {
                     aria-label="Play testimonial"
                   >
                     <span className="w-16 h-16 rounded-full bg-background/95 flex items-center justify-center shadow-strong group-hover:scale-105 transition-transform">
-                      <Play className="w-7 h-7 text-primary text-[#f26e76] translate-x-0.5" fill="currentColor" />
+                      <Play className="w-7 h-7 text-primary translate-x-0.5" fill="currentColor" />
                     </span>
                   </button>
                 )}

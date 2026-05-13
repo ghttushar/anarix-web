@@ -42,7 +42,7 @@ const StatBlock = ({ value, label, delta, align = "left" }: StatBlockProps) => {
         {target !== null ? <motion.span>{display}</motion.span> : value}
       </motion.div>
       <div className="mt-3 text-sm text-muted-foreground uppercase tracking-[0.14em]">{label}</div>
-      {delta && <div className="mt-1 text-xs text-primary text-[#f26e76] font-medium">{delta}</div>}
+      {delta && <div className="mt-1 text-xs text-primary font-medium">{delta}</div>}
     </div>
   );
 };

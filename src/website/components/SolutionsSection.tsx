@@ -278,7 +278,7 @@ const SolutionsSection = () => {
     >
       <div className="max-w-[1280px] mx-auto">
         <div className="text-center mb-12">
-          <span className="inline-block text-[11px] font-semibold tracking-[0.15em] uppercase px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[#f26e76] mb-5">
+          <span className="inline-block text-[11px] font-semibold tracking-[0.15em] uppercase px-4 py-1.5 rounded-full bg-primary/10 text-primary mb-5">
             Platform Capabilities
           </span>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-[44px] font-semibold text-foreground leading-tight tracking-tight">

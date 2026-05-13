@@ -103,7 +103,7 @@ const Pricing = () => {
           <div className="inline-flex items-center gap-3 p-1 rounded-pill bg-muted border border-border">
             <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-pill text-sm font-medium transition-all duration-200 ${!annual ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>Monthly</button>
             <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-pill text-sm font-medium transition-all duration-200 ${annual ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
-              Yearly <span className="text-primary text-[#f26e76] text-xs ml-1">Save 20%</span>
+              Yearly <span className="text-primary text-xs ml-1">Save 20%</span>
             </button>
           </div>
         </motion.div>
@@ -149,7 +149,7 @@ const Pricing = () => {
               <ul className="space-y-2.5">
                 {plan.features.map((f) => (
                   <li key={f} className={`flex items-start gap-2 text-sm ${plan.dark ? "text-background/70" : "text-muted-foreground"}`}>
-                    <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.dark ? "text-background/60" : "text-primary text-[#f26e76]"}`} /> {f}
+                    <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.dark ? "text-background/60" : "text-primary"}`} /> {f}
                   </li>
                 ))}
               </ul>
@@ -166,7 +166,7 @@ const Pricing = () => {
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Feature</th>
                   <th className="text-center py-3 px-4 text-sm font-medium text-foreground">Starter</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-primary text-[#f26e76]">Growth</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-primary">Growth</th>
                   <th className="text-center py-3 px-4 text-sm font-medium text-foreground">Enterprise</th>
                 </tr>
               </thead>
@@ -191,7 +191,7 @@ const Pricing = () => {
             {faqs.map((faq, i) => (
               <div key={i} className="border border-border rounded-xl overflow-hidden">
                 <button className="w-full flex items-center justify-between p-4 text-left text-sm font-medium text-foreground hover:bg-muted/30 transition-colors" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                  <span className="flex items-center gap-2"><HelpCircle className="w-4 h-4 text-primary text-[#f26e76]" />{faq.q}</span>
+                  <span className="flex items-center gap-2"><HelpCircle className="w-4 h-4 text-primary" />{faq.q}</span>
                   <span className="text-muted-foreground">{openFaq === i ? "−" : "+"}</span>
                 </button>
                 {openFaq === i && (
