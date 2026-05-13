@@ -177,7 +177,7 @@ export default function AanSurfacesSection() {
               <div className="h-44 mb-4">
                 <s.Mock />
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.body}</p>
+              {s.body !== "\n" && <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.body}</p>}
               {s.use !== "\n" && (
                 <div className="text-xs italic text-foreground/80 border-l-2 border-primary/40 pl-3">
                   Use it: {s.use}
