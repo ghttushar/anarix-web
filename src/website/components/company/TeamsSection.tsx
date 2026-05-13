@@ -9,35 +9,24 @@ type Member = { name: string; role: string };
 type Dept = { name: string; tagline: string; members: Member[] };
 
 const DEPARTMENTS: Dept[] = [
-  {
-    name: "Leadership",
-    tagline: "Sets the bar. Then quietly clears it.",
-    members: [{ name: "Sunil", role: "CEO" }],
-  },
-  {
-    name: "Account Management",
-    tagline: "Your direct line. They own the outcome, not the excuses.",
+  { name: "Leadership", tagline: "Sets the bar. Then quietly clears it.",
+    members: [{ name: "Sunil", role: "CEO" }] },
+  { name: "Account Management", tagline: "Your direct line. They own the outcome, not the excuses.",
     members: [
       { name: "Bharath", role: "Account Manager" },
       { name: "Naveen", role: "Account Manager" },
       { name: "Rakesh C", role: "Account Manager" },
       { name: "Tarun Kumar", role: "Account Manager" },
       { name: "Nishith", role: "Account Manager" },
-    ],
-  },
-  {
-    name: "Service",
-    tagline: "Operators behind every campaign decision. Quiet hands, loud results.",
+    ] },
+  { name: "Service", tagline: "Operators behind every campaign decision. Quiet hands, loud results.",
     members: [
       { name: "Milu", role: "Service" },
       { name: "Venky", role: "Service" },
       { name: "Kartik", role: "Service" },
       { name: "Vardhan", role: "Service" },
-    ],
-  },
-  {
-    name: "Tech",
-    tagline: "Builds the platform you don't think about. Because it just works.",
+    ] },
+  { name: "Tech", tagline: "Builds the platform you don't think about. Because it just works.",
     members: [
       { name: "Aman", role: "Engineering" },
       { name: "Rajveer", role: "Engineering" },
@@ -51,62 +40,113 @@ const DEPARTMENTS: Dept[] = [
       { name: "Archana", role: "Engineering" },
       { name: "Loges", role: "Engineering" },
       { name: "Sam", role: "Engineering" },
-    ],
-  },
-  {
-    name: "Design",
-    tagline: "Makes complex data feel calm. Not cute, calm.",
+    ] },
+  { name: "Design", tagline: "Makes complex data feel calm. Not cute, calm.",
     members: [
       { name: "Anubhav", role: "Design" },
       { name: "Tushar", role: "Design" },
-    ],
-  },
-  {
-    name: "Marketing",
-    tagline: "Tells the story without the noise. Or the buzzwords.",
+    ] },
+  { name: "Marketing", tagline: "Tells the story without the noise. Or the buzzwords.",
     members: [
       { name: "Jasleen", role: "Marketing" },
       { name: "Devyanshi", role: "Marketing" },
       { name: "Nandan", role: "Marketing" },
-    ],
-  },
+    ] },
 ];
 
 const ALL_MEMBERS = DEPARTMENTS.flatMap((d) => d.members.map((m) => ({ ...m, dept: d.name })));
 
+/** Stacked, overlapping, hand-laid row of caricature cards. */
+function StackedRow({
+  members,
+  size = 88,
+  overlap = 22,
+  dark = false,
+}: {
+  members: { name: string; role: string; dept: string }[];
+  size?: number;
+  overlap?: number;
+  dark?: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center" style={{ paddingLeft: overlap }}>
+      {members.map((m, i) => {
+        const tilt = ((i % 7) - 3) * 1.4; // -4.2 .. 4.2 deg
+        return (
+          <motion.div
+            key={`${m.dept}-${m.name}-${i}`}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ delay: i * 0.025, duration: 0.32, ease: [0.2, 0, 0, 1] }}
+            tabIndex={0}
+            className={`group relative cursor-default focus:outline-none transition-all duration-300 ease-out
+              hover:!rotate-0 hover:scale-[1.14] hover:-translate-y-3 hover:z-30 focus:scale-[1.14] focus:-translate-y-3 focus:z-30
+              ${dark ? "" : ""}`}
+            style={{
+              width: size,
+              height: size,
+              marginLeft: -overlap,
+              transform: `rotate(${tilt}deg)`,
+              zIndex: i + 1,
+            }}
+          >
+            <div
+              className={`w-full h-full rounded-[28px] overflow-hidden shadow-xl ring-1 transition-shadow duration-300 group-hover:shadow-2xl
+                ${dark ? "ring-white/15" : "ring-black/5"}`}
+              style={{ background: dark ? "#0e1020" : "#fff" }}
+            >
+              {/* Default: caricature */}
+              <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0 group-focus:opacity-0">
+                <CaricatureMockup name={m.name} dept={m.dept} />
+              </div>
+              {/* Hover: photo-style */}
+              <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
+                <PhotoMockup name={m.name} dept={m.dept} />
+              </div>
+            </div>
+
+            {/* Hover label - floats below, doesn't shift layout */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-40">
+              <div className={`px-2.5 py-1 rounded-md text-[11px] font-semibold shadow-md ${dark ? "bg-white text-[#0e1020]" : "bg-foreground text-background"}`}>
+                {m.name}
+                <span className="opacity-60 font-normal ml-1.5">{m.role}</span>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function TeamsSection() {
   return (
     <>
-      {/* Hero strip - dark, caricature row preview */}
+      {/* HERO STRIP - dark, stacked caricature row preview */}
       <section className="py-24 px-6 bg-[hsl(240_30%_8%)] text-[hsl(0_0%_98%)] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30 pointer-events-none"
-          style={{ background: "radial-gradient(800px 400px at 70% 110%, hsl(var(--primary) / 0.4), transparent 60%)" }}
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{ background: "radial-gradient(800px 400px at 70% 110%, hsl(var(--primary) / 0.45), transparent 60%)" }}
         />
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-[1fr_auto] gap-10 items-end">
-            <div>
+            <div className="min-w-0">
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] mb-5">
-                Let's chat more over <em className="font-aan not-italic text-primary-foreground/95 italic">Chai</em> (or Filter Coffee).
+                Let's chat more over <em className="font-aan not-italic italic text-primary-foreground/95">Chai</em> (or Filter Coffee).
               </h2>
-              <p className="text-lg text-[hsl(0_0%_75%)] max-w-xl mb-8">
+              <p className="text-lg text-[hsl(0_0%_75%)] max-w-xl mb-10">
                 The team shaping advertising intelligence at Anarix. Hover any face - we promise the real ones look better.
               </p>
-              <div className="flex flex-wrap gap-2 max-w-2xl">
-                {ALL_MEMBERS.slice(0, 12).map((m, i) => (
-                  <motion.div
-                    key={m.name}
-                    initial={{ opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.04, duration: 0.3 }}
-                    style={{ transform: `rotate(${(i % 5) - 2}deg)` }}
-                    className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10 shadow-lg"
-                  >
-                    <CaricatureMockup name={m.name} dept={m.dept} />
-                  </motion.div>
-                ))}
+              <div className="pb-6">
+                <StackedRow
+                  members={ALL_MEMBERS.slice(0, 12)}
+                  size={72}
+                  overlap={20}
+                  dark
+                />
               </div>
-              <p className="text-xs text-[hsl(0_0%_60%)] mt-6 tracking-wide uppercase">Built by operators, for operators.</p>
+              <p className="text-xs text-[hsl(0_0%_60%)] mt-2 tracking-wide uppercase">Built by operators, for operators.</p>
             </div>
             <div className="lg:justify-self-end">
               <Link to="/website/demo">
@@ -119,7 +159,7 @@ export default function TeamsSection() {
         </div>
       </section>
 
-      {/* Departments - editorial layout */}
+      {/* DEPARTMENTS - editorial, stacked rows */}
       <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16 max-w-3xl">
@@ -134,7 +174,7 @@ export default function TeamsSection() {
             </p>
           </div>
 
-          <div className="space-y-16">
+          <div className="space-y-20">
             {DEPARTMENTS.map((dept) => (
               <div key={dept.name} className="grid md:grid-cols-[220px_1fr] gap-8 md:gap-12">
                 <div className="md:sticky md:top-28 self-start">
@@ -145,10 +185,12 @@ export default function TeamsSection() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {dept.members.map((m, i) => (
-                    <MemberCard key={m.name} member={m} dept={dept.name} index={i} />
-                  ))}
+                <div className="min-w-0 pb-10">
+                  <StackedRow
+                    members={dept.members.map((m) => ({ ...m, dept: dept.name }))}
+                    size={92}
+                    overlap={26}
+                  />
                 </div>
               </div>
             ))}
@@ -156,37 +198,5 @@ export default function TeamsSection() {
         </div>
       </section>
     </>
-  );
-}
-
-function MemberCard({ member, dept, index }: { member: Member; dept: string; index: number }) {
-  const tilt = ((index % 5) - 2) * 0.6;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: index * 0.03, duration: 0.35, ease: [0.2, 0, 0, 1] }}
-      whileHover={{ scale: 1.08, y: -6, rotate: 0 }}
-      whileFocus={{ scale: 1.08, y: -6, rotate: 0 }}
-      style={{ transform: `rotate(${tilt}deg)` }}
-      tabIndex={0}
-      className="group relative rounded-2xl border border-border bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-default shadow-sm hover:shadow-lg hover:z-10 transition-shadow"
-    >
-      <div className="aspect-square relative">
-        {/* Default state: caricature */}
-        <div className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0 group-focus:opacity-0">
-          <CaricatureMockup name={member.name} dept={dept} />
-        </div>
-        {/* Hover state: photo-style portrait */}
-        <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100">
-          <PhotoMockup name={member.name} dept={dept} />
-        </div>
-      </div>
-      <div className="p-3 border-t border-border bg-card">
-        <div className="text-sm font-semibold text-foreground truncate">{member.name}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{member.role}</div>
-      </div>
-    </motion.div>
   );
 }

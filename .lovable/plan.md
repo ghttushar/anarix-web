@@ -1,47 +1,42 @@
 
 ## Plan
 
-### 1. Teams Section Redesign (`TeamsSection.tsx`, `CaricatureMockup.tsx`)
-Match the reference image aesthetic:
-- **Default state:** caricature SVG (no monogram). Cards rendered in a single horizontal flowing row per department with slight rotation/staggered offset like the reference, soft shadow, rounded squircle (rx=18).
-- **Hover state:** caricature crossfades to a real photo placeholder (circular `<img>` from `/team/{slug}.jpg` with graceful fallback to a richer photo-style SVG). Card lifts `y:-6`, scale `1.08`, name+role label fades in below.
-- Replace dept-grouped grid with a more editorial layout: dept name + tagline on left, horizontal scrolling/wrapping caricature row on right (mirroring reference).
-- Add a dark "Let's chat over chai" hero strip above teams (Bangalore-flavored pun: *"Let's chat more over Chai (or Filter Coffee)."*) with caricature row preview and a "Talk to an Expert" pill CTA.
-- Upgrade `CaricatureMockup` with richer SVG: subtle gradient bg, hair highlights, shoulder garment color per dept, optional accessories (glasses/beard) deterministic by name hash. Add second variant `PhotoMockup` rendered as a more photo-realistic SVG portrait (skin shading, depth) used as the "photo" hover state until real photos are uploaded.
+### 1. Redesign the team-card stack (reference-image style)
+Replace the dept-grouped grid in `TeamsSection.tsx` with a single, flowing horizontal row per department that mimics the uploaded reference:
 
-### 2. Content & Feature Audit — add coverage for innovative features
-Add new sections / expand existing ones across:
-- **Home (`Home.tsx`)** — insert `InnovationBand` highlighting: Aan Copilot, Ask Aan (text-selection tooltip), Full-Screen Aan workspace, Floating Action Island, Insights System, Command Palette (Cmd+K), Day-Parting heatmap, Sandbox dashboard. Each card: icon, name, one-line value prop, micro pun.
-- **AanAI page** — new `AanSurfacesSection` describing the three Aan touchpoints with mock visuals:
-  1. **Aan Copilot Panel** — right-side workspace
-  2. **Ask Aan** — text-selection tooltip use-case (highlight a number → Aan explains)
-  3. **Full-Screen Aan** — dedicated `/aan` route for deep work
-  4. **Floating Action Island** — persistent hub for alerts + quick actions
-  Each with a mini mock card showing the UI shape (no screenshots, hand-built mocks using app tokens).
-- **Product pages** (Advertising, Profitability, Automation, ManagedServices) — add 1 extra "Why teams love it" content block + 1 use-case strip with 3 mini scenarios written as light pitch copy with mild puns ("Bid less, win more. Yes, really.").
-- **About page** — keep teams; add small "Our principles" trio (Operators first, Reversible by default, Numbers don't lie — but they do whisper).
+- **Stacked overlap**: cards use negative left margin (`-ml-3` to `-ml-5` responsive) so each card visually overlaps its neighbor by ~25%.
+- **Per-card tilt**: deterministic rotation `(-4° .. +4°)` based on index, with alternating sign so the row reads as a hand-laid arrangement, not a grid.
+- **Squircle silhouette**: tighter `rounded-[28px]`, drop shadow `shadow-xl`, subtle white inner ring (`ring-1 ring-white/10`) so cards pop against dark backgrounds.
+- **Hover behavior**: hovered card lifts (`y:-10`, `scale:1.12`), straightens (`rotate:0`), raises `z-index`, and pushes neighbors gently apart via group-hover sibling translate. Caricature crossfades to photo-style portrait (existing `PhotoMockup`).
+- **Name label**: hidden by default, fades in below on hover only (so the row stays clean like the reference).
+- **Layout shift**: department label (name + tagline + count) moves to a left rail, the right side becomes a single horizontal scroll row of stacked faces, no grid wrapping. On mobile, falls back to a wrapped flex with the same overlap + tilt.
 
-Tone: light, indirect, salesy with restrained puns. No emojis. Aan zone keeps the playful copy; analytics tone untouched.
+The dark "Chai (or Filter Coffee)" hero strip already uses a mini version of this row - I'll upgrade it to match the new card silhouette and overlap so the two sections feel unified.
 
-### 3. Design polish + visuals
-- Add a new `FeatureMockStrip.tsx` rendering small, distinct hand-coded mocks (command palette, floating island, ask-aan tooltip, full-screen workspace) using existing app design tokens — distinct silhouettes per feature so visuals don't repeat.
-- Strengthen `AmbientBackdropV2` contrast in light mode (current bloom is too faint at 1668px). Add a subtle conic accent in hero zones only.
+### 2. Redesign caricatures - Ghibli / animated 3D style
+Rebuild `CaricatureMockup.tsx` from the ground up. Goals: soft, painted-3D feel, large round eyes with highlights, warm rim light, painterly hair shapes, gentle face shading. All hand-authored SVG (no raster, no AI generation).
 
-### 4. Alignment & Spacing Audit
-Sweep all `src/website/pages/**` and `src/website/components/**`:
-- Standardize section vertical rhythm to `py-24` (mobile `py-16`).
-- Standardize container to `max-w-6xl mx-auto px-6`.
-- Standardize SectionHeader margin-bottom to `mb-14`.
-- Standardize card grid gaps to `gap-4` (dense) / `gap-6` (feature).
-- Fix any orphan `mt-`/`pt-` overrides; remove inline magic numbers.
-- Verify no horizontal overflow at 1668px and 390px.
+New SVG construction:
+- **Background**: soft radial gradient + subtle painterly "speckle" overlay (20-30 tiny low-opacity dots) for hand-drawn texture.
+- **Face geometry**: rounder head proportions (Ghibli-style: wider face, smaller chin), soft shadow under chin, blush ovals.
+- **Eyes**: large round eyes with iris gradient, two highlight dots (specular + secondary), eyelash arc on top. Deterministic pupil position so different members "look" slightly different directions.
+- **Hair**: 4-6 painterly hair variants per dept, layered fills (base + highlight stroke) for the "stylized 3D" feel. Cowlick / bangs / side-swept / topknot / curly-fluff variants chosen by name hash.
+- **Skin shading**: a second layer with multiply-blend dark patch on cheek/jaw side to fake 3D form. Nose hint as a soft curved highlight + shadow pair instead of a line.
+- **Expressions**: 3 mouth variants (soft smile, open laugh, neutral lip-press), each with painterly inner-mouth shadow.
+- **Optional accents**: glasses (rounded, with lens highlight), beard (deterministic), small earring dot, subtle freckle cluster.
+- **Rim light**: soft white glow on the upper-left of head/shoulders to sell the 3D form.
+- **Color palette per dept**: keep current dept tints, add a second "Ghibli-warm" accent layer (soft peach/sky/rose) so each card has a paint-pot feel rather than flat fills.
 
-### 5. Em-dash Purge
-Run `rg -l "—" src/website src/components/aan` and replace every em-dash (—) and en-dash (–) with hyphen `-` across all website + Aan-facing copy. Code/comments included if user-visible. Skip generated files (supabase types).
+Result: the default card view is a row of Ghibli-style 3D-feel portraits, lightly tilted and overlapping, with hover revealing the more "photo-real" variant.
 
-### Files
-**New:** `src/website/components/home/InnovationBand.tsx`, `src/website/components/aan/AanSurfacesSection.tsx`, `src/website/components/marketing/FeatureMockStrip.tsx`, `src/website/components/company/PhotoMockup.tsx`, `src/website/components/company/TeamsHero.tsx`, `src/website/components/marketing/UseCaseStrip.tsx`.
-**Edited:** `TeamsSection.tsx`, `CaricatureMockup.tsx`, `Home.tsx`, `AanAI.tsx`, `About.tsx`, all 4 product pages, `AmbientBackdropV2.tsx`, plus em-dash sweep across `src/website/**`.
+### 3. Files
+**Edited only** (no new files):
+- `src/website/components/company/CaricatureMockup.tsx` - full rewrite with Ghibli/3D style.
+- `src/website/components/company/TeamsSection.tsx` - new stacked/overlapping row layout, hover lift, sibling-push, hidden labels by default.
+- (Minor) `src/website/components/company/PhotoMockup.tsx` - tighten color palette so the hover-state portrait reads as the "real" version of the same Ghibli character (consistent face shape, eye position).
 
-### Open question
-1. For the team **photo hover**, should I generate stylized SVG "photo-style" portraits as placeholders (deterministic per name, distinct from caricature), or leave a real `<img src="/team/{slug}.jpg">` reference with a fallback caricature so you can drop real photos into `public/team/` later? (Recommended: do both — try `<img>` first, fall back to stylized portrait SVG.)
+### Out of scope this round
+- No content changes, no other pages touched, no new sections.
+- Real photos still belong in `public/team/` later - hover-state remains the stylized portrait until then.
+
+Ready to build on approval.
