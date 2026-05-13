@@ -133,22 +133,6 @@ const AanAI = () => {
         </div>
       </section>
 
-      {/* Live chat */}
-      <section className="py-24 px-6">
-        <div className="max-w-3xl mx-auto">
-          <SectionHeader eyebrow="Try it now" title="Ask Aan anything." lead="Live chat powered by the same model that runs inside Anarix. Ask about products, integrations, methodology, or how Aan would handle a specific scenario." align="center" className="mb-8" />
-          <div className="flex flex-wrap gap-2 justify-center mb-5">
-            {promptChips.map((p) => (
-              <span key={p} className="text-xs px-3 py-1.5 rounded-pill bg-card border border-border text-muted-foreground">{p}</span>
-            ))}
-          </div>
-          <WebsiteAanChat
-            height="h-[560px]"
-            initialMessage="Hey, I'm Aan. Ask me anything about Anarix — products, methodology, integrations, or how I'd handle a specific scenario in your account."
-          />
-        </div>
-      </section>
-
       {/* Safety */}
       <section className="py-24 px-6 bg-muted/20">
         <div className="max-w-6xl mx-auto">
@@ -174,7 +158,11 @@ const AanAI = () => {
         </div>
       </section>
 
-      <CycloneScrollSection />
+      <div className="max-w-3xl mx-auto px-6 text-center pt-16 pb-4">
+        <p className="text-sm text-muted-foreground">
+          Want to try Aan now? Tap <span className="text-primary font-semibold">Ask Aan</span> in the floating action island — bottom-right of your screen.
+        </p>
+      </div>
 
       <div className="max-w-6xl mx-auto px-6 text-center pb-16">
         <Link to="/website/demo">
