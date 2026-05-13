@@ -87,12 +87,21 @@ export function FloatingActionIsland() {
 
   const { setDataPanel } = useActivePanel();
 
-  const actions: ActionItem[] = [
+  const appActions: ActionItem[] = [
     { icon: Bell, label: criticalCount > 0 ? `Alerts (${criticalCount})` : "Alerts", onClick: () => setDataPanel("notifications"), highlight: criticalCount > 0, badge: criticalCount > 0 ? criticalCount : undefined },
     { icon: Lightbulb, label: "Insights", onClick: openInsights },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
     { icon: Download, label: "Export", onClick: () => toast.success("Export started") },
   ];
+
+  const websiteActions: ActionItem[] = [
+    { icon: CalendarPlus, label: "Book a demo", onClick: () => navigate("/website/demo") },
+    { icon: BookOpen, label: "Docs", onClick: () => navigate("/website/documentation") },
+    { icon: theme === "dark" ? Sun : Moon, label: theme === "dark" ? "Light" : "Dark", onClick: () => setTheme(theme === "dark" ? "light" : "dark") },
+    ...(scrolled ? [{ icon: ArrowUp, label: "Top", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) }] : []),
+  ];
+
+  const actions = isWebsite ? websiteActions : appActions;
 
   const takeScreenshot = async () => {
     setIsCapturing(true);
