@@ -73,7 +73,7 @@ const Careers = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.08, duration: 0.5 }}
             >
-              <p.icon className="w-7 h-7 text-primary mx-auto mb-3" />
+              <p.icon className="w-7 h-7 text-primary text-[#f26e76] mx-auto mb-3" />
               <h4 className="font-semibold text-foreground text-sm mb-1">{p.title}</h4>
               <p className="text-xs text-muted-foreground">{p.desc}</p>
             </motion.div>

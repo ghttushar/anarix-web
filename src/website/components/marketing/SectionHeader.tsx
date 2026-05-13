@@ -18,7 +18,7 @@ const SectionHeader = ({ eyebrow, title, lead, align = "left", className = "" }:
     className={`${align === "center" ? "text-center mx-auto" : ""} max-w-3xl ${className}`}
   >
     {eyebrow && (
-      <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+      <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
         {eyebrow}
       </div>
     )}

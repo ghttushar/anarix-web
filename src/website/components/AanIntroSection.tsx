@@ -26,7 +26,7 @@ const AanIntroSection = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <motion.div
-            className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-sm font-medium"
+            className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-sm font-medium"
             initial={{ opacity: 0, y: 12 }}
             animate={isVisible ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5 }}
@@ -65,7 +65,7 @@ const AanIntroSection = () => {
                 transition={{ delay: 0.2 + i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                  <cap.icon className="w-5 h-5 text-primary" />
+                  <cap.icon className="w-5 h-5 text-primary text-[#f26e76]" />
                 </div>
                 <div>
                   <h4 className="font-semibold text-foreground">{cap.label}</h4>

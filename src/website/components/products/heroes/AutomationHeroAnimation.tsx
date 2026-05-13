@@ -56,7 +56,7 @@ const AutomationHeroAnimation = () => {
             <div key={s.label} className="relative flex flex-col items-center text-center">
               <div
                 className={`w-14 h-14 rounded-full border flex items-center justify-center transition-colors duration-300 ${
-                  isActive ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"
+                  isActive ? "border-primary bg-primary/10 text-primary text-[#f26e76]" : "border-border bg-background text-muted-foreground"
                 }`}
               >
                 <s.icon className="w-5 h-5" />

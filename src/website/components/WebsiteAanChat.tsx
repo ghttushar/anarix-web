@@ -124,7 +124,7 @@ export default function WebsiteAanChat({
             {loading ? "Thinking…" : "Online"}
           </div>
         </div>
-        <Sparkles className="w-4 h-4 text-primary" />
+        <Sparkles className="w-4 h-4 text-primary text-[#f26e76]" />
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">

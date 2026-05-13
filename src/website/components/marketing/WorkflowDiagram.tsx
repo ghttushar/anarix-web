@@ -51,7 +51,7 @@ const WorkflowDiagram = ({ nodes = defaultNodes }: WorkflowDiagramProps) => (
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.4, delay: 0.15 + i * 0.1, ease: [0.2, 0, 0, 1] }}
           >
-            <div className="relative w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center text-sm font-bold text-primary z-10">
+            <div className="relative w-14 h-14 rounded-full bg-card border border-border flex items-center justify-center text-sm font-bold text-primary text-[#f26e76] z-10">
               {i + 1}
             </div>
             <div className="mt-3 font-semibold text-foreground text-sm">{n.label}</div>
@@ -65,7 +65,7 @@ const WorkflowDiagram = ({ nodes = defaultNodes }: WorkflowDiagramProps) => (
     <div className="md:hidden space-y-4">
       {nodes.map((n, i) => (
         <div key={n.label} className="flex gap-4 items-start">
-          <div className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-sm font-bold text-primary shrink-0">
+          <div className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-sm font-bold text-primary text-[#f26e76] shrink-0">
             {i + 1}
           </div>
           <div>

@@ -6,7 +6,7 @@ const ProblemSection = () => (
     <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
       <SectionHeader
         eyebrow="The problem"
-        title={<>Most ad platforms tell you what happened.<br/><span className="text-primary">None tell you what to do.</span></>}
+        title={<>Most ad platforms tell you what happened.<br/><span className="text-primary text-[#f26e76]">None tell you what to do.</span></>}
         lead="Operators stitch together Seller Central exports, Walmart Connect dashboards, ad platform UIs, and a dozen spreadsheets. By the time a $4,000 wasted-spend pattern is visible, it's already cost you $40,000."
       />
       <motion.div

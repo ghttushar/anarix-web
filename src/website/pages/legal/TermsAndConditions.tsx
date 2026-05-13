@@ -142,7 +142,7 @@ const TermsAndConditions = () => (
         <h2>28. Contact Us</h2>
         <p>
           If you have any questions or suggestions about our terms &amp; policies, do not hesitate to contact us at{" "}
-          <a className="text-primary hover:underline" href="mailto:tech@anarix.ai">tech@anarix.ai</a>.
+          <a className="text-primary text-[#f26e76] hover:underline" href="mailto:tech@anarix.ai">tech@anarix.ai</a>.
         </p>
       </div>
     </article>

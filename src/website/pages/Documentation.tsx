@@ -262,7 +262,7 @@ const Documentation = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-pill bg-primary/10 text-primary text-sm font-medium">
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-sm font-medium">
             <BookOpen className="w-4 h-4" /> Documentation
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground">
@@ -286,7 +286,7 @@ const Documentation = () => {
                         className={cn(
                           "w-full text-left px-2.5 py-1.5 rounded-md text-sm transition-colors flex items-center gap-1",
                           activeId === a.id
-                            ? "bg-primary/10 text-primary font-medium"
+                            ? "bg-primary/10 text-primary text-[#f26e76] font-medium"
                             : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                         )}
                       >
@@ -317,7 +317,7 @@ const Documentation = () => {
                   <ul key={i} className="space-y-1.5 pl-1">
                     {block.list.map((item, j) => (
                       <li key={j} className="text-[15px] text-muted-foreground leading-relaxed flex gap-2">
-                        <span className="text-primary mt-1.5 w-1 h-1 rounded-full bg-primary flex-shrink-0" /> {item}
+                        <span className="text-primary text-[#f26e76] mt-1.5 w-1 h-1 rounded-full bg-primary flex-shrink-0" /> {item}
                       </li>
                     ))}
                   </ul>

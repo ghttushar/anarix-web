@@ -80,7 +80,7 @@ const PrivacyPolicy = () => (
         <h2>Contact Information</h2>
         <p>
           If you have any questions regarding this Privacy Policy or the practices of this Site, please contact us by sending an email to{" "}
-          <a className="text-primary hover:underline" href="mailto:support@anarix.ai">support@anarix.ai</a>.
+          <a className="text-primary text-[#f26e76] hover:underline" href="mailto:support@anarix.ai">support@anarix.ai</a>.
         </p>
       </div>
     </article>

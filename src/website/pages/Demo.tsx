@@ -48,7 +48,7 @@ const Demo = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <h3 className="font-bold text-foreground mb-1 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-primary" /> Select a Date
+                <Calendar className="w-4 h-4 text-primary text-[#f26e76]" /> Select a Date
               </h3>
               <p className="text-xs text-muted-foreground mb-4">Choose an available date for your demo.</p>
 
@@ -77,7 +77,7 @@ const Demo = () => {
               {selectedDate !== null && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                   <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-primary" /> Available Times (ET)
+                    <Clock className="w-4 h-4 text-primary text-[#f26e76]" /> Available Times (ET)
                   </h4>
                   <div className="grid grid-cols-4 gap-2">
                     {timeSlots.map((t) => (
@@ -129,7 +129,7 @@ const Demo = () => {
                   <ul className="space-y-3">
                     {benefits.map((b) => (
                       <li key={b} className="flex items-start gap-2.5">
-                        <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-4 h-4 text-primary text-[#f26e76] flex-shrink-0 mt-0.5" />
                         <span className="text-sm text-muted-foreground">{b}</span>
                       </li>
                     ))}

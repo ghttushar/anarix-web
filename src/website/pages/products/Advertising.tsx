@@ -39,7 +39,7 @@ const ProductAdvertising = () => (
       <div className="max-w-6xl mx-auto">
         {/* HERO with pun + animation */}
         <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
             <Megaphone className="w-3.5 h-3.5" /> Advertising
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
@@ -70,7 +70,7 @@ const ProductAdvertising = () => (
         <div className="grid md:grid-cols-2 gap-6 mb-24">
           {features.map((f, i) => (
             <motion.div key={f.title} className="p-6 rounded-2xl border border-border bg-card hover:border-primary/30 transition-all duration-300" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.4 }}>
-              <f.icon className="w-7 h-7 text-primary mb-4" />
+              <f.icon className="w-7 h-7 text-primary text-[#f26e76] mb-4" />
               <h3 className="text-lg font-bold text-foreground mb-2">{f.title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
             </motion.div>
@@ -100,7 +100,7 @@ const ProductAdvertising = () => (
           <SectionHeader eyebrow="The split" title="What we automate, what you decide." className="mb-12" />
           <div className="grid md:grid-cols-2 gap-6">
             <div className="p-6 rounded-2xl border border-border bg-card">
-              <div className="text-xs uppercase tracking-[0.14em] text-primary font-semibold mb-4">Automated</div>
+              <div className="text-xs uppercase tracking-[0.14em] text-primary text-[#f26e76] font-semibold mb-4">Automated</div>
               <ul className="space-y-2.5">
                 {automated.map((a) => (
                   <li key={a} className="flex items-start gap-3 text-sm text-foreground">

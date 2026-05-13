@@ -163,7 +163,7 @@ export default function TeamsSection() {
       <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-16 max-w-3xl">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
               The People
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-[1.1]">

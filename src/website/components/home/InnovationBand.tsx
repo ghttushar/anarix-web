@@ -63,7 +63,7 @@ export default function InnovationBand() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-14"
         >
-          <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+          <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
             What's inside
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-[1.1]">
@@ -85,7 +85,7 @@ export default function InnovationBand() {
               className="group p-5 rounded-2xl border border-border bg-card hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200"
             >
               <div className="w-10 h-10 mb-4 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                <f.icon className="w-5 h-5 text-primary" />
+                <f.icon className="w-5 h-5 text-primary text-[#f26e76]" />
               </div>
               <h3 className="font-bold text-foreground text-base mb-1">{f.name}</h3>
               <p className="text-xs text-primary/80 italic mb-2">{f.pun}</p>

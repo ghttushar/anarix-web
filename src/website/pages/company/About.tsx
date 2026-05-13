@@ -52,7 +52,7 @@ const About = () => (
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
           >
-            <v.icon className="w-8 h-8 text-primary mb-4" />
+            <v.icon className="w-8 h-8 text-primary text-[#f26e76] mb-4" />
             <h3 className="text-2xl font-bold text-foreground mb-2">{v.title}</h3>
             <p className="text-muted-foreground text-lg leading-relaxed">{v.desc}</p>
           </motion.div>
@@ -81,7 +81,7 @@ const About = () => (
               >
                 {/* Dot */}
                 <div className="absolute top-3 left-0 w-4 h-4 rounded-full bg-primary border-4 border-background" />
-                <div className="font-bold text-primary text-lg mb-1">{m.year}</div>
+                <div className="font-bold text-primary text-[#f26e76] text-lg mb-1">{m.year}</div>
                 <p className="text-sm text-muted-foreground leading-relaxed pr-4">{m.event}</p>
               </motion.div>
             ))}
@@ -112,7 +112,7 @@ const About = () => (
     <section className="py-16 px-6 border-t border-border">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+          <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-[#f26e76] text-xs font-medium uppercase tracking-[0.14em]">
             How we operate
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground leading-[1.1]">

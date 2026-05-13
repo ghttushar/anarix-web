@@ -30,7 +30,7 @@ const Contact = () => (
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 3 + i * 0.5, delay: item.delay, repeat: Infinity, ease: "easeInOut" }}
               >
-                <item.icon className="w-5 h-5 text-primary" />
+                <item.icon className="w-5 h-5 text-primary text-[#f26e76]" />
               </motion.div>
             ))}
 
@@ -42,15 +42,15 @@ const Contact = () => (
 
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-background/80 backdrop-blur-sm">
-                  <Mail className="w-5 h-5 text-primary" />
+                  <Mail className="w-5 h-5 text-primary text-[#f26e76]" />
                   <span className="text-sm text-foreground">hello@anarix.ai</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-background/80 backdrop-blur-sm">
-                  <MapPin className="w-5 h-5 text-primary" />
+                  <MapPin className="w-5 h-5 text-primary text-[#f26e76]" />
                   <span className="text-sm text-foreground">New York, NY</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-background/80 backdrop-blur-sm">
-                  <Phone className="w-5 h-5 text-primary" />
+                  <Phone className="w-5 h-5 text-primary text-[#f26e76]" />
                   <span className="text-sm text-foreground">+1 (555) 000-0000</span>
                 </div>
               </div>

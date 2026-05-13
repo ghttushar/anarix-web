@@ -13,11 +13,11 @@ const typeConfig: Record<
   AanDraft["type"],
   { icon: React.ComponentType<{ className?: string }>; label: string; color: string }
 > = {
-  report: { icon: BarChart3, label: "Report", color: "text-primary" },
+  report: { icon: BarChart3, label: "Report", color: "text-primary text-[#f26e76]" },
   audit: { icon: Search, label: "Audit", color: "text-warning" },
   bid_change: { icon: Zap, label: "Bid Change", color: "text-success" },
   campaign_edit: { icon: FileText, label: "Campaign Edit", color: "text-accent" },
-  rule: { icon: Zap, label: "Rule", color: "text-primary" },
+  rule: { icon: Zap, label: "Rule", color: "text-primary text-[#f26e76]" },
 };
 
 export function ArtifactCard({ artifact, onClick, className }: ArtifactCardProps) {
@@ -55,7 +55,7 @@ export function ArtifactCard({ artifact, onClick, className }: ArtifactCardProps
                 artifact.status === "pending" && "bg-warning/10 text-warning",
                 artifact.status === "approved" && "bg-success/10 text-success",
                 artifact.status === "rejected" && "bg-destructive/10 text-destructive",
-                artifact.status === "editing" && "bg-primary/10 text-primary"
+                artifact.status === "editing" && "bg-primary/10 text-primary text-[#f26e76]"
               )}
             >
               {artifact.status}

@@ -282,7 +282,7 @@ export function AanInput() {
                     className="group inline-flex max-w-full items-center gap-2 text-left"
                   >
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 shrink-0">Suggested</span>
-                    <span className="text-xs font-medium text-primary group-hover:underline truncate">
+                    <span className="text-xs font-medium text-primary text-[#f26e76] group-hover:underline truncate">
                       {PROMPT_SUGGESTIONS[suggestionIndex]}
                     </span>
                   </button>
@@ -312,7 +312,7 @@ export function AanInput() {
                 <div className="w-[3px] shrink-0 bg-gradient-to-b from-primary to-accent" />
                 <div className="flex items-center gap-2.5 px-3 py-2.5 flex-1 min-w-0">
                   <div className="flex items-center justify-center h-6 w-6 rounded-md bg-primary/10 shrink-0">
-                    <AanGlyph state="listening" className="h-3.5 w-3.5 text-primary" />
+                    <AanGlyph state="listening" className="h-3.5 w-3.5 text-primary text-[#f26e76]" />
                   </div>
                   <button onClick={handleSuggestionClick} className="flex-1 text-left min-w-0 cursor-pointer group">
                     <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-0.5">Suggested</span>
@@ -417,7 +417,7 @@ export function AanInput() {
                         <div className="text-xs font-medium">{model.name}</div>
                         <div className="text-[10px] text-muted-foreground">{model.description}</div>
                       </div>
-                      {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                      {isSelected && <Check className="h-3.5 w-3.5 text-primary text-[#f26e76] shrink-0" />}
                     </button>
                   );
                 })}
