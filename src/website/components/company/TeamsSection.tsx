@@ -181,7 +181,7 @@ export default function TeamsSection() {
                   <h3 className="text-2xl font-bold text-foreground tracking-tight">{dept.name}</h3>
                   <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{dept.tagline}</p>
                   <div className="text-[11px] uppercase tracking-wider text-muted-foreground/70 mt-4">
-                    {dept.members.length} {dept.members.length === 1 ? "member" : "members"}
+                    {dept.members.length}
                   </div>
                 </div>
 
