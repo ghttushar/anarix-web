@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import WebsiteThemeToggle from "./WebsiteThemeToggle";
 
 
 const navItems: Array<{
@@ -129,6 +130,7 @@ const Navbar = () => {
 
         {/* Right side */}
         <div className="hidden lg:flex items-center gap-2 justify-end">
+          <WebsiteThemeToggle />
           <Link
             to="/login"
             className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 group px-2"
@@ -217,6 +219,10 @@ const Navbar = () => {
                 </div>
               ))}
               <div className="pt-3 border-t border-border space-y-2">
+                <div className="flex items-center justify-between px-3 py-1">
+                  <span className="text-sm text-muted-foreground">Theme</span>
+                  <WebsiteThemeToggle />
+                </div>
                 <Link to="/login" className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground">
                   Sign In <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
