@@ -107,6 +107,9 @@ const About = () => (
         </Link>
       </motion.div>
     </div>
+
+    {/* Teams — full-width section */}
+    <TeamsSection />
   </PageLayout>
 );
 
