@@ -23,11 +23,6 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
   ],
 };
 
-const badges = [
-  { icon: BadgeCheck, label: "SOC 2 Type II" },
-  { icon: Shield, label: "GDPR" },
-  { icon: Lock, label: "AES-256" },
-];
 
 const Footer = () => {
   return (
