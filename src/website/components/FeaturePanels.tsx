@@ -44,7 +44,7 @@ const FEATURES = [
   },
   {
     title: "One Platform for\nYour Whole Team",
-    desc: "Stop chasing assets across teams. Everyone calls Anarix home — from analysts to creatives.",
+    desc: "Stop chasing assets across teams. Everyone calls Anarix home - from analysts to creatives.",
   },
 ];
 

@@ -42,7 +42,7 @@ export default function AmbientBackdropV2() {
         <rect width="100%" height="100%" fill="url(#ambient-grid)" />
       </svg>
 
-      {/* 3. Data shards — sparkline fragments parked in negative space */}
+      {/* 3. Data shards - sparkline fragments parked in negative space */}
       <svg className="absolute top-[12%] right-[8%] w-44 h-12 text-primary/30" viewBox="0 0 200 50" fill="none">
         <polyline points="0,40 30,32 60,36 90,18 120,24 150,10 200,16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx="150" cy="10" r="2.5" fill="currentColor" />

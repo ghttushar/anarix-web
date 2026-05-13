@@ -29,7 +29,7 @@ const EmbedDayparting = () => (
                 key={hi}
                 className="h-3.5 rounded-sm"
                 style={{ backgroundColor: `hsl(var(--primary) / ${0.08 + v * 0.85})` }}
-                title={`${days[di]} ${hi}:00 — ${(v * 6).toFixed(1)}x`}
+                title={`${days[di]} ${hi}:00 - ${(v * 6).toFixed(1)}x`}
               />
             ))}
           </div>

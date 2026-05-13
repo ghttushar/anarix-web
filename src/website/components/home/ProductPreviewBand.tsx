@@ -42,7 +42,7 @@ const ProductPreviewBand = () => (
   <section className="py-24 sm:py-32 px-6 bg-muted/20">
     <div className="max-w-7xl mx-auto">
       <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-        {/* Left — editorial copy */}
+        {/* Left - editorial copy */}
         <div className="lg:col-span-5">
           <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-5">
             Inside Anarix
@@ -68,7 +68,7 @@ const ProductPreviewBand = () => (
           </div>
         </div>
 
-        {/* Right — trading-desk mock */}
+        {/* Right - trading-desk mock */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}

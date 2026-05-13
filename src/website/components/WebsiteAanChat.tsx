@@ -27,7 +27,7 @@ export default function WebsiteAanChat({
   ],
   className,
   height = "h-[460px]",
-  initialMessage = "Hi, I'm Aan. Ask me anything about Anarix — products, pricing, integrations, or how I work.",
+  initialMessage = "Hi, I'm Aan. Ask me anything about Anarix - products, pricing, integrations, or how I work.",
 }: Props) {
   const [messages, setMessages] = useState<Msg[]>([
     { role: "assistant", content: initialMessage },

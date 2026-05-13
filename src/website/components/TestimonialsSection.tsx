@@ -5,7 +5,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 const TESTIMONIALS = [
   {
     quote:
-      "Anarix helped us rethink how we approach growth on Walmart—from a conversion-first mindset to a true full-funnel strategy. By unlocking visibility at the top of the funnel and executing with precision throughout the shopper journey, they turned an underperforming SKU into a meaningful omnichannel growth driver. The impact on both new customer acquisition and total sales has been exceptional.",
+      "Anarix helped us rethink how we approach growth on Walmart-from a conversion-first mindset to a true full-funnel strategy. By unlocking visibility at the top of the funnel and executing with precision throughout the shopper journey, they turned an underperforming SKU into a meaningful omnichannel growth driver. The impact on both new customer acquisition and total sales has been exceptional.",
     author: "Firat Ozkan",
     role: "Co-Founder, CMO & CSO",
     company: "Mount-It!",
@@ -59,7 +59,7 @@ export default function TestimonialsSection() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Quote 1 — wide */}
+          {/* Quote 1 - wide */}
           <article
             className={`lg:col-span-7 p-8 rounded-2xl bg-card border border-border shadow-soft transition-all duration-500 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
@@ -78,7 +78,7 @@ export default function TestimonialsSection() {
             </div>
           </article>
 
-          {/* Quote 2 — narrow */}
+          {/* Quote 2 - narrow */}
           <article
             className={`lg:col-span-5 p-8 rounded-2xl bg-gradient-to-br from-primary/8 to-accent/40 border border-border shadow-soft transition-all duration-500 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
@@ -97,7 +97,7 @@ export default function TestimonialsSection() {
             </div>
           </article>
 
-          {/* Video testimonial — full width */}
+          {/* Video testimonial - full width */}
           <article
             className={`lg:col-span-12 rounded-2xl bg-card border border-border shadow-soft overflow-hidden transition-all duration-500 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"

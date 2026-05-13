@@ -92,7 +92,7 @@ const HeroSection = () => {
           The Anarix Insight Engine
         </motion.div>
 
-        {/* Main headline — Attendflow-style serif with italic accent */}
+        {/* Main headline - Attendflow-style serif with italic accent */}
         <motion.h1
           className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-semibold tracking-tight text-foreground leading-[1.05] mb-8"
           initial={{ opacity: 0, y: 16 }}
@@ -150,7 +150,7 @@ const HeroSection = () => {
           transition={{ delay: 0.5, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           Anarix is the AI operating layer between your ads, your catalog, and
-          your unified P&amp;L — across Amazon, Walmart, Shopify, and TikTok.
+          your unified P&amp;L - across Amazon, Walmart, Shopify, and TikTok.
         </motion.p>
 
         {/* CTAs */}

@@ -9,9 +9,10 @@ import WorkflowDiagram from "@/website/components/marketing/WorkflowDiagram";
 import SplitFeature from "@/website/components/marketing/SplitFeature";
 import EmbedInsightCard from "@/website/components/embeds/EmbedInsightCard";
 import EmbedRuleCard from "@/website/components/embeds/EmbedRuleCard";
+import AanSurfacesSection from "@/website/components/aan/AanSurfacesSection";
 
 const capabilities = [
-  { icon: FileText, title: "Reports", desc: "Auto-generated weekly and monthly reviews. Channel, SKU, campaign, and search-term breakdowns — written in plain English with sources cited." },
+  { icon: FileText, title: "Reports", desc: "Auto-generated weekly and monthly reviews. Channel, SKU, campaign, and search-term breakdowns - written in plain English with sources cited." },
   { icon: Shield, title: "Audits", desc: "Continuous scans for wasted spend, missing negatives, broken bid groups, search-term cannibalisation, and inventory-aware budget waste." },
   { icon: Zap, title: "Rules", desc: "Aan drafts rules with guardrails, simulates the impact on historical data, and waits for your approval before anything goes live." },
   { icon: Palette, title: "Creative", desc: "Ad copy variants, A/B test specs, and image suggestions grounded in what's already converting in your category." },
@@ -55,7 +56,7 @@ const AanAI = () => {
               Anarix Analytical <span className="text-gradient-primary">Neural</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Your second analyst. Aan reads your data, diagnoses issues, drafts rules, and explains every decision — so you can move fast without flying blind.
+              Your second analyst. Aan reads your data, diagnoses issues, drafts rules, and explains every decision - so you can move fast without flying blind.
             </p>
             <p className="font-aan text-2xl sm:text-3xl text-primary/80 mt-5 italic">
               Our AI glows, what else you need.
@@ -108,10 +109,10 @@ const AanAI = () => {
           <SplitFeature
             eyebrow="Insights"
             title="Surface the issues that move money."
-            body={<p>Aan watches every metric you care about and surfaces the ones that matter. Severity-coded, sourced, and one click away from the underlying data — so you spend your time deciding, not searching.</p>}
+            body={<p>Aan watches every metric you care about and surfaces the ones that matter. Severity-coded, sourced, and one click away from the underlying data - so you spend your time deciding, not searching.</p>}
             visual={
               <div className="space-y-3">
-                <EmbedInsightCard severity="high" title="Sponsored Display ROAS dropped 38% in 24h" body="Most of the loss is concentrated on retargeting placements for ASIN B07X9. Likely a competitor launch — see the competitive activity tab." />
+                <EmbedInsightCard severity="high" title="Sponsored Display ROAS dropped 38% in 24h" body="Most of the loss is concentrated on retargeting placements for ASIN B07X9. Likely a competitor launch - see the competitive activity tab." />
                 <EmbedInsightCard severity="medium" title="3 search terms burning $180/day with zero orders" body="Aan drafted a negative-keyword rule. Preview shows projected $5,400/mo savings with no impact on hero ASIN reach." />
               </div>
             }
@@ -120,16 +121,19 @@ const AanAI = () => {
             reverse
             eyebrow="Rules"
             title="Drafts you can read, simulate, and approve."
-            body={<p>Aan writes rules in plain language and shows the underlying logic. Every rule comes with guardrails — daily caps, blast-radius limits, and rollback windows. Nothing executes until you approve.</p>}
+            body={<p>Aan writes rules in plain language and shows the underlying logic. Every rule comes with guardrails - daily caps, blast-radius limits, and rollback windows. Nothing executes until you approve.</p>}
             visual={<EmbedRuleCard />}
           />
         </div>
       </section>
 
+      {/* Aan surfaces */}
+      <AanSurfacesSection />
+
       {/* Safety */}
       <section className="py-24 px-6 bg-muted/20">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader eyebrow="Safety" title="Aan suggests. You approve. Always." lead="Aan is an intelligence layer — not an autonomous agent. The user is the decision-maker, always." align="center" className="mb-14" />
+          <SectionHeader eyebrow="Safety" title="Aan suggests. You approve. Always." lead="Aan is an intelligence layer - not an autonomous agent. The user is the decision-maker, always." align="center" className="mb-14" />
           <div className="grid md:grid-cols-3 gap-6">
             {safetyPillars.map((p, i) => (
               <motion.div
@@ -153,7 +157,7 @@ const AanAI = () => {
 
       <div className="max-w-3xl mx-auto px-6 text-center pt-16 pb-4">
         <p className="text-sm text-muted-foreground">
-          Want to try Aan now? Tap <span className="text-primary font-semibold">Ask Aan</span> in the floating action island — bottom-right of your screen.
+          Want to try Aan now? Tap <span className="text-primary font-semibold">Ask Aan</span> in the floating action island - bottom-right of your screen.
         </p>
       </div>
 

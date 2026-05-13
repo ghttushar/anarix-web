@@ -13,7 +13,7 @@ import AutomationHeroAnimation from "@/website/components/products/heroes/Automa
 import BigNumberStrip from "@/website/components/products/BigNumberStrip";
 
 const features = [
-  { icon: Zap, title: "Smart Bid Management", desc: "AI-optimised bids that adapt to market conditions, competition, and inventory state — not yesterday's spreadsheet." },
+  { icon: Zap, title: "Smart Bid Management", desc: "AI-optimised bids that adapt to market conditions, competition, and inventory state - not yesterday's spreadsheet." },
   { icon: Settings, title: "Visual Rule Builder", desc: "Compose IF/THEN logic without code. Conditions, guardrails, escalation paths, and rollback windows in plain English." },
   { icon: ShieldCheck, title: "Audit-Safe Previews", desc: "Every rule is simulated against historical data before it goes live. Nothing executes without your approval." },
   { icon: Clock, title: "Dayparting & Scheduling", desc: "Adjust spend by hour, day, day-of-week, or custom triggers. Pause during stockouts, accelerate during launches." },
@@ -104,7 +104,7 @@ const ProductAutomation = () => (
 
       {/* What can go wrong */}
       <div className="mb-24">
-        <SectionHeader eyebrow="Safety" title="What can go wrong — and how we stop it." className="mb-12" />
+        <SectionHeader eyebrow="Safety" title="What can go wrong - and how we stop it." className="mb-12" />
         <div className="grid md:grid-cols-2 gap-6">
           {guardrails.map((g) => (
             <div key={g.title} className="p-6 rounded-2xl border border-border bg-card">

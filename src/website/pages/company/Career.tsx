@@ -80,7 +80,7 @@ const Careers = () => {
           ))}
         </div>
 
-        {/* Open positions — accordion */}
+        {/* Open positions - accordion */}
         <h2 className="text-2xl font-bold text-foreground mb-6">Open Positions</h2>
         <div className="space-y-3 mb-16">
           {positions.map((pos, i) => (

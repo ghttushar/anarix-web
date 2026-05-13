@@ -10,7 +10,7 @@ const team = [
 ];
 
 /**
- * Managed services hero — staggered avatars stack in, then a subtle
+ * Managed services hero - staggered avatars stack in, then a subtle
  * "ROAS up" arrow draws across the bottom indicating outcome alignment.
  */
 const MSHeroAnimation = () => {
@@ -70,7 +70,7 @@ const MSHeroAnimation = () => {
       <div className="mt-6 pt-6 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <TrendingUp className="w-4 h-4 text-emerald-600" />
-          <span>Outcomes — not hours — billed</span>
+          <span>Outcomes - not hours - billed</span>
         </div>
         <div className="text-sm font-semibold text-foreground tabular-nums">
           {Math.round(t * 92)}% retention

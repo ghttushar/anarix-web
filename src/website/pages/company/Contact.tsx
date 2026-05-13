@@ -7,7 +7,7 @@ const Contact = () => (
   <PageLayout>
     <div className="max-w-6xl mx-auto px-6">
       <div className="grid lg:grid-cols-2 gap-16 items-start">
-        {/* Left — creative illustration area */}
+        {/* Left - creative illustration area */}
         <motion.div
           className="relative"
           initial={{ opacity: 0, x: -20 }}
@@ -58,7 +58,7 @@ const Contact = () => (
           </div>
         </motion.div>
 
-        {/* Right — form */}
+        {/* Right - form */}
         <motion.form
           className="space-y-5 pt-4"
           initial={{ opacity: 0, x: 20 }}

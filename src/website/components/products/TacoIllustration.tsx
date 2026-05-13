@@ -58,7 +58,7 @@ const TacoIllustration = ({ progress }: Props) => {
           </filter>
         </defs>
 
-        {/* Layered editorial ground shadow — token-driven, no warm halo */}
+        {/* Layered editorial ground shadow - token-driven, no warm halo */}
         <g>
           <ellipse cx="250" cy="430" rx="220" ry="22" fill="hsl(var(--foreground))" fillOpacity="0.06" filter="url(#taco-shadow-wide)" />
           <ellipse cx="250" cy="430" rx="170" ry="14" fill="hsl(var(--foreground))" fillOpacity="0.14" filter="url(#taco-shadow-mid)" />
@@ -71,7 +71,7 @@ const TacoIllustration = ({ progress }: Props) => {
           dangerouslySetInnerHTML={{ __html: tacoInner }}
         />
 
-        {/* Bite-edge inner rim — implies shell cross-section */}
+        {/* Bite-edge inner rim - implies shell cross-section */}
         {progress > 0.05 && (
           <>
             <ellipse

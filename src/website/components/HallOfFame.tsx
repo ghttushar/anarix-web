@@ -24,7 +24,7 @@ const HallOfFame = () => {
             Powered by <span className="text-gradient-primary">Experts</span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Engineers, strategists, designers, and account managers — building the future of e-commerce advertising.
+            Engineers, strategists, designers, and account managers - building the future of e-commerce advertising.
           </p>
         </motion.div>
 

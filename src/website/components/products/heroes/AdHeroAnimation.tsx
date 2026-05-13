@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 /**
- * KPI scoreboard hero — ROAS climbs 2.1x → 3.4x with bars rising from
+ * KPI scoreboard hero - ROAS climbs 2.1x → 3.4x with bars rising from
  * left to right. Single-pass scroll-triggered animation.
  */
 const AdHeroAnimation = () => {

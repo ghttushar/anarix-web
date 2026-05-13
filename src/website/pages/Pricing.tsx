@@ -42,10 +42,10 @@ const compareFeatures = [
   { feature: "Channels", starter: "2", growth: "All", enterprise: "All + Custom" },
   { feature: "Analytics", starter: "Basic", growth: "Advanced", enterprise: "Custom" },
   { feature: "Automation Rules", starter: "5", growth: "Unlimited", enterprise: "Unlimited" },
-  { feature: "Aan AI", starter: "—", growth: "✓", enterprise: "Full Suite" },
-  { feature: "Creative Studio", starter: "—", growth: "✓", enterprise: "✓" },
-  { feature: "API Access", starter: "—", growth: "—", enterprise: "✓" },
-  { feature: "Dedicated AM", starter: "—", growth: "—", enterprise: "✓" },
+  { feature: "Aan AI", starter: "-", growth: "✓", enterprise: "Full Suite" },
+  { feature: "Creative Studio", starter: "-", growth: "✓", enterprise: "✓" },
+  { feature: "API Access", starter: "-", growth: "-", enterprise: "✓" },
+  { feature: "Dedicated AM", starter: "-", growth: "-", enterprise: "✓" },
 ];
 
 const faqs = [
@@ -108,7 +108,7 @@ const Pricing = () => {
           </div>
         </motion.div>
 
-        {/* Pricing cards — differentiated styles */}
+        {/* Pricing cards - differentiated styles */}
         <div className="grid md:grid-cols-3 gap-6 mb-20">
           {plans.map((plan, i) => (
             <motion.div

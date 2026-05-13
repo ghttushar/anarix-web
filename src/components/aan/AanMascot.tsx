@@ -66,7 +66,7 @@ export function AanMascot({
       !reduceMotion &&
       (state === "idle" || state === "listening" || state === "speaking" || state === "working");
 
-  // Cursor tracking — body lean + eye gaze
+  // Cursor tracking - body lean + eye gaze
   useEffect(() => {
     if (!trackCursor) {
       setBodyLean({ x: 0, y: 0, tilt: 0 });
@@ -118,7 +118,7 @@ export function AanMascot({
     return () => window.removeEventListener("mousemove", handler);
   }, [hovered, trackCursor]);
 
-  // Blink — random interval, runs whenever eyes are visible
+  // Blink - random interval, runs whenever eyes are visible
   useEffect(() => {
     if (!showEyes || staticEyes) return;
     let cancelled = false;
@@ -202,7 +202,7 @@ export function AanMascot({
   const containerW = slotW + (floating && tier === "full" ? 8 : 0);
   const containerH = slotH + (floating && tier === "full" ? 14 : 0);
 
-  // Eyes — fully proportional to body, no min-size floor (prevents oversized eyes at small sizes)
+  // Eyes - fully proportional to body, no min-size floor (prevents oversized eyes at small sizes)
   // Bar shape uses tighter geometry so eyes sit centered on the pill.
   const eyeSize = shape === "bar" ? size * 0.11 : size * 0.16;
   const eyeOffsetX =
@@ -296,7 +296,7 @@ export function AanMascot({
             />
           )}
 
-          {/* Body — morphs between diamond / circle / cube / bar */}
+          {/* Body - morphs between diamond / circle / cube / bar */}
           <motion.div
             animate={{
               width: bodyW,
@@ -377,7 +377,7 @@ export function AanMascot({
               />
             )}
 
-            {/* Liquid swirl — thinking state */}
+            {/* Liquid swirl - thinking state */}
             {state === "thinking" && tier === "full" && !isStatic && (
               <motion.div
                 aria-hidden
@@ -403,7 +403,7 @@ export function AanMascot({
             )}
           </motion.div>
 
-          {/* Eyes — overlay, always upright */}
+          {/* Eyes - overlay, always upright */}
           {showEyes && (
             <div
               aria-hidden

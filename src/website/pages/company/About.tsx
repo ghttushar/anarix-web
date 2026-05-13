@@ -24,7 +24,7 @@ const milestones = [
 const About = () => (
   <PageLayout>
     <div className="max-w-6xl mx-auto px-6">
-      {/* Hero — large typography */}
+      {/* Hero - large typography */}
       <motion.div
         className="mb-24"
         initial={{ opacity: 0, y: 20 }}
@@ -42,7 +42,7 @@ const About = () => (
         </p>
       </motion.div>
 
-      {/* Values — large typography blocks */}
+      {/* Values - large typography blocks */}
       <div className="grid md:grid-cols-2 gap-12 mb-24">
         {values.map((v, i) => (
           <motion.div
@@ -59,7 +59,7 @@ const About = () => (
         ))}
       </div>
 
-      {/* Timeline — horizontal scroll */}
+      {/* Timeline - horizontal scroll */}
       <motion.div
         className="mb-24"
         initial={{ opacity: 0 }}
@@ -98,7 +98,7 @@ const About = () => (
       >
         <h2 className="text-2xl font-bold text-foreground mb-6">Powered by 40+ experts across 8 countries</h2>
         <p className="text-muted-foreground max-w-lg mx-auto mb-6">
-          Engineers, strategists, designers, and account managers — united by a mission to make e-commerce advertising work.
+          Engineers, strategists, designers, and account managers - united by a mission to make e-commerce advertising work.
         </p>
         <Link to="/website/company/career">
           <Button className="rounded-pill px-6 bg-primary text-primary-foreground btn-shine">
@@ -108,7 +108,33 @@ const About = () => (
       </motion.div>
     </div>
 
-    {/* Teams — full-width section */}
+    {/* Principles - operating beliefs */}
+    <section className="py-16 px-6 border-t border-border">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="inline-flex items-center px-3 py-1 mb-4 rounded-pill bg-primary/10 text-primary text-xs font-medium uppercase tracking-[0.14em]">
+            How we operate
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground leading-[1.1]">
+            Three principles. <span className="text-gradient-primary">Held loudly.</span>
+          </h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { t: "Operators first", d: "Every feature is reviewed by the people who'd use it under pressure. If it doesn't survive a Monday morning, it doesn't ship." },
+            { t: "Reversible by default", d: "Nothing irreversible without a preview, a confirmation, and a rollback window. Mistakes should be cheap." },
+            { t: "Numbers don't lie. They whisper.", d: "We design for the person reading the dashboard at 11pm. Hierarchy, sources, and severity, always." },
+          ].map((p) => (
+            <div key={p.t} className="rounded-2xl border border-border bg-card p-6">
+              <h3 className="text-lg font-bold text-foreground mb-2">{p.t}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{p.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* Teams - full-width section */}
     <TeamsSection />
   </PageLayout>
 );

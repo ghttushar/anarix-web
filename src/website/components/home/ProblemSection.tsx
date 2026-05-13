@@ -19,7 +19,7 @@ const ProblemSection = () => (
         {[
           { l: "Hours/week reconciling reports", v: "12+" },
           { l: "Avg latency on profitability data", v: "3 days" },
-          { l: "Wasted spend caught after the fact", v: "8–14%" },
+          { l: "Wasted spend caught after the fact", v: "8-14%" },
           { l: "Tools in the average ops stack", v: "9" },
         ].map((r) => (
           <div key={r.l} className="flex items-baseline justify-between border-b border-border py-3">

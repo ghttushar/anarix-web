@@ -8,7 +8,7 @@ export default function WebsiteLayout() {
     <div className="website-scope relative min-h-screen bg-background text-foreground antialiased">
       <AmbientBackdropV2 />
       <Outlet />
-      {/* Single Aan surface for the website — opened from the Floating Action Island */}
+      {/* Single Aan surface for the website - opened from the Floating Action Island */}
       <AanWebsitePanel />
     </div>
   );

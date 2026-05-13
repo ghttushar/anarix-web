@@ -5,6 +5,7 @@ import TestimonialsSection from "@/website/components/TestimonialsSection";
 import ProblemSection from "@/website/components/home/ProblemSection";
 import SolutionsSection from "@/website/components/SolutionsSection";
 import ProductPreviewBand from "@/website/components/home/ProductPreviewBand";
+import InnovationBand from "@/website/components/home/InnovationBand";
 import WorkflowSection from "@/website/components/home/WorkflowSection";
 import CycloneScrollSection from "@/website/components/CycloneScrollSection";
 import AuditCTASection from "@/website/components/AuditCTASection";
@@ -21,6 +22,7 @@ const Index = () => {
       <ProblemSection />
       <SolutionsSection />
       <ProductPreviewBand />
+      <InnovationBand />
       <WorkflowSection />
       <CycloneScrollSection />
       <AuditCTASection />

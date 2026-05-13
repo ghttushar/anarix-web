@@ -25,7 +25,7 @@ export function AanConversation() {
     }
   }, [messages, isGenerating, generationProgress]);
 
-  // Register the generation card anchor — owns the live presence while generating
+  // Register the generation card anchor - owns the live presence while generating
   useEffect(() => {
     if (!newBranding) return;
     if (isGenerating) {
@@ -102,7 +102,7 @@ export function AanConversation() {
         </div>
       ))}
 
-      {/* Generation Progress Indicator — rendered like an assistant message */}
+      {/* Generation Progress Indicator - rendered like an assistant message */}
       {isGenerating && (
         <div className="flex flex-row gap-3">
           <div

@@ -54,12 +54,12 @@ export function AanCopilotPanel() {
             </div>
           </div>
 
-          {/* Conversation Area — independent scroll */}
+          {/* Conversation Area - independent scroll */}
           <ScrollArea className="flex-1 min-h-0">
             <AanConversation />
           </ScrollArea>
 
-          {/* Draft preview removed — drafts are now shown inline in the conversation */}
+          {/* Draft preview removed - drafts are now shown inline in the conversation */}
 
           {/* Input Area */}
           <div className="shrink-0">

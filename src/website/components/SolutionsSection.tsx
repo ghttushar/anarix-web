@@ -267,7 +267,7 @@ const SolutionsSection = () => {
   const [activeIndex, setActiveIndex] = useState(1);
 
   // Desktop layout: 5 cols × 2 rows. Active card spans 2 rows in its column.
-  // Active column = (activeIndex % 5) + 1 — keeps the card roughly where it was.
+  // Active column = (activeIndex % 5) + 1 - keeps the card roughly where it was.
   const activeCol = (activeIndex % 5) + 1;
   const others = FEATURES.map((_, i) => i).filter((i) => i !== activeIndex);
 
@@ -285,7 +285,7 @@ const SolutionsSection = () => {
             The Anarix Operating System
           </h2>
           <p className="text-base lg:text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Advertising, analytics, automation, and intelligence — unified in one operational system.
+            Advertising, analytics, automation, and intelligence - unified in one operational system.
           </p>
         </div>
 

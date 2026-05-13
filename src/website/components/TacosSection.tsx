@@ -35,7 +35,7 @@ const TacosSection = () => {
     <section ref={ref} className="py-24 sm:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-          {/* Illustration — left 60% */}
+          {/* Illustration - left 60% */}
           <motion.div
             className="lg:col-span-7 order-1"
             initial={{ opacity: 0, y: 12 }}
@@ -45,7 +45,7 @@ const TacosSection = () => {
             <TacoIllustration progress={progress} />
           </motion.div>
 
-          {/* Editorial poster — right 40% */}
+          {/* Editorial poster - right 40% */}
           <div className="lg:col-span-5 order-2">
             <motion.p
               className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-6"
@@ -76,7 +76,7 @@ const TacosSection = () => {
               transition={{ delay: 0.5, duration: 0.6 }}
             >
               One bite for us. The rest stays on your plate. TACoS is the
-              ad-spend ratio your CFO actually cares about — and we're built
+              ad-spend ratio your CFO actually cares about - and we're built
               to shrink it.
             </motion.p>
 

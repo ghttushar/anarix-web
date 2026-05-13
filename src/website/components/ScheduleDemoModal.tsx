@@ -108,9 +108,9 @@ const ScheduleDemoModal = ({ open, onClose }: ScheduleDemoModalProps) => {
                   >
                     <option value="">Select range…</option>
                     <option>Under $10K</option>
-                    <option>$10K – $50K</option>
-                    <option>$50K – $200K</option>
-                    <option>$200K – $1M</option>
+                    <option>$10K - $50K</option>
+                    <option>$50K - $200K</option>
+                    <option>$200K - $1M</option>
                     <option>$1M+</option>
                   </select>
                 </div>

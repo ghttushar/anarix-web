@@ -13,9 +13,9 @@ import AdHeroAnimation from "@/website/components/products/heroes/AdHeroAnimatio
 import BigNumberStrip from "@/website/components/products/BigNumberStrip";
 
 const features = [
-  { icon: Sparkles, title: "AI + Rule-Based Bidder", desc: "A bidder that thinks. Combines machine learning with rules you trust to keep CPC efficient and ROAS climbing — without surrendering control." },
+  { icon: Sparkles, title: "AI + Rule-Based Bidder", desc: "A bidder that thinks. Combines machine learning with rules you trust to keep CPC efficient and ROAS climbing - without surrendering control." },
   { icon: Target, title: "Smart Keyword Automation", desc: "Discover, harvest, graduate, and negate keywords automatically. Aan reads search query reports daily so you don't have to." },
-  { icon: Clock, title: "Dayparting (AMS)", desc: "Spend when shoppers convert. Hour-of-day budget shaping for every campaign — backed by 90 days of conversion velocity per ASIN." },
+  { icon: Clock, title: "Dayparting (AMS)", desc: "Spend when shoppers convert. Hour-of-day budget shaping for every campaign - backed by 90 days of conversion velocity per ASIN." },
   { icon: BarChart3, title: "Impact Analysis", desc: "Counterfactual reporting on every change. See projected lift before you commit, then measure actual lift against your baseline." },
 ];
 
@@ -46,7 +46,7 @@ const ProductAdvertising = () => (
             We don't chase impressions. <span className="text-gradient-primary">We hunt margin.</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Campaign management for Amazon, Walmart, and beyond — engineered for ROAS, not vanity metrics.
+            Campaign management for Amazon, Walmart, and beyond - engineered for ROAS, not vanity metrics.
           </p>
         </motion.div>
 
@@ -63,7 +63,7 @@ const ProductAdvertising = () => (
         />
 
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
-          <SectionHeader eyebrow="The problem" title="Most ad tools optimise for the wrong thing." lead="Bid platforms chase impressions. Agencies chase ACoS. Aan chases contribution margin — the only number your CFO actually cares about." />
+          <SectionHeader eyebrow="The problem" title="Most ad tools optimise for the wrong thing." lead="Bid platforms chase impressions. Agencies chase ACoS. Aan chases contribution margin - the only number your CFO actually cares about." />
           <StatBlock value="38%" label="Avg ROAS lift" delta="within 90 days" />
         </div>
 
@@ -81,7 +81,7 @@ const ProductAdvertising = () => (
           <SplitFeature
             eyebrow="Campaign manager"
             title="A trading desk for your ad spend."
-            body={<><p>Every campaign, every match type, every placement — sortable, filterable, editable inline. Sparkline trends sit next to status badges so you can spot drift in two seconds, not two minutes.</p><p>Bulk actions are previewed before they execute. Nothing changes silently.</p></>}
+            body={<><p>Every campaign, every match type, every placement - sortable, filterable, editable inline. Sparkline trends sit next to status badges so you can spot drift in two seconds, not two minutes.</p><p>Bulk actions are previewed before they execute. Nothing changes silently.</p></>}
             visual={<AppEmbedFrame label="anarix.app/advertising"><EmbedCampaignTable /></AppEmbedFrame>}
             bullets={["Inline edit with validation", "Bulk pause / resume / negate with preview", "Audit trail per change"]}
           />

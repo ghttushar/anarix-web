@@ -40,7 +40,7 @@ const Demo = () => {
 
         {!submitted ? (
           <div className="grid lg:grid-cols-5 gap-8">
-            {/* Left — Calendar */}
+            {/* Left - Calendar */}
             <motion.div
               className="lg:col-span-3 p-6 rounded-2xl border border-border bg-card"
               initial={{ opacity: 0, x: -20 }}
@@ -98,7 +98,7 @@ const Demo = () => {
               )}
             </motion.div>
 
-            {/* Right — Confirmation + form */}
+            {/* Right - Confirmation + form */}
             <motion.div
               className="lg:col-span-2 space-y-6"
               initial={{ opacity: 0, x: 20 }}

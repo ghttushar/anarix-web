@@ -67,7 +67,7 @@ const Navbar = () => {
           Anarix<span className="text-primary">.ai</span>
         </Link>
 
-        {/* Desktop Nav — centered */}
+        {/* Desktop Nav - centered */}
         <div className="hidden lg:flex items-center justify-center gap-0.5">
           {navItems.map((item) => (
             <div

@@ -24,7 +24,7 @@ const sections: { icon: any; title: string; articles: Article[] }[] = [
           { h: "1. Create your workspace" },
           { p: "Sign up with your work email. Pick a workspace name (typically your brand or agency name). Invite teammates from Settings → Team." },
           { h: "2. Connect a marketplace" },
-          { p: "Open Settings → Integrations and pick Amazon, Walmart, Shopify, or TikTok Shop. OAuth flows take ~2 minutes per channel. Historical data syncs in the background — usually within an hour for the past 90 days." },
+          { p: "Open Settings → Integrations and pick Amazon, Walmart, Shopify, or TikTok Shop. OAuth flows take ~2 minutes per channel. Historical data syncs in the background - usually within an hour for the past 90 days." },
           { h: "3. Set spend guardrails" },
           { p: "Settings → Preferences → Guardrails. Default daily and monthly spend caps per campaign. These are enforced by the rule engine before any automation can apply." },
           { h: "4. Meet Aan" },
@@ -62,7 +62,7 @@ const sections: { icon: any; title: string; articles: Article[] }[] = [
             "Sign in to your Amazon Ads account in the popup.",
             "Select the profiles (regions/accounts) you want Anarix to manage.",
             "Pick a sync window: 30, 90, or 365 days of history.",
-            "First sync completes in 5–60 minutes depending on volume.",
+            "First sync completes in 5-60 minutes depending on volume.",
           ] },
           { h: "Permissions requested" },
           { p: "Read: campaigns, keywords, reports, search terms. Write: bids, budgets, campaign state. AMC: query execution and audience export." },
@@ -106,10 +106,10 @@ const sections: { icon: any; title: string; articles: Article[] }[] = [
           { p: "Unified P&L shows true contribution margin across channels at the SKU, brand, or account level." },
           { h: "Cost lines included" },
           { list: [
-            "Cost of goods sold (COGS) — uploaded or pulled from Shopify.",
-            "Marketplace fees — referral, FBA, storage, returns.",
-            "Ad spend — Sponsored Products/Brands/Display, plus off-platform.",
-            "Shipping & fulfillment — actual cost from settlement reports.",
+            "Cost of goods sold (COGS) - uploaded or pulled from Shopify.",
+            "Marketplace fees - referral, FBA, storage, returns.",
+            "Ad spend - Sponsored Products/Brands/Display, plus off-platform.",
+            "Shipping & fulfillment - actual cost from settlement reports.",
             "Refunds and chargebacks.",
           ] },
           { h: "Frequency" },
@@ -145,7 +145,7 @@ const sections: { icon: any; title: string; articles: Article[] }[] = [
         id: "impact-analysis",
         title: "Impact Analysis",
         body: [
-          { p: "Impact Analysis compares performance before and after any change — a bid edit, a new campaign, a daypart schedule." },
+          { p: "Impact Analysis compares performance before and after any change - a bid edit, a new campaign, a daypart schedule." },
           { p: "Anarix automatically baselines the prior period and surfaces significant deltas as pill-style indicators on every metric." },
         ],
       },
@@ -190,10 +190,10 @@ const sections: { icon: any; title: string; articles: Article[] }[] = [
           { p: "Aan is the AI layer sitting on top of your Anarix data. It reads, diagnoses, drafts, and explains. It never auto-applies destructive changes." },
           { h: "Where Aan shows up" },
           { list: [
-            "Aan workspace — full chat with audits, rule drafts, and reports.",
-            "Insights panel — prioritized findings ranked by revenue impact.",
-            "Ask Aan tooltip — select any number in any table for instant context.",
-            "Floating action island — quick capture and conversation from anywhere.",
+            "Aan workspace - full chat with audits, rule drafts, and reports.",
+            "Insights panel - prioritized findings ranked by revenue impact.",
+            "Ask Aan tooltip - select any number in any table for instant context.",
+            "Floating action island - quick capture and conversation from anywhere.",
           ] },
         ],
       },
@@ -232,13 +232,13 @@ const sections: { icon: any; title: string; articles: Article[] }[] = [
         body: [
           { h: "May 2026" },
           { list: [
-            "Aan agents — autonomous workflows for budget pacing and anomaly response.",
+            "Aan agents - autonomous workflows for budget pacing and anomaly response.",
             "TikTok Shop ads integration (beta).",
             "Improved scatter chart margins on Profitability dashboard.",
           ] },
           { h: "April 2026" },
           { list: [
-            "Day-parting v3 — single-screen heatmap + scheduled jobs.",
+            "Day-parting v3 - single-screen heatmap + scheduled jobs.",
             "Multi-rule filter builder on every analytical table.",
             "Dark mode polish across the application.",
           ] },
@@ -338,7 +338,7 @@ const Documentation = () => {
             <WebsiteAanChat
               scope="docs"
               height="h-[560px]"
-              initialMessage="I can answer questions about Anarix's docs — setup, integrations, rules, API. What do you want to know?"
+              initialMessage="I can answer questions about Anarix's docs - setup, integrations, rules, API. What do you want to know?"
               suggested={[
                 "How do I connect Amazon?",
                 "How do I create a rule?",

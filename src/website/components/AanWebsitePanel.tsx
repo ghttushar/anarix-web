@@ -41,7 +41,7 @@ const PAGE_LABELS: Record<string, string> = {
 /**
  * Right-side fixed Aan chatbot for the website. Internally provides its own
  * AanPresenceProvider so the morphing mascot from the app travels into the
- * input slot above the textarea — exact same shape-morph behavior as the
+ * input slot above the textarea - exact same shape-morph behavior as the
  * in-app AanCopilotPanel + AanInput.
  */
 export default function AanWebsitePanel() {
@@ -58,7 +58,7 @@ function PanelInner() {
   const isOpen = mode === "copilot";
 
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Hi, I'm **Aan**. Ask me anything about Anarix — products, pricing, integrations, or how I work." },
+    { role: "assistant", content: "Hi, I'm **Aan**. Ask me anything about Anarix - products, pricing, integrations, or how I work." },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -199,7 +199,7 @@ function PanelInner() {
             role="dialog"
             aria-label="Chat with Aan"
           >
-            {/* Header — AanLogo + context bar (mirrors AanCopilotPanel) */}
+            {/* Header - AanLogo + context bar (mirrors AanCopilotPanel) */}
             <div className="border-b border-border shrink-0">
               <div className="flex items-center justify-between px-4 py-4">
                 <AanLogo />
@@ -224,7 +224,7 @@ function PanelInner() {
               </div>
             </div>
 
-            {/* Conversation — no per-message mascot, mirrors app pattern */}
+            {/* Conversation - no per-message mascot, mirrors app pattern */}
             <ScrollArea className="flex-1 min-h-0">
               <div className="p-4 space-y-4">
                 {messages.map((m, i) => (
@@ -289,7 +289,7 @@ function PanelInner() {
               </div>
             )}
 
-            {/* Input area — mascot anchor lives ABOVE the textarea (app parity) */}
+            {/* Input area - mascot anchor lives ABOVE the textarea (app parity) */}
             <div className="shrink-0 bg-background border-t border-border">
               <div className="px-4 pb-4 pt-3">
                 {/* Mascot slot (left-aligned, 52x52). The travelling AanMascot
@@ -305,7 +305,7 @@ function PanelInner() {
                   </span>
                 </div>
 
-                {/* Input container — chrome matches AanInput */}
+                {/* Input container - chrome matches AanInput */}
                 <div className="relative flex items-end gap-0 rounded-lg border border-border bg-card focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20 transition-all">
                   <button
                     type="button"
@@ -341,7 +341,7 @@ function PanelInner() {
               </div>
             </div>
 
-            {/* Travelling mascot — portals into the input slot above */}
+            {/* Travelling mascot - portals into the input slot above */}
             <AanPresencePortal />
           </motion.aside>
         </>

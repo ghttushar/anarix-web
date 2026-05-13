@@ -14,7 +14,7 @@ import EmbedScatterMargin from "@/website/components/embeds/EmbedScatterMargin";
 
 const features = [
   { icon: PieChart, title: "SKU-Level P&L", desc: "Contribution margin per SKU with FBA fees, storage, returns, refunds, and the cost lines hiding inside marketplace settlements broken out line-by-line." },
-  { icon: BarChart3, title: "Cross-Channel Attribution", desc: "Unified view across Amazon, Walmart, Shopify, TikTok, Meta, and Google Ads — joined to fulfilment cost and order-level economics." },
+  { icon: BarChart3, title: "Cross-Channel Attribution", desc: "Unified view across Amazon, Walmart, Shopify, TikTok, Meta, and Google Ads - joined to fulfilment cost and order-level economics." },
   { icon: TrendingUp, title: "Real-Time Dashboards", desc: "Live metrics refreshed every 15 minutes. No more waiting for yesterday's data to make today's decisions." },
   { icon: Target, title: "Margin Diagnostics", desc: "Aan flags profit leaks before they compound. See exactly which SKUs are bleeding, why, and what to do about it." },
 ];
@@ -30,7 +30,7 @@ const moneyGoes = [
 
 const ProductProfitability = () => (
   <PageLayout>
-    {/* HERO — taco animation + pun at the very top */}
+    {/* HERO - taco animation + pun at the very top */}
     <TacosSection />
 
     <div className="max-w-6xl mx-auto px-6">
@@ -94,7 +94,7 @@ const ProductProfitability = () => (
           reverse
           eyebrow="Week 1"
           title="What you'll see in your first seven days."
-          body={<><p>Most teams find $8,000–$40,000 of monthly margin within the first week — usually in long-tail SKUs that should have been delisted, ads running on unprofitable variants, or storage fees that ballooned during a promo.</p></>}
+          body={<><p>Most teams find $8,000-$40,000 of monthly margin within the first week - usually in long-tail SKUs that should have been delisted, ads running on unprofitable variants, or storage fees that ballooned during a promo.</p></>}
           visual={<AppEmbedFrame label="Margin leaks · ranked"><EmbedScatterMargin /></AppEmbedFrame>}
           bullets={["Ranked margin leaks with $ recovery", "Aan-drafted action for each", "Exportable for finance review"]}
         />

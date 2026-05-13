@@ -8,7 +8,7 @@ interface AnchorRegistration {
 }
 
 interface AanPresenceContextType {
-  /** Currently active anchor — the travelling mascot is rendered here. */
+  /** Currently active anchor - the travelling mascot is rendered here. */
   activeAnchor: AanAnchor | null;
   /** Register / unregister an anchor's DOM element. */
   registerAnchor: (anchor: AanAnchor, el: HTMLElement | null, size?: number) => void;

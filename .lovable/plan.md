@@ -1,102 +1,47 @@
 
-## 1. Aan Website Copilot — match in-app behavior
+## Plan
 
-Rewrite `src/website/components/AanWebsitePanel.tsx` so the chrome mirrors `AanCopilotPanel` + `AanInput`:
+### 1. Teams Section Redesign (`TeamsSection.tsx`, `CaricatureMockup.tsx`)
+Match the reference image aesthetic:
+- **Default state:** caricature SVG (no monogram). Cards rendered in a single horizontal flowing row per department with slight rotation/staggered offset like the reference, soft shadow, rounded squircle (rx=18).
+- **Hover state:** caricature crossfades to a real photo placeholder (circular `<img>` from `/team/{slug}.jpg` with graceful fallback to a richer photo-style SVG). Card lifts `y:-6`, scale `1.08`, name+role label fades in below.
+- Replace dept-grouped grid with a more editorial layout: dept name + tagline on left, horizontal scrolling/wrapping caricature row on right (mirroring reference).
+- Add a dark "Let's chat over chai" hero strip above teams (Bangalore-flavored pun: *"Let's chat more over Chai (or Filter Coffee)."*) with caricature row preview and a "Talk to an Expert" pill CTA.
+- Upgrade `CaricatureMockup` with richer SVG: subtle gradient bg, hair highlights, shoulder garment color per dept, optional accessories (glasses/beard) deterministic by name hash. Add second variant `PhotoMockup` rendered as a more photo-realistic SVG portrait (skin shading, depth) used as the "photo" hover state until real photos are uploaded.
 
-- Move the morphing `AanMascot` out of the chat bubbles and into a **fixed slot directly above the input field** (left-aligned, 52×52, same `pl-3 mb-2 h-[52px]` slot used in `AanInput`).
-- Wrap the panel in `AanPresenceProvider`; register the new slot as the `"input"` anchor via `useAanPresence().registerAnchor("input", el, 44)`.
-- Render `<AanPresencePortal />` inside the panel so the same shape-morphing mascot travels between idle/listening/thinking states (circle ↔ blob) exactly like the app.
-- States wire-up: `inputFocused → listening`, while loading → `thinking`, after assistant reply → `speaking` briefly. Use the existing `useAan()` setters (`setInputFocused`, plus a local `isGenerating` flag passed via context state).
-- Remove the per-message mascot avatars in conversation bubbles (chat in app doesn't render mascot per message either — only the persistent one).
-- Keep the suggestion chip pattern from `AanInput` (small "Suggested" pill animating in next to the mascot).
-- Input chrome stays identical: rounded card, paperclip + textarea + gradient send.
+### 2. Content & Feature Audit — add coverage for innovative features
+Add new sections / expand existing ones across:
+- **Home (`Home.tsx`)** — insert `InnovationBand` highlighting: Aan Copilot, Ask Aan (text-selection tooltip), Full-Screen Aan workspace, Floating Action Island, Insights System, Command Palette (Cmd+K), Day-Parting heatmap, Sandbox dashboard. Each card: icon, name, one-line value prop, micro pun.
+- **AanAI page** — new `AanSurfacesSection` describing the three Aan touchpoints with mock visuals:
+  1. **Aan Copilot Panel** — right-side workspace
+  2. **Ask Aan** — text-selection tooltip use-case (highlight a number → Aan explains)
+  3. **Full-Screen Aan** — dedicated `/aan` route for deep work
+  4. **Floating Action Island** — persistent hub for alerts + quick actions
+  Each with a mini mock card showing the UI shape (no screenshots, hand-built mocks using app tokens).
+- **Product pages** (Advertising, Profitability, Automation, ManagedServices) — add 1 extra "Why teams love it" content block + 1 use-case strip with 3 mini scenarios written as light pitch copy with mild puns ("Bid less, win more. Yes, really.").
+- **About page** — keep teams; add small "Our principles" trio (Operators first, Reversible by default, Numbers don't lie — but they do whisper).
 
-This makes the website panel visually and behaviorally a 1:1 thin-client of the app's copilot, except it talks to `website-aan` edge function and never executes app actions.
+Tone: light, indirect, salesy with restrained puns. No emojis. Aan zone keeps the playful copy; analytics tone untouched.
 
-## 2. Teams section on About page
+### 3. Design polish + visuals
+- Add a new `FeatureMockStrip.tsx` rendering small, distinct hand-coded mocks (command palette, floating island, ask-aan tooltip, full-screen workspace) using existing app design tokens — distinct silhouettes per feature so visuals don't repeat.
+- Strengthen `AmbientBackdropV2` contrast in light mode (current bloom is too faint at 1668px). Add a subtle conic accent in hero zones only.
 
-New file: `src/website/components/company/TeamsSection.tsx`. Mounted inside `src/website/pages/company/About.tsx` (between existing intro and footer regions).
+### 4. Alignment & Spacing Audit
+Sweep all `src/website/pages/**` and `src/website/components/**`:
+- Standardize section vertical rhythm to `py-24` (mobile `py-16`).
+- Standardize container to `max-w-6xl mx-auto px-6`.
+- Standardize SectionHeader margin-bottom to `mb-14`.
+- Standardize card grid gaps to `gap-4` (dense) / `gap-6` (feature).
+- Fix any orphan `mt-`/`pt-` overrides; remove inline magic numbers.
+- Verify no horizontal overflow at 1668px and 390px.
 
-Structure:
+### 5. Em-dash Purge
+Run `rg -l "—" src/website src/components/aan` and replace every em-dash (—) and en-dash (–) with hyphen `-` across all website + Aan-facing copy. Code/comments included if user-visible. Skip generated files (supabase types).
 
-```text
-[Eyebrow] The People
-[H2] One team. Five departments. Zero silos.
-[Lead] Short paragraph (~2 lines) about culture.
+### Files
+**New:** `src/website/components/home/InnovationBand.tsx`, `src/website/components/aan/AanSurfacesSection.tsx`, `src/website/components/marketing/FeatureMockStrip.tsx`, `src/website/components/company/PhotoMockup.tsx`, `src/website/components/company/TeamsHero.tsx`, `src/website/components/marketing/UseCaseStrip.tsx`.
+**Edited:** `TeamsSection.tsx`, `CaricatureMockup.tsx`, `Home.tsx`, `AanAI.tsx`, `About.tsx`, all 4 product pages, `AmbientBackdropV2.tsx`, plus em-dash sweep across `src/website/**`.
 
-  Leadership          [Sunil — CEO]
-  Account Management  [Bharath, Naveen, Rakesh C, Tarun Kumar, Nishith]
-  Service             [Milu, Venky, Kartik, Vardhan]
-  Tech                [Aman, Rajveer, Samarth, Samim, Vikas, Mohan, Rohit, Ben, Lipsa, Archana, Loges, Sam]
-  Design              [Anubhav, Tushar]
-  Marketing           [Jasleen, Devyanshi, Nandan]
-```
-
-Card behavior (per attached layout reference):
-- Default: small square card, initials monogram on a soft `bg-card` tile, name underneath, role under name in muted text.
-- Hover/focus (and tap on mobile): card scales `1.0 → 1.08`, raises shadow, swaps the monogram for a **caricature mockup** (placeholder SVG component `CaricatureMockup.tsx` that draws a stylized head silhouette with a department-tinted background — easy to swap for real art later), and reveals a one-line bio chip.
-- Grid: `grid-cols-2 sm:grid-cols-3 md:grid-cols-5` per department row, dept heading is a sticky-ish left rail on `md+` and a stacked H3 on mobile.
-- Motion: `framer-motion` `whileHover={{ scale: 1.08 }}`, 180ms cubic-bezier(0.2,0,0,1) — within design system limits.
-
-Data lives inline in `TeamsSection.tsx` as a typed array; each member `{ name, role, dept, bioLine }`.
-
-## 3. Testimonials — 3 quotes + 1 video
-
-Update `src/website/components/TestimonialsSection.tsx`:
-
-- Replace existing copy with the three real quotes:
-  1. **Firat Ozkan** — Co-Founder & CMO/CSO, Mount-It! (Walmart full-funnel quote).
-  2. **James Ellington** — Sr. Director of Sales, Retail Division, Drive Medical.
-  3. **Video testimonial** card paired with the third quote — renders a `<video>` element with `poster` and `controls`; src defaults to `/testimonials/video.mp4` (placeholder path) so the user can drop the file later. Tile shows a "Play" overlay until clicked.
-- Layout: 2-column grid on desktop with the video card spanning a wider tile; stacked on mobile.
-- Add an "Important voices, not many — but the ones that matter" eyebrow line per the user's framing.
-
-## 4. Creative website background
-
-New `src/website/components/AmbientBackdropV2.tsx` replacing/upgrading the current `AmbientBackdrop`:
-
-- Layered, low-opacity composition: 
-  - Soft periwinkle radial bloom in the upper-left, drifting via `framer-motion` (240ms ease, ≤8px motion per system rules — drift is via slow CSS transform with very low amplitude).
-  - Hairline grid overlay (1px `currentColor` at 4% opacity) for analytical texture.
-  - Floating geometric "data shards" (3–5 thin SVG chevrons / sparkline fragments) parked in negative space, fading in on scroll with `useScrollReveal`.
-  - Dotted "constellation" pattern in the footer band.
-- All effects are CSS/SVG only — no `backdrop-filter`, no infinite pulse, no parallax > 8px. Respects motion rules in section 9 of project knowledge.
-- Mounted once in `WebsiteLayout.tsx` behind `<main>` with `pointer-events-none`.
-
-## 5. App-accurate visuals + more copy
-
-Audit pass across product pages (`Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `Profitability.tsx`) and `Home.tsx`:
-
-- Replace generic chart placeholders with **distinct, page-appropriate mocks** that mirror the actual app components:
-  - Advertising: campaign table mock (uses real column headers from the Advertising module memory: Campaign / Spend / Sales / ROAS / TACoS) + a small bid-history sparkline.
-  - Automation: rule-card mock (matches `EmbedRuleCard` styling) + a guardrail diagram.
-  - Managed Services: pod-roster card + onboarding timeline.
-  - Profitability: scatter-chart preview (margin vs units) + nested P&L row mock — both already exist conceptually in app, ports a static SVG version.
-- Add 1–2 paragraphs of supporting body copy under each section header (currently many sections are headline-only). Tone follows zone rules: Core/Reports = clinical, Aan page = lightly witty.
-
-## 6. Files
-
-**New**
-- `src/website/components/company/TeamsSection.tsx`
-- `src/website/components/company/CaricatureMockup.tsx`
-- `src/website/components/AmbientBackdropV2.tsx`
-- `src/website/components/products/mocks/CampaignTableMock.tsx`
-- `src/website/components/products/mocks/RuleCardMock.tsx`
-- `src/website/components/products/mocks/PodRosterMock.tsx`
-- `src/website/components/products/mocks/PnlScatterMock.tsx`
-
-**Edited**
-- `src/website/components/AanWebsitePanel.tsx` — full rewrite for app parity.
-- `src/website/components/TestimonialsSection.tsx` — new content + video tile.
-- `src/website/pages/company/About.tsx` — mount `TeamsSection`.
-- `src/website/WebsiteLayout.tsx` — swap to `AmbientBackdropV2`.
-- `src/website/pages/products/*.tsx` (4 files) — drop in mocks + body copy.
-- `src/website/pages/Home.tsx` — add supporting paragraphs to thin sections.
-
-**Deleted**
-- `src/website/components/AmbientBackdrop.tsx` (replaced).
-
-## Open questions
-
-1. **Testimonial video file** — should I leave a placeholder path (`/testimonials/firat.mp4`) and a poster image slot for you to upload later, or do you want to attach the file now?
-2. **Caricatures** — confirm placeholder monogram/silhouette is fine for now (real art swapped later by replacing `CaricatureMockup.tsx`)?
+### Open question
+1. For the team **photo hover**, should I generate stylized SVG "photo-style" portraits as placeholders (deterministic per name, distinct from caricature), or leave a real `<img src="/team/{slug}.jpg">` reference with a fallback caricature so you can drop real photos into `public/team/` later? (Recommended: do both — try `<img>` first, fall back to stylized portrait SVG.)

@@ -12,7 +12,7 @@ const capabilities = [
 
 const chatMessages = [
   { role: "user" as const, text: "What's my best performing campaign this week?" },
-  { role: "aan" as const, text: "Your 'Summer Sale – Brand Defense' campaign on Amazon drove $48K in revenue at 4.2x ROAS, up 18% WoW. Should I scale the budget?" },
+  { role: "aan" as const, text: "Your 'Summer Sale - Brand Defense' campaign on Amazon drove $48K in revenue at 4.2x ROAS, up 18% WoW. Should I scale the budget?" },
   { role: "user" as const, text: "Yes, increase by 20% and pause underperformers." },
   { role: "aan" as const, text: "Done. Budget increased to $12K/day. Paused 3 campaigns with ROAS < 1.5x. I'll monitor and report back tomorrow." },
 ];

@@ -3,7 +3,7 @@ import WorkflowDiagram from "@/website/components/marketing/WorkflowDiagram";
 
 const WorkflowSection = ({
   eyebrow = "How it works",
-  title = "Aan works alongside your team — never around it.",
+  title = "Aan works alongside your team - never around it.",
   lead = "Aan reads, diagnoses, and drafts. You approve. Every action is reversible and logged for audit.",
   nodes,
 }: { eyebrow?: string; title?: string; lead?: string; nodes?: { label: string; sub?: string }[] }) => (

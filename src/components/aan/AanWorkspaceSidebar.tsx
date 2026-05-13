@@ -62,7 +62,7 @@ export function AanWorkspaceSidebar() {
   if (isCollapsed) {
     return (
       <aside className="w-14 border-r border-border bg-card flex flex-col h-full shrink-0">
-        {/* Collapsed header — centered symbol logo */}
+        {/* Collapsed header - centered symbol logo */}
         <div className="flex items-center justify-center h-12 border-b border-border/30 shrink-0">
           <AanGlyph className="h-6 w-6 aan-gradient-text" staticEyes />
         </div>
@@ -116,7 +116,7 @@ export function AanWorkspaceSidebar() {
 
   return (
     <aside className="w-64 border-r border-border bg-card flex flex-col h-full shrink-0">
-      {/* Header — Logo left, collapse right (matches AppSidebar) */}
+      {/* Header - Logo left, collapse right (matches AppSidebar) */}
       <div className="flex items-center justify-between h-12 px-3 border-b border-border/30 shrink-0">
         <div className="flex items-center gap-2">
           <AanGlyph className="h-6 w-6 aan-gradient-text" staticEyes />

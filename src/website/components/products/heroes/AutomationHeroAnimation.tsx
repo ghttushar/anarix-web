@@ -10,7 +10,7 @@ const steps = [
 ];
 
 /**
- * Pipeline hero — a traveling pulse moves through 4 nodes (Draft →
+ * Pipeline hero - a traveling pulse moves through 4 nodes (Draft →
  * Simulate → Approve → Execute), highlighting each as it passes.
  */
 const AutomationHeroAnimation = () => {
