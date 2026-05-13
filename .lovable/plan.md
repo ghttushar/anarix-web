@@ -1,86 +1,93 @@
-# Plan — Website Pages, Live Aan, Real UI Embeds
 
-## 1. Navigation cleanup
-- `Navbar.tsx`: remove Pricing link (keep route reachable but hidden from nav).
-- Verify all nav links point to `/website/...` and active states work in light + dark.
+# Rework: Home + Products + Aan AI
 
-## 2. Aan launcher — fix overlap, make it feel alive
-Problem: `WebsiteAanLauncher` (bottom-right) overlaps `ScrollToTop` button on Home.
-- Stack vertically: ScrollToTop sits above launcher with 16px gap, both pinned bottom-right. Hide ScrollToTop on mobile when launcher open.
-- Replace static button with live `AanMascot` (reuse `src/components/aan/AanMascot.tsx` — diamond/circle/cube states, cursor tracking, idle breathing) inside a 64px floating pill.
-- Add subtle gradient ring (brand.primary → brand.accent) using AI-only gradient rule (≤400ms shimmer, single pass on idle every 8s).
-- Label "Talk to Aan" appears on hover; mascot transitions: idle → listening (on open) → thinking (on stream) → idle.
-- Same launcher persists across all `/website/*` pages.
+Hybrid pacing: editorial hero → dense middle (data, embeds, diagrams) → editorial close. Real Anarix tone (analytical, calm). All visuals use Periwinkle tokens. No new business logic.
 
-## 3. Live Talk-to-Aan (already wired) — upgrade
-- Keep `supabase/functions/website-aan` (Lovable AI Gateway, gemini-3-flash-preview, streaming).
-- Update `WebsiteAanChat.tsx`:
-  - Replace static avatar with mini `AanMascot` (state synced to streaming/idle).
-  - System prompt expanded with concrete Anarix product knowledge (Profitability SKU P&L, Advertising AI+rule bidder, Dayparting, Rule Agents, AMC, Aan workspace, marketplaces, pricing tiers, integrations).
-  - Suggested prompt chips: "What does Anarix do?", "How does Aan create rules?", "Show me the dayparting flow", "Pricing".
-  - Markdown render via `react-markdown` (already in deps; add if missing).
-  - 429/402 inline error banners (no toasts — toasts forbidden on website).
+## 1. Shared building blocks (new)
 
-## 4. Aan AI page — full rebuild
-`src/website/pages/AanAI.tsx`
-- Hero: large `AanMascot` (200px) center-stage, headline "Aan. Intelligence by Anarix.", live state cycling (diamond → circle → cube → anchor on a 6s loop demonstrating moods).
-- Section: "What Aan does" — 4 columns (Diagnose, Draft, Explain, Confirm) each with mini app screenshot.
-- Section: "Aan in your workflow" — embed read-only snippets:
-  - `InsightCard` from `src/components/insights/InsightCard.tsx` (mock data)
-  - Mini conversation card mimicking `AanConversation` layout
-  - Rule draft preview (static JSX matching `RuleAgents` styling)
-- Section: "Talk to Aan now" — full-width embedded `WebsiteAanChat` (not floating, inline 600px).
-- Section: "Safety first" — explains never-auto-execute, version history, audit trail (per project knowledge).
+Create `src/website/components/marketing/`:
+- `StatBlock.tsx` — oversized number + label + delta (e.g. "$200M+ / managed ad spend / +38% YoY"). Uses Satoshi 600, 64–96px.
+- `SectionHeader.tsx` — eyebrow chip + H2 + lead paragraph, consistent across pages.
+- `SplitFeature.tsx` — 50/50 text + visual slot, alternating left/right.
+- `WorkflowDiagram.tsx` — framer-motion node-and-edge diagram (Connect → Diagnose → Draft → Approve → Execute), animated stroke draw.
+- `AppEmbedFrame.tsx` — chrome wrapper (faux toolbar dots + label) for read-only app screenshots/components, `pointer-events-none`, `scale-[0.92]`.
 
-## 5. Documentation page — full rebuild
-`src/website/pages/Documentation.tsx`
-- Three-column layout: left sidebar nav (sticky), center content, right sticky `WebsiteAanChat` (docs-scoped system prompt).
-- Sections (real content, ~300–500 words each):
-  1. Quickstart
-  2. Connecting Amazon
-  3. Connecting Walmart
-  4. Profitability & SKU P&L
-  5. Advertising — AI+Rule bidder
-  6. Dayparting
-  7. Rule Agents (creating, previewing, applying)
-  8. Impact Analysis
-  9. AMC queries & audiences
-  10. Reports & client portal
-  11. Aan workspace (chat, audits, drafts)
-  12. Settings & integrations
-- Each section anchors via hash; sidebar highlights active section on scroll.
-- Docs Aan chat system prompt grounded in same content + cites section names.
+Create `src/website/components/embeds/` (read-only, mock data, no app context required):
+- `EmbedKpiStrip.tsx` — 4 KPI cards (Revenue, ROAS, TACoS, Orders) styled like `KPICard`.
+- `EmbedCampaignTable.tsx` — 6-row campaign table with sticky first col, status badges, sparkline column.
+- `EmbedScatterMargin.tsx` — SVG scatter (margin vs spend) with quadrant guides.
+- `EmbedDayparting.tsx` — 7×24 heatmap grid with Periwinkle scale.
+- `EmbedRuleCard.tsx` — rule definition card (IF/THEN block + guardrail chips + Preview/Approve buttons).
+- `EmbedInsightCard.tsx` — Aan insight card (severity dot + title + 2-line diagnosis + "Open in Aan" link).
 
-## 6. Company pages — populate with real content
-- **About** (`company/About.tsx`): keep current shell, add real mission paragraph, 4 values rewritten in Anarix tone (per Section 10), founders blurb, `HallOfFame` component already exists — embed it.
-- **Career** (`company/Career.tsx`): real role list (Sr Frontend Eng, Data Eng, Account Strategist, Product Designer), location/remote tags, "How we hire" 4-step timeline, mailto careers@anarix.ai.
-- **Contact** (`company/Contact.tsx`): keep form layout, add real office (NYC), support hours, SLA note, link to docs + Aan.
+Create `src/assets/website/` illustrations via imagegen (4 abstract Periwinkle visuals: data lattice, signal flow, decision tree, calm waveform). Used as section accents only.
 
-## 7. Embed real app UI on Product pages
-Create `src/website/components/AppUIEmbed/` with read-only wrappers (mock data, pointer-events disabled, scaled 0.85):
-- `EmbedProfitabilityHero.tsx` — wraps `ProfitabilityHeroCard`
-- `EmbedScatter.tsx` — wraps `ScatterPlotChart`
-- `EmbedCampaignTable.tsx` — wraps `CampaignTable` (truncated to 5 rows)
-- `EmbedRuleAgent.tsx` — static rule card matching `RuleAgents` styling
-- `EmbedDayparting.tsx` — wraps `HourlyHeatmap`
+## 2. Home (`src/website/pages/Home.tsx`)
 
-Mount on:
-- `Profitability.tsx` → replace mock dashboard with EmbedProfitabilityHero + EmbedScatter
-- `Advertising.tsx` → add EmbedCampaignTable below feature grid
-- `Automation.tsx` → add EmbedRuleAgent + EmbedDayparting
-- `ManagedServices.tsx` → add EmbedProfitabilityHero (illustrative)
+New section order (replacing current flat stack):
 
-All embeds wrapped in browser-chrome card (existing pattern from current Profitability page) and labeled "Live from the Anarix app".
+1. **HeroSection** (existing, kept)
+2. **SocialProofSection** (existing, kept — tightened)
+3. **StatBand** (new) — 4 oversized StatBlocks in a single row: $200M+ ad spend, $1.2B GMV, 4.2x median ROAS, 12.8% TACoS.
+4. **ProblemSection** (new) — editorial: "Most ad platforms tell you what happened. None tell you what to do." 2-column with illustration.
+5. **SolutionsSection** (existing, kept)
+6. **ProductPreviewBand** (new, dense) — 3 `AppEmbedFrame` cards side-by-side (KPI strip, campaign table, dayparting heatmap) with caption underneath each.
+7. **WorkflowDiagram** section — "How Aan works alongside your team" with the 5-node animated diagram.
+8. **ImpactSection** (existing, kept)
+9. **TestimonialsSection** (existing, kept)
+10. **IntegrationOrbit** (existing component, re-used) — "Plugs into your stack"
+11. **AuditCTASection** (existing, kept as editorial close)
 
-## 8. Hide app chrome on /website
-Already done via `FloatingActionIsland.tsx` hiddenRoutes — verify `/website` prefix matches every subpath. Also ensure `<Toaster />` instances are not rendered inside `WebsiteLayout`.
+## 3. Aan AI (`src/website/pages/AanAI.tsx`)
 
-## 9. Theme toggle
-Already in navbar (`WebsiteThemeToggle`). Verify Periwinkle tokens applied via `website.css` for both modes; no custom hex in components.
+1. **Hero** — keep mascot, enlarge to 180px, add subtitle line "Anarix Analytical Neural — your second analyst." Add 3 inline stat chips below ("Reads 47 data sources", "Drafts in <8s", "100% auditable").
+2. **What Aan does** (new) — `SectionHeader` + 5 capability cards in 2-row grid (existing capabilities, expanded copy 60–80 words each).
+3. **WorkflowDiagram** — "From question to approved action" (5-step animated).
+4. **Aan in your workflow** (new) — 3 `SplitFeature` blocks alternating, each with `EmbedInsightCard`, `EmbedRuleCard`, then Aan chat snippet on the right.
+5. **Live chat** (existing `WebsiteAanChat`) — full width, taller (h-[560px]), with 4 suggested-prompt chips above.
+6. **Safety section** (new) — "Aan suggests. You approve. Always." 3-column: Preview-first, Full audit log, Versioned drafts. Periwinkle illustration accent.
+7. **CycloneScrollSection** (existing, kept)
+8. CTA close.
 
-## Open question
-For embedded app components — I'll wrap real components with mock data and `pointer-events-none` so they render exactly like the app (richest demo). Confirm if you'd rather have static screenshots instead (lighter, but less impressive). I'll proceed with live read-only embeds unless you say otherwise.
+## 4. Product pages
 
-## Files
-**Edit**: `Navbar.tsx`, `WebsiteAanLauncher.tsx`, `WebsiteAanChat.tsx`, `ScrollToTop.tsx`, `AanAI.tsx`, `Documentation.tsx`, `company/About.tsx`, `company/Career.tsx`, `company/Contact.tsx`, `Profitability.tsx`, `Advertising.tsx`, `Automation.tsx`, `ManagedServices.tsx`, `supabase/functions/website-aan/index.ts` (expanded prompt).
-**Create**: `src/website/components/AppUIEmbed/{EmbedProfitabilityHero,EmbedScatter,EmbedCampaignTable,EmbedRuleAgent,EmbedDayparting}.tsx`, `src/website/docs/sections.ts` (docs content data).
+Common new structure for each (`Profitability`, `Advertising`, `Automation`, `ManagedServices`):
+
+1. Hero (existing, kept).
+2. **Problem statement** — 1 editorial paragraph + supporting StatBlock.
+3. **Feature grid** (existing, kept — copy expanded).
+4. **AppEmbedFrame deep-dive** — page-specific embed:
+   - Profitability → `EmbedKpiStrip` + `EmbedScatterMargin`.
+   - Advertising → `EmbedCampaignTable` + `EmbedDayparting`.
+   - Automation → `EmbedRuleCard` + WorkflowDiagram (mini, 3 nodes).
+   - ManagedServices → `EmbedInsightCard` triplet + team illustration.
+5. **SplitFeature** (new) — 2 alternating blocks with longer prose (120–150 words each) covering "How it works" and "What you'll see in week 1".
+6. **Outcome stat band** — 3 StatBlocks per page (page-specific metrics).
+7. **Existing tail sections** kept (TacosSection on Profitability).
+8. CTA close.
+
+## 5. Visual + motion rules
+
+- All motion: opacity + ≤8px translate, 180–240ms, `cubic-bezier(0.2,0,0,1)`.
+- WorkflowDiagram: single SVG path draw on inView (once), 600ms.
+- StatBlock numbers: count-up on inView (once, 800ms, ease-out).
+- Embeds: `pointer-events-none`, no live data fetching, mock arrays inline.
+- All colors via tokens (`bg-card`, `text-foreground`, `text-primary`, `border-border`).
+
+## 6. Files
+
+Create:
+- `src/website/components/marketing/{StatBlock,SectionHeader,SplitFeature,WorkflowDiagram,AppEmbedFrame}.tsx`
+- `src/website/components/embeds/{EmbedKpiStrip,EmbedCampaignTable,EmbedScatterMargin,EmbedDayparting,EmbedRuleCard,EmbedInsightCard}.tsx`
+- `src/website/components/home/{StatBand,ProblemSection,ProductPreviewBand}.tsx`
+- 4 illustrations in `src/assets/website/` via imagegen.
+
+Edit:
+- `src/website/pages/Home.tsx`
+- `src/website/pages/AanAI.tsx`
+- `src/website/pages/products/Profitability.tsx`
+- `src/website/pages/products/Advertising.tsx`
+- `src/website/pages/products/Automation.tsx`
+- `src/website/pages/products/ManagedServices.tsx`
+
+No backend changes. No route changes. No nav changes.
