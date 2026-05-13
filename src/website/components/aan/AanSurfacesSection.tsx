@@ -115,8 +115,8 @@ const surfaces = [
   {
     title: "Aan Copilot",
     sub: "The right-side workspace",
-    body: "Open it on any page. Aan keeps the context, drafts the action, and shows its work. Every output gets a preview before it touches your account.",
-    use: "When ROAS dips and you need a diagnosis in under a minute.",
+    body: "\n",
+    use: "\n",
     Mock: CopilotMock,
   },
   {
