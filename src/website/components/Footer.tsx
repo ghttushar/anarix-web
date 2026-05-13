@@ -80,15 +80,12 @@ const Footer = () => {
             © {new Date().getFullYear()} Anarix. All rights reserved.
           </p>
           <div className="flex gap-4">
-            {["Privacy", "Terms", "Security"].map((link) => (
-              <a
-                key={link}
-                href="#"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300"
-              >
-                {link}
-              </a>
-            ))}
+            <Link to="/website/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">
+              Privacy
+            </Link>
+            <Link to="/website/terms-and-conditions" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">
+              Terms
+            </Link>
           </div>
         </div>
       </div>

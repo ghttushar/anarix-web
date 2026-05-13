@@ -104,6 +104,8 @@ import WebsiteProductProfitability from "./website/pages/products/Profitability"
 import WebsiteProductAdvertising from "./website/pages/products/Advertising";
 import WebsiteProductAutomation from "./website/pages/products/Automation";
 import WebsiteProductManagedServices from "./website/pages/products/ManagedServices";
+import WebsitePrivacyPolicy from "./website/pages/legal/PrivacyPolicy";
+import WebsiteTermsAndConditions from "./website/pages/legal/TermsAndConditions";
 
 const queryClient = new QueryClient();
 
@@ -246,6 +248,8 @@ function AppRoutes() {
         <Route path="products/advertising" element={<WebsiteProductAdvertising />} />
         <Route path="products/automation" element={<WebsiteProductAutomation />} />
         <Route path="products/managed-services" element={<WebsiteProductManagedServices />} />
+        <Route path="privacy-policy" element={<WebsitePrivacyPolicy />} />
+        <Route path="terms-and-conditions" element={<WebsiteTermsAndConditions />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
