@@ -1,52 +1,62 @@
+## Goal
 
-# Refined TACoS section — "30% less, every time"
-
-Replace the current cartoonish circular pie-slice taco with an editorial-grade SVG illustration of a taco shown in side profile, with a clean **bite arc** removed from the upper-right. A bite-shaped wedge animates out (the 30% bite) on scroll-in. Mature linework, restrained palette, no kid-poster vibes.
+The current taco reads flat and small in a centered column. The user wants the visual energy of the attached 3D taco reference (volumetric shell, plump fillings, soft studio lighting) — but executed as a mature, editorial illustration that fits Anarix's serious analytical platform tone.
 
 ## Visual concept
 
-- **Side-profile taco**, 360×260 viewBox, drawn in monoline + flat fills.
-- **Single muted palette** (no rainbow): warm shell ochre `hsl(36 45% 62%)`, soft tomato `hsl(8 55% 55%)`, sage lettuce `hsl(140 22% 48%)`, muted cheese `hsl(40 55% 65%)`, ink line `hsl(var(--foreground))`. Everything reads as one composed object, not a sticker.
-- **Bite removal**: a SVG `mask` that subtracts a smooth bite arc (cubic curve, not jagged teeth — too playful) from the upper-right ~30% of the silhouette. Animates from full to bitten over 1.4s, eased.
-- **Subtle crumbs**: 3 small dots fall from the bite area on scroll-in, soft fade-out at end. No confetti, no steam.
-- **Type as visual anchor** (treated as poster, not caption):
-  - Eyebrow: "TACOS · TOTAL ADVERTISING COST OF SALES" (small caps, tracked, muted).
-  - Headline: "We take a **30%** bite out of yours." — the `30%` morphs/counts up alongside the bite.
-  - Sub: "One bite for us. The rest stays on your plate." (the pun, mature).
-  - Footnote: existing TACoS explainer paragraph kept, slightly tightened.
-- **Motion timing**: bite eats in 1.4s `cubic-bezier(0.2,0,0,1)`. Number counts 0→30. Crumbs fade 0.4→0 over 1s with delay 0.6s. Single pass, no looping.
+**Bigger, dimensional, asymmetric.** Replace the small flat side-profile with a large 3/4-view taco rendered as layered SVG with soft gradient shading to simulate volume — inspired by the 3D reference but kept as a refined 2D illustration (no photoreal, no glossy plastic look).
 
-## Layout
+**Side-by-side editorial layout** (replaces the current centered stack):
+- Left (60%): the taco illustration, ~520px tall, sitting on a soft pedestal of light. Bite removed from upper-right ~30%.
+- Right (40%): typographic poster — eyebrow, large headline with morphing 30%, supporting paragraph, and a small stat strip ("avg TACoS reduction · 30%" / "across 100+ brands" / "in first 90 days").
+- On narrow viewports, stacks vertically, taco first.
 
-```
-[ small-caps eyebrow                              ]
-[                                                 ]
-[              ILLUSTRATION (side taco)           ]
-[                                                 ]
-[          We take a 30% bite out of yours.       ]
-[       One bite for us. The rest stays …         ]
-```
+## Illustration upgrades (within current single SVG)
 
-Two-column on lg+ optional, but center-stack reads cleaner and matches existing rhythm. Stick with center-stack.
+1. **Dimensional shell** — replace flat shell fills with layered paths:
+   - Back rim (darker ochre)
+   - Mid shell body (warm gradient: hsl(36 55% 72%) → hsl(32 48% 52%))
+   - Inner shell shadow (deep umber crescent on the inside curve)
+   - Highlight sheen (soft cream gradient along upper edge, ~12% opacity)
+2. **Plump fillings** — lettuce ribbon gets a second darker layer behind for depth; tomato cubes get a tiny highlight dot; cheese strands get one warm-shadow stroke beneath.
+3. **Soft contact shadow** — wider, softer radial ellipse beneath the taco (currently too thin).
+4. **Ambient floor glow** — a very faint warm radial gradient *behind* the taco at ~6% opacity so it sits in a quiet "studio" environment without breaking the calm app palette.
+5. **Bite refinement** — keep the animated mask, but add:
+   - A subtle inner darker rim along the bite edge (1.5px stroke at 22% foreground) to suggest the shell's cross-section thickness.
+   - 5 crumbs instead of 3, with varied sizes (1.6–2.6px).
+6. **30% badge** — promote to a circular medallion with a thin ring outline anchored at the bite, with a hairline leader line pointing to the bite edge. Still uses tabular nums + count-up.
 
-## Implementation
+## Typography & copy (right column)
 
-Single file edit: `src/website/components/TacosSection.tsx`.
+- Eyebrow: `TACoS · TOTAL ADVERTISING COST OF SALES` (existing styling)
+- Headline (Satoshi 600, 48–56px): "We take a **30%** bite out of yours."
+- Sub (Noto, 16–18px, muted): "One bite for us. The rest stays on your plate. TACoS is the only ad-spend ratio your CFO actually cares about — and we're built to shrink it."
+- Stat strip (3 inline mini-stats, 12px label / 20px value, separated by hairline dividers):
+  - `30%` avg TACoS reduction
+  - `90 days` typical timeline
+  - `100+` brands operated
 
-- Replace `AnimatedTaco` with new `BittenTaco` SVG component:
-  - viewBox `0 0 360 260`.
-  - Layers (back→front): shadow ellipse, shell back-curve, fillings group (lettuce ribbon, tomato dice, cheese strands, sour-cream highlight), shell front-curve, ink outline.
-  - `<mask id="bite">` containing a white rect plus a black bite path (smooth crescent on upper-right). Bite path `pathLength` animated via `framer-motion` from 0 (no bite) to 1 (full 30% bite).
-  - Crumbs: 3 small `<circle>` with staggered `motion.circle` opacity + translate.
-- Replace headline + sub copy as above.
-- Remove "Our Take on TACoS" eyebrow → replace with the small-caps full-name eyebrow.
-- Number counter reused via existing `progress` state (already counts 0→1 over 2s; reduce to 1.4s and tie to bite).
-- Keep `useScrollReveal` and the section wrapper untouched.
+## Motion (unchanged constraints)
 
-No new dependencies. No other files touched.
+- Single-pass bite animation, 1.4s, easeOutQuart, triggered on scroll-reveal.
+- Number morphs with bite progress.
+- Stat strip fades in at delay 0.85s, opacity-only, 600ms.
+- No loops, no pulsing, no parallax. Respects Section 9.
 
-## QA
+## Palette discipline
 
-- Verify on light + dark themes: ink line uses `currentColor`/foreground token so contrast is correct.
-- Verify bite mask renders cleanly (no leaking edges) at 64px and 320px sizes.
-- Verify text never overlaps illustration on narrow viewports — illustration scales `max-w-sm`.
+- Taco uses *illustrative* warm palette (ochre/sage/tomato) — these are illustration colors, not data-viz tokens. They live only inside this one section, fully scoped to the SVG.
+- All text, dividers, and the medallion ring use design-system tokens (`foreground`, `muted-foreground`, `border`).
+- No brand gradient leaks outside Aan zones; the medallion uses neutral foreground only.
+
+## Files touched
+
+- `src/website/components/TacosSection.tsx` — single file rewrite. No new components, no new dependencies, no other files touched.
+
+## QA checklist
+
+- Verify in light + dark themes (taco palette stays warm, surrounding chrome inverts via tokens).
+- Verify illustration scales cleanly from 320px → 720px wide.
+- Verify text never overlaps illustration at 768px breakpoint.
+- Verify bite mask renders cleanly (no jagged edge) at full size.
+- Verify count-up reaches exactly 30 at progress=1.
