@@ -47,21 +47,23 @@ const TacoIllustration = ({ progress }: Props) => {
             />
           </mask>
 
-          <radialGradient id="taco-floor-glow" cx="50%" cy="68%" r="55%">
-            <stop offset="0%" stopColor="hsl(36 70% 70%)" stopOpacity="0.18" />
-            <stop offset="70%" stopColor="hsl(36 70% 70%)" stopOpacity="0" />
-          </radialGradient>
-
-          <radialGradient id="taco-real-shadow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.22" />
-            <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0" />
-          </radialGradient>
+          <filter id="taco-shadow-tight" x="-20%" y="-400%" width="140%" height="900%">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
+          <filter id="taco-shadow-mid" x="-20%" y="-400%" width="140%" height="900%">
+            <feGaussianBlur stdDeviation="8" />
+          </filter>
+          <filter id="taco-shadow-wide" x="-20%" y="-400%" width="140%" height="900%">
+            <feGaussianBlur stdDeviation="18" />
+          </filter>
         </defs>
 
-        {/* Ambient floor glow */}
-        <ellipse cx="250" cy="360" rx="220" ry="60" fill="url(#taco-floor-glow)" />
-        {/* Soft contact shadow */}
-        <ellipse cx="250" cy="430" rx="180" ry="14" fill="url(#taco-real-shadow)" />
+        {/* Layered editorial ground shadow — token-driven, no warm halo */}
+        <g>
+          <ellipse cx="250" cy="430" rx="220" ry="22" fill="hsl(var(--foreground))" fillOpacity="0.06" filter="url(#taco-shadow-wide)" />
+          <ellipse cx="250" cy="430" rx="170" ry="14" fill="hsl(var(--foreground))" fillOpacity="0.14" filter="url(#taco-shadow-mid)" />
+          <ellipse cx="250" cy="432" rx="120" ry="6" fill="hsl(var(--foreground))" fillOpacity="0.28" filter="url(#taco-shadow-tight)" />
+        </g>
 
         {/* The hand-drawn taco itself, masked for the bite */}
         <g
