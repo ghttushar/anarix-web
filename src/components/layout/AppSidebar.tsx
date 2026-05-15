@@ -6,7 +6,7 @@ import {
   CalendarClock, History, ListTodo, Settings, Users, ChevronDown,
   ChevronRight, Layers, Image, FlaskConical, PackageCheck,
   Send, Sun, Moon, User, LogOut, PanelLeft,
-  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug, Globe
+  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug, Globe, CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -368,6 +368,9 @@ export function AppSidebar() {
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/component-library")}>
                     <Layers className="h-4 w-4" /><span>Component Library</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/billing")}>
+                    <CreditCard className="h-4 w-4" /><span>Billing</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
                     <User className="h-4 w-4" /><span>Profile</span>
@@ -430,6 +433,9 @@ export function AppSidebar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/component-library")}>
                     <Layers className="h-4 w-4" /><span>Component Library</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/billing")}>
+                    <CreditCard className="h-4 w-4" /><span>Billing</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
