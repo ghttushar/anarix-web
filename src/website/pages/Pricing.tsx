@@ -1,155 +1,191 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, HelpCircle } from "lucide-react";
+import { Check, X, ArrowRight, MessageSquare, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import PageLayout from "@/website/components/PageLayout";
-
-const plans = [
-  {
-    name: "Starter",
-    desc: "For growing brands getting started with ads.",
-    monthly: 499,
-    yearly: 399,
-    features: ["Up to $50K ad spend", "2 channels", "Basic analytics", "Email support", "5 automation rules"],
-    cta: "Get Started",
-    style: "border-border bg-card",
-  },
-  {
-    name: "Growth",
-    desc: "For brands scaling aggressively across channels.",
-    monthly: 1499,
-    yearly: 1199,
-    popular: true,
-    features: ["Up to $500K ad spend", "All channels", "Advanced analytics", "Priority support", "Unlimited rules", "Aan AI copilot", "Creative Studio"],
-    cta: "Start Free Trial",
-    style: "border-primary bg-card shadow-strong ring-1 ring-primary/20",
-  },
-  {
-    name: "Enterprise",
-    desc: "For large brands and agencies needing everything.",
-    monthly: null,
-    yearly: null,
-    features: ["Unlimited ad spend", "All channels + custom", "Custom dashboards", "Dedicated AM", "Unlimited rules", "Full Aan AI suite", "Creative Studio", "API access", "SSO & compliance"],
-    cta: "Contact Sales",
-    style: "border-border bg-foreground text-background",
-    dark: true,
-  },
-];
-
-const compareFeatures = [
-  { feature: "Ad Spend Limit", starter: "$50K", growth: "$500K", enterprise: "Unlimited" },
-  { feature: "Channels", starter: "2", growth: "All", enterprise: "All + Custom" },
-  { feature: "Analytics", starter: "Basic", growth: "Advanced", enterprise: "Custom" },
-  { feature: "Automation Rules", starter: "5", growth: "Unlimited", enterprise: "Unlimited" },
-  { feature: "Aan AI", starter: "-", growth: "✓", enterprise: "Full Suite" },
-  { feature: "Creative Studio", starter: "-", growth: "✓", enterprise: "✓" },
-  { feature: "API Access", starter: "-", growth: "-", enterprise: "✓" },
-  { feature: "Dedicated AM", starter: "-", growth: "-", enterprise: "✓" },
-];
-
-const faqs = [
-  { q: "Can I switch plans anytime?", a: "Yes, you can upgrade or downgrade at any time. Changes take effect at your next billing cycle." },
-  { q: "Is there a free trial?", a: "Yes, Growth plan comes with a 14-day free trial. No credit card required to start." },
-  { q: "What happens if I exceed my ad spend limit?", a: "We'll notify you and help you upgrade seamlessly. No service interruption." },
-  { q: "Do you offer agency pricing?", a: "Yes, we have special pricing for agencies managing multiple brands. Contact sales for details." },
-];
+import { pricingMajors, PricingMode, PricingPlan } from "@/website/data/pricingPlans";
+import { useTrial } from "@/contexts/TrialContext";
+import { useBillingFlow } from "@/contexts/BillingFlowContext";
 
 const Pricing = () => {
-  const [annual, setAnnual] = useState(true);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { setTrial } = useTrial();
+  const { billingFlowEnabled } = useBillingFlow();
 
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(t);
-  }, []);
+  const [mode, setMode] = useState<PricingMode>("yearly");
+  const [majorId, setMajorId] = useState(pricingMajors[0].id);
+  const major = pricingMajors.find((m) => m.id === majorId)!;
 
-  if (loading) {
-    return (
-      <PageLayout>
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12 space-y-4">
-            <div className="h-12 w-80 mx-auto rounded-xl shimmer" />
-            <div className="h-6 w-60 mx-auto rounded-lg shimmer" />
-            <div className="h-10 w-48 mx-auto rounded-pill shimmer" />
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="p-8 rounded-2xl border border-border space-y-4">
-                <div className="h-6 w-24 rounded shimmer" />
-                <div className="h-4 w-full rounded shimmer" />
-                <div className="h-10 w-32 rounded shimmer" />
-                <div className="h-10 w-full rounded-pill shimmer" />
-                <div className="space-y-2">
-                  {[1, 2, 3, 4].map(j => <div key={j} className="h-4 w-full rounded shimmer" />)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
+  const [sectionId, setSectionId] = useState(major.sections[0].id);
+  const section = major.sections.find((s) => s.id === sectionId) ?? major.sections[0];
+
+  const handleMajorChange = (id: typeof major.id) => {
+    setMajorId(id);
+    const m = pricingMajors.find((x) => x.id === id)!;
+    setSectionId(m.sections[0].id);
+  };
+
+  const handleChoosePlan = (_plan: PricingPlan) => {
+    if (billingFlowEnabled) setTrial("paid");
+    navigate("/profitability/dashboard");
+  };
+
+  const formatPrice = (plan: PricingPlan) => {
+    const v = mode === "yearly" ? plan.yearly : plan.monthly;
+    if (v === null) return "Custom";
+    return `$${v.toLocaleString()}`;
+  };
 
   return (
     <PageLayout>
       <div className="max-w-6xl mx-auto px-6">
-        <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        {/* Header */}
+        <motion.div
+          className="text-center mb-10"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-            Simple, <span className="text-gradient-primary">Transparent</span> Pricing
+            Pricing built around <span className="text-gradient-primary">how you operate</span>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">No hidden fees. Scale as you grow.</p>
-          <div className="inline-flex items-center gap-3 p-1 rounded-pill bg-muted border border-border">
-            <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-pill text-sm font-medium transition-all duration-200 ${!annual ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>Monthly</button>
-            <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-pill text-sm font-medium transition-all duration-200 ${annual ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+            Pick a track. Switch any time. No marketplace fluff — just plans that map to real operators.
+          </p>
+        </motion.div>
+
+        {/* Two persistent helper strips */}
+        <div className="grid sm:grid-cols-2 gap-3 mb-10">
+          <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">Try all features free for a month</p>
+              <p className="text-xs text-muted-foreground">No credit card. Cancel anytime.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => navigate("/login")}>
+              Start Free Trial
+            </Button>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-md bg-muted text-foreground flex items-center justify-center shrink-0">
+              <MessageSquare className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">Need a custom plan for your agency?</p>
+              <p className="text-xs text-muted-foreground">Volume discounts and white-label available.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => navigate("/website/company/contact")}>
+              Contact Us
+            </Button>
+          </div>
+        </div>
+
+        {/* Major tabs (Advertising | Profitability) */}
+        <div className="flex items-center justify-center mb-6">
+          <div className="inline-flex items-center gap-1 p-1 rounded-pill bg-muted border border-border">
+            {pricingMajors.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => handleMajorChange(m.id)}
+                className={`px-5 py-2 rounded-pill text-sm font-medium transition-all ${
+                  majorId === m.id
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-center text-sm text-muted-foreground mb-6">{major.blurb}</p>
+
+        {/* Sub-tabs (only if multiple sections) */}
+        {major.sections.length > 1 && (
+          <div className="flex items-center justify-center mb-6">
+            <div className="inline-flex items-center gap-1 border-b border-border">
+              {major.sections.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSectionId(s.id)}
+                  className={`px-4 py-2 text-sm font-medium transition-all border-b-2 -mb-px ${
+                    sectionId === s.id
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Monthly/Annually toggle */}
+        <div className="flex items-center justify-center mb-10">
+          <div className="inline-flex items-center gap-1 p-1 rounded-pill bg-muted border border-border">
+            <button
+              onClick={() => setMode("monthly")}
+              className={`px-4 py-1.5 rounded-pill text-sm font-medium transition-all ${
+                mode === "monthly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setMode("yearly")}
+              className={`px-4 py-1.5 rounded-pill text-sm font-medium transition-all ${
+                mode === "yearly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+              }`}
+            >
               Yearly <span className="text-primary text-xs ml-1">Save 20%</span>
             </button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Pricing cards - differentiated styles */}
-        <div className="grid md:grid-cols-3 gap-6 mb-20">
-          {plans.map((plan, i) => (
+        {/* Compact plan cards */}
+        <div
+          className={`grid gap-4 mb-16 ${
+            section.plans.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
+          }`}
+        >
+          {section.plans.map((plan, i) => (
             <motion.div
-              key={plan.name}
-              className={`relative p-8 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${plan.style}`}
-              initial={{ opacity: 0, y: 20 }}
+              key={plan.id}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+              transition={{ delay: 0.05 * i, duration: 0.35 }}
+              className={`relative rounded-2xl border p-6 bg-card transition-all duration-200 hover:-translate-y-0.5 ${
+                plan.highlight ? "border-primary ring-1 ring-primary/30 shadow-strong" : "border-border"
+              }`}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-pill bg-primary text-primary-foreground text-xs font-medium">
+              {plan.highlight && (
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-pill bg-primary text-primary-foreground text-[11px] font-medium">
                   Most Popular
                 </div>
               )}
-              <h3 className={`text-xl font-bold ${plan.dark ? "text-background" : "text-foreground"}`}>{plan.name}</h3>
-              <p className={`text-sm mt-1 mb-4 ${plan.dark ? "text-background/60" : "text-muted-foreground"}`}>{plan.desc}</p>
-              <div className="mb-6">
-                {plan.monthly ? (
-                  <>
-                    <span className={`text-4xl font-bold ${plan.dark ? "text-background" : "text-foreground"}`}>${annual ? plan.yearly : plan.monthly}</span>
-                    <span className={plan.dark ? "text-background/60" : "text-muted-foreground"}>/mo</span>
-                  </>
-                ) : (
-                  <span className={`text-2xl font-bold ${plan.dark ? "text-background" : "text-foreground"}`}>Custom</span>
-                )}
+              <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+              <p className="text-sm text-muted-foreground mt-1 mb-5 min-h-[40px]">{plan.description}</p>
+              <div className="mb-5">
+                <span className="text-3xl font-bold text-foreground">{formatPrice(plan)}</span>
+                {plan.monthly !== null && <span className="text-sm text-muted-foreground">/mo</span>}
               </div>
-              <Link to="/website/demo">
-                <Button
-                  className={`w-full rounded-pill mb-6 ${
-                    plan.popular ? "bg-primary text-primary-foreground btn-shine" :
-                    plan.dark ? "bg-background text-foreground hover:bg-background/90" : ""
-                  }`}
-                  variant={plan.popular || plan.dark ? "default" : "outline"}
-                >
-                  {plan.cta}
-                </Button>
-              </Link>
-              <ul className="space-y-2.5">
-                {plan.features.map((f) => (
-                  <li key={f} className={`flex items-start gap-2 text-sm ${plan.dark ? "text-background/70" : "text-muted-foreground"}`}>
-                    <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.dark ? "text-background/60" : "text-primary"}`} /> {f}
+              <Button
+                className="w-full rounded-pill mb-5"
+                variant={plan.highlight ? "default" : "outline"}
+                onClick={() => handleChoosePlan(plan)}
+              >
+                {plan.cta ?? "Choose Plan"}
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+              <ul className="space-y-2">
+                {plan.features.slice(0, 4).map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    <span>{f}</span>
                   </li>
                 ))}
               </ul>
@@ -157,52 +193,69 @@ const Pricing = () => {
           ))}
         </div>
 
-        {/* Comparison table */}
-        <motion.div className="mb-20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-          <h2 className="text-2xl font-bold text-foreground text-center mb-8">Compare Plans</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        {/* Detailed comparison table */}
+        <div className="mb-20">
+          <h2 className="text-2xl font-bold text-foreground text-center mb-2">
+            Compare {section.label} plans
+          </h2>
+          <p className="text-sm text-muted-foreground text-center mb-8">
+            Every feature, side by side.
+          </p>
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Feature</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-foreground">Starter</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-primary">Growth</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-foreground">Enterprise</th>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Feature</th>
+                  {section.plans.map((p) => (
+                    <th
+                      key={p.id}
+                      className={`py-3 px-4 font-medium text-center ${
+                        p.highlight ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {p.name}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {compareFeatures.map((row, i) => (
-                  <tr key={row.feature} className="border-b border-border/50 hover:bg-accent/30 transition-colors">
-                    <td className="py-3 px-4 text-sm text-foreground">{row.feature}</td>
-                    <td className="py-3 px-4 text-sm text-center text-muted-foreground">{row.starter}</td>
-                    <td className="py-3 px-4 text-sm text-center text-foreground font-medium">{row.growth}</td>
-                    <td className="py-3 px-4 text-sm text-center text-muted-foreground">{row.enterprise}</td>
+                {section.comparison.map((row) => (
+                  <tr key={row.feature} className="border-b border-border/60 last:border-b-0">
+                    <td className="py-3 px-4 text-foreground">{row.feature}</td>
+                    {row.values.map((v, i) => (
+                      <td key={i} className="py-3 px-4 text-center text-muted-foreground">
+                        {typeof v === "boolean" ? (
+                          v ? (
+                            <Check className="w-4 h-4 text-primary inline" />
+                          ) : (
+                            <X className="w-4 h-4 text-muted-foreground/40 inline" />
+                          )
+                        ) : (
+                          v
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
+                <tr>
+                  <td className="py-3 px-4" />
+                  {section.plans.map((p) => (
+                    <td key={p.id} className="py-3 px-4 text-center">
+                      <Button
+                        size="sm"
+                        variant={p.highlight ? "default" : "outline"}
+                        className="rounded-pill"
+                        onClick={() => handleChoosePlan(p)}
+                      >
+                        Choose
+                      </Button>
+                    </td>
+                  ))}
+                </tr>
               </tbody>
             </table>
           </div>
-        </motion.div>
-
-        {/* FAQ */}
-        <motion.div className="max-w-2xl mx-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-          <h2 className="text-2xl font-bold text-foreground text-center mb-8">Frequently Asked Questions</h2>
-          <div className="space-y-3">
-            {faqs.map((faq, i) => (
-              <div key={i} className="border border-border rounded-xl overflow-hidden">
-                <button className="w-full flex items-center justify-between p-4 text-left text-sm font-medium text-foreground hover:bg-muted/30 transition-colors" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                  <span className="flex items-center gap-2"><HelpCircle className="w-4 h-4 text-primary" />{faq.q}</span>
-                  <span className="text-muted-foreground">{openFaq === i ? "−" : "+"}</span>
-                </button>
-                {openFaq === i && (
-                  <motion.div className="px-4 pb-4 text-sm text-muted-foreground" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.2 }}>
-                    {faq.a}
-                  </motion.div>
-                )}
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        </div>
       </div>
     </PageLayout>
   );
