@@ -157,6 +157,8 @@ export default function Preferences() {
   const { effects, toggle } = useVisualEffects();
   const { newFeaturesVisible, toggleNewFeatures } = useFeatureToggle();
   const { newBranding, toggleNewBranding } = useBranding();
+  const { billingFlowEnabled, toggleBillingFlow } = useBillingFlow();
+  const { trial, startSync, forceExpire, reset: resetTrial } = useTrial();
   const { schemeId, setSchemeId, schemes, currentScheme } = useColorScheme();
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
@@ -390,6 +392,40 @@ export default function Preferences() {
               </div>
               <Switch checked={newBranding} onCheckedChange={toggleNewBranding} />
             </label>
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Billing Flow */}
+        <section className="space-y-4">
+          <div>
+            <h2 className="font-heading text-lg font-medium text-foreground">Billing Flow</h2>
+            <p className="text-sm text-muted-foreground">Enable the new trial, pricing, and in-app billing experience. When off, the app behaves exactly as today.</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card divide-y divide-border">
+            <label className="flex items-center justify-between cursor-pointer p-4">
+              <div>
+                <p className="font-medium text-foreground">Enable Billing Flow</p>
+                <p className="text-xs text-muted-foreground">Adds the trial overlay on Dashboard, the upgrade banner, the Billing settings page, and rewires Pricing CTAs.</p>
+              </div>
+              <Switch checked={billingFlowEnabled} onCheckedChange={toggleBillingFlow} />
+            </label>
+            {billingFlowEnabled && (
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Trial state</p>
+                    <p className="text-xs text-muted-foreground">Current: <span className="font-mono">{trial}</span></p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => startSync()}>Start sync</Button>
+                    <Button size="sm" variant="outline" onClick={() => forceExpire()}>Force expired</Button>
+                    <Button size="sm" variant="ghost" onClick={() => resetTrial()}>Reset</Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
