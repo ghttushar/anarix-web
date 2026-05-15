@@ -10,6 +10,8 @@ import { useCurrency, CURRENCIES } from "@/contexts/CurrencyContext";
 import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useBillingFlow } from "@/contexts/BillingFlowContext";
+import { useTrial } from "@/contexts/TrialContext";
 import { useColorScheme } from "@/contexts/ColorSchemeContext";
 import { cn } from "@/lib/utils";
 import { Pencil, RotateCcw, Globe, Palette } from "lucide-react";
