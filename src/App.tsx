@@ -15,6 +15,8 @@ import { IntegrationsProvider } from "@/contexts/IntegrationsContext";
 import { VisualEffectsProvider } from "@/contexts/VisualEffectsContext";
 import { FeatureToggleProvider } from "@/contexts/FeatureToggleContext";
 import { BrandingProvider } from "@/contexts/BrandingContext";
+import { BillingFlowProvider } from "@/contexts/BillingFlowContext";
+import { TrialProvider } from "@/contexts/TrialContext";
 import { ActivePanelProvider } from "@/contexts/ActivePanelContext";
 import { AanProvider } from "@/components/aan";
 import { InsightsProvider } from "@/components/insights";
@@ -86,6 +88,7 @@ import SettingsSystem from "./pages/settings/System";
 import DesignSystem from "./pages/settings/DesignSystem";
 import ComponentLibrary from "./pages/settings/ComponentLibrary";
 import Integrations from "./pages/settings/Integrations";
+import Billing from "./pages/settings/Billing";
 
 // Brand
 import AanMascotShowcase from "./pages/brand/AanMascotShowcase";
@@ -106,6 +109,8 @@ import WebsiteProductAutomation from "./website/pages/products/Automation";
 import WebsiteProductManagedServices from "./website/pages/products/ManagedServices";
 import WebsitePrivacyPolicy from "./website/pages/legal/PrivacyPolicy";
 import WebsiteTermsAndConditions from "./website/pages/legal/TermsAndConditions";
+import WebsiteCancelPlan from "./website/pages/CancelPlan";
+import WebsiteDowngradePlan from "./website/pages/DowngradePlan";
 
 const queryClient = new QueryClient();
 
@@ -230,6 +235,8 @@ function AppRoutes() {
       <Route path="/settings/design-system/:tab" element={<DesignSystem />} />
       <Route path="/settings/component-library" element={<ComponentLibrary />} />
       <Route path="/settings/component-library/:section" element={<ComponentLibrary />} />
+      <Route path="/settings/billing" element={<Billing />} />
+      <Route path="/settings/billing/:tab" element={<Billing />} />
 
       <Route path="/brand/aan" element={<AanMascotShowcase />} />
 
@@ -250,6 +257,8 @@ function AppRoutes() {
         <Route path="products/managed-services" element={<WebsiteProductManagedServices />} />
         <Route path="privacy-policy" element={<WebsitePrivacyPolicy />} />
         <Route path="terms-and-conditions" element={<WebsiteTermsAndConditions />} />
+        <Route path="cancel-plan" element={<WebsiteCancelPlan />} />
+        <Route path="downgrade-plan" element={<WebsiteDowngradePlan />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
@@ -273,6 +282,8 @@ const App = () => (
                     <VisualEffectsProvider>
                       <FeatureToggleProvider>
                         <BrandingProvider>
+                        <BillingFlowProvider>
+                        <TrialProvider>
                         <TooltipProvider>
                           <Toaster />
                           <Sonner position="bottom-left" />
@@ -284,6 +295,8 @@ const App = () => (
                             </CreativeFeatures>
                           </BrowserRouter>
                         </TooltipProvider>
+                        </TrialProvider>
+                        </BillingFlowProvider>
                         </BrandingProvider>
                       </FeatureToggleProvider>
                     </VisualEffectsProvider>
