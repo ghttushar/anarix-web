@@ -74,23 +74,21 @@ export default function Billing() {
       <div className="flex flex-1 h-full min-h-0 min-w-0">
         <div className="flex-1 min-w-0 space-y-6">
           <PageHeader title="Billing" subtitle="Manage invoices, payment methods, and your plan." />
-          <AppTaskbar breadcrumbItems={breadcrumbItems}>
-            <div className="inline-flex items-center gap-1 border-b border-border">
-              {TABS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => handleTabChange(t)}
-                  className={`px-3 py-1.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                    tab === t
-                      ? "border-primary text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t === "invoices" ? "Invoices" : "Manage Plans"}
-                </button>
-              ))}
-            </div>
-          </AppTaskbar>
+          <div className="inline-flex items-center gap-1 border-b border-border">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                onClick={() => handleTabChange(t)}
+                className={`px-3 py-1.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  tab === t
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t === "invoices" ? "Invoices" : "Manage Plans"}
+              </button>
+            ))}
+          </div>
 
           {tab === "invoices" && (
             <div className="rounded-lg border border-border bg-card overflow-hidden">
