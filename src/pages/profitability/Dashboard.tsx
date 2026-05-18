@@ -55,10 +55,6 @@ const breadcrumbItems = [
 ];
 export default function ProfitabilityDashboard() {
   const { dataPanel, setDataPanel, closeDataPanel } = useActivePanel();
-  const { trial } = useTrial();
-  const { billingFlowEnabled } = useBillingFlow();
-  const isSyncing = billingFlowEnabled && trial === "syncing";
-  const isExpired = billingFlowEnabled && trial === "expired";
   const { tab: routeTab } = useParams<{ tab?: string }>();
   const profNav = useNavigate();
   const validTabs = ["products", "orders"] as const;
