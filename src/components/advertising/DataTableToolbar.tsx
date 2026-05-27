@@ -188,6 +188,19 @@ export function DataTableToolbar({
       <div className="flex items-center justify-between gap-2">
         {/* Left Side */}
         <div className="flex items-center gap-2">
+          {/* Edit Mode Toggle — first position */}
+          {showViewToggle && onViewModeChange && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("h-8 gap-1 text-xs cursor-pointer", viewMode === "edit" && "bg-destructive/10 text-destructive")}
+              onClick={handleEditToggle}
+              title={viewMode === "edit" ? "Save & exit edit mode" : "Switch to Edit mode"}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+          )}
           {leftContent}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -405,19 +418,6 @@ export function DataTableToolbar({
             </Button>
           )}
 
-          {/* Edit Mode Toggle */}
-          {showViewToggle && onViewModeChange && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("h-8 gap-1 text-xs ml-1 cursor-pointer", viewMode === "edit" && "bg-destructive/10 text-destructive")}
-              onClick={handleEditToggle}
-              title={viewMode === "edit" ? "Save & exit edit mode" : "Switch to Edit mode"}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-          )}
         </div>
       </div>
 
