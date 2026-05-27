@@ -5,16 +5,13 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useDensity } from "@/contexts/DensityContext";
 import { useCurrency, CURRENCIES } from "@/contexts/CurrencyContext";
-import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useBranding } from "@/contexts/BrandingContext";
 import { useBillingFlow } from "@/contexts/BillingFlowContext";
 import { useTrial } from "@/contexts/TrialContext";
-import { useColorScheme } from "@/contexts/ColorSchemeContext";
 import { cn } from "@/lib/utils";
-import { Pencil, RotateCcw, Globe, Palette } from "lucide-react";
+import { Pencil, RotateCcw, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
 
@@ -151,15 +148,11 @@ const breadcrumbItems = [
   { label: "Preferences" },
 ];
 export default function Preferences() {
-  // Top breadcrumb will be added in return
-  const { density, setDensity } = useDensity();
   const { displayCurrency, setDisplayCurrency, exchangeRate, lastUpdated } = useCurrency();
-  const { effects, toggle } = useVisualEffects();
   const { newFeaturesVisible, toggleNewFeatures } = useFeatureToggle();
   const { newBranding, toggleNewBranding } = useBranding();
   const { billingFlowEnabled, toggleBillingFlow } = useBillingFlow();
   const { trial, startSync, forceExpire, reset: resetTrial } = useTrial();
-  const { schemeId, setSchemeId, schemes, currentScheme } = useColorScheme();
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -204,101 +197,6 @@ export default function Preferences() {
 
         <Separator />
 
-        {/* Color Scheme */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Palette className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <h2 className="font-heading text-lg font-medium text-foreground">Color Scheme</h2>
-              <p className="text-sm text-muted-foreground">Choose a color palette variant</p>
-            </div>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Active Scheme</p>
-                <p className="text-xs text-muted-foreground">{currentScheme.description}</p>
-              </div>
-              <Select value={schemeId} onValueChange={setSchemeId}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {schemes.map((scheme) => (
-                    <SelectItem key={scheme.id} value={scheme.id}>
-                      {scheme.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {schemes.map((scheme) => (
-                <button
-                  key={scheme.id}
-                  onClick={() => setSchemeId(scheme.id)}
-                  className={cn(
-                    "rounded-lg border-2 p-3 text-left transition-colors",
-                    schemeId === scheme.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-card hover:border-primary/50"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    {/* Color preview dots */}
-                    <div className="flex gap-1">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: `hsl(${scheme.light["--primary"]})` }}
-                      />
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: `hsl(${scheme.light["--background"]})` }}
-                      />
-                      <div
-                        className="h-3 w-3 rounded-full border border-border"
-                        style={{ backgroundColor: `hsl(${scheme.light["--muted-foreground"]})` }}
-                      />
-                    </div>
-                  </div>
-                  <p className={cn(
-                    "text-sm font-medium",
-                    schemeId === scheme.id ? "text-primary" : "text-foreground"
-                  )}>
-                    {scheme.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{scheme.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <Separator />
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-heading text-lg font-medium text-foreground">Display Density</h2>
-            <p className="text-sm text-muted-foreground">Adjust how compact the interface appears</p>
-          </div>
-          <div className="flex gap-4">
-            {(["comfortable", "compact"] as const).map(d => (
-              <button
-                key={d}
-                onClick={() => setDensity(d)}
-                className={cn(
-                  "flex-1 rounded-lg border-2 p-4 text-center transition-colors",
-                  density === d ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/50"
-                )}
-              >
-                <p className={cn("font-medium capitalize", density === d ? "text-primary" : "text-foreground")}>{d}</p>
-                <p className="text-xs text-muted-foreground">{d === "comfortable" ? "Default spacing" : "More data visible"}</p>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <Separator />
 
         {/* Currency Display */}
         <section className="space-y-4">
@@ -467,38 +365,6 @@ export default function Preferences() {
           </div>
         </section>
 
-        <Separator />
-
-        {/* Visual Effects */}
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-heading text-lg font-medium text-foreground">Visual Effects</h2>
-            <p className="text-sm text-muted-foreground">Control animations and visual enhancements</p>
-          </div>
-          <div className="space-y-0 rounded-lg border border-border bg-card divide-y divide-border">
-            <label className="flex items-center justify-between cursor-pointer p-4">
-              <div>
-                <p className="font-medium text-foreground">Ambient Background</p>
-                <p className="text-xs text-muted-foreground">Subtle animated dot pattern</p>
-              </div>
-              <Switch checked={effects.ambientBackground} onCheckedChange={() => toggle("ambientBackground")} />
-            </label>
-            <label className="flex items-center justify-between cursor-pointer p-4">
-              <div>
-                <p className="font-medium text-foreground">Number Animations</p>
-                <p className="text-xs text-muted-foreground">Smooth morphing transitions for metrics</p>
-              </div>
-              <Switch checked={effects.numberAnimations} onCheckedChange={() => toggle("numberAnimations")} />
-            </label>
-            <label className="flex items-center justify-between cursor-pointer p-4">
-              <div>
-                <p className="font-medium text-foreground">Floating Action Island</p>
-                <p className="text-xs text-muted-foreground">Quick actions bar at bottom</p>
-              </div>
-              <Switch checked={effects.floatingIsland} onCheckedChange={() => toggle("floatingIsland")} />
-            </label>
-          </div>
-        </section>
       </div>
 </AppLayout>
   );
