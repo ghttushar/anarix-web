@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, Archive, DollarSign } from "lucide-react";
 import { mockTargetingActions, mockTargetCampaigns, mockTargetAdGroups } from "@/data/mockTargetingActions";
+import { MatchTypePicker } from "@/components/advertising/MatchTypePicker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -170,9 +171,7 @@ export default function TargetingActions() {
                   <TableHead className="min-w-[130px]">Source AdGroup</TableHead>
                   <TableHead className="min-w-[150px]">Target Campaign</TableHead>
                   <TableHead className="min-w-[150px]">Target Ad Group</TableHead>
-                  <TableHead className="w-[100px] text-center">Broad</TableHead>
-                  <TableHead className="w-[100px] text-center">Exact</TableHead>
-                  <TableHead className="w-[100px] text-center">Phrase</TableHead>
+                  <TableHead className="min-w-[260px]">Match Types</TableHead>
                   <TableHead className="w-14 text-center">Archive</TableHead>
                   <TableHead className="text-right">Impressions</TableHead>
                   <TableHead className="text-right">Clicks</TableHead>
@@ -219,18 +218,9 @@ export default function TargetingActions() {
                           <SelectContent>{mockTargetAdGroups.map((ag) => (<SelectItem key={ag.id} value={ag.id}>{ag.name}</SelectItem>))}</SelectContent>
                         </Select>
                       </TableCell>
-                      {(["broad", "exact", "phrase"] as const).map((matchType) => {
-                        const mt = action.matchTypes[matchType];
-                        return (
-                          <TableCell key={matchType} className="px-1.5">
-                            <div className={cn("relative flex flex-col items-center gap-1 rounded-lg border p-2 min-w-[80px] transition-colors", mt.selected ? "border-primary/40 bg-primary/5" : "border-border bg-background")}>
-                              <Checkbox checked={mt.selected} className="absolute left-1.5 top-1.5 h-3 w-3" />
-                              <span className={cn("text-[10px] uppercase font-medium tracking-wide", mt.selected ? "text-primary" : "text-muted-foreground")}>{matchType}</span>
-                              <Input type="number" value={mt.bid} step={0.01} className="h-6 w-14 text-center text-xs border-border bg-background shadow-none focus-visible:ring-1 focus-visible:ring-primary/30 rounded px-1" />
-                            </div>
-                          </TableCell>
-                        );
-                      })}
+                      <TableCell className="px-2">
+                        <MatchTypePicker value={action.matchTypes as any} />
+                      </TableCell>
                       <TableCell className="text-center">
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Archive className="h-3.5 w-3.5 text-muted-foreground" /></Button>
                       </TableCell>
