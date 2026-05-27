@@ -331,8 +331,12 @@ function CampaignManagerInner() {
               onClearSelection={() => setSelectedIds(new Set())}
               onCancel={() => { discardDrafts(); setSelectedIds(new Set()); setViewMode("view"); }}
               onSave={() => { commitDrafts(); setSelectedIds(new Set()); toast.success("Changes saved"); }}
+              onBulkUpdate={(updates) => {
+                selectedIds.forEach((id) => handleCampaignUpdate(id, updates));
+              }}
             />
           )}
+
 
           {renderTable()}
         </div>
