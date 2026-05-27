@@ -148,15 +148,11 @@ const breadcrumbItems = [
   { label: "Preferences" },
 ];
 export default function Preferences() {
-  // Top breadcrumb will be added in return
-  const { density, setDensity } = useDensity();
   const { displayCurrency, setDisplayCurrency, exchangeRate, lastUpdated } = useCurrency();
-  const { effects, toggle } = useVisualEffects();
   const { newFeaturesVisible, toggleNewFeatures } = useFeatureToggle();
   const { newBranding, toggleNewBranding } = useBranding();
   const { billingFlowEnabled, toggleBillingFlow } = useBillingFlow();
   const { trial, startSync, forceExpire, reset: resetTrial } = useTrial();
-  const { schemeId, setSchemeId, schemes, currentScheme } = useColorScheme();
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
   const [editingKey, setEditingKey] = useState<string | null>(null);
