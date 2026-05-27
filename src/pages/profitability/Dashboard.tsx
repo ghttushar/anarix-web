@@ -6,6 +6,7 @@ import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ProfitabilityHeroCard } from "@/components/profitability/ProfitabilityHeroCard";
 import { ProductsPnLTable } from "@/components/profitability/ProductsPnLTable";
 import { COGSEditModal } from "@/components/profitability/COGSEditModal";
+import { BulkCogsUploadModal } from "@/components/profitability/BulkCogsUploadModal";
 import { ProductDetailPanel } from "@/components/profitability/ProductDetailPanel";
 import { ProductTrendsModal } from "@/components/profitability/ProductTrendsModal";
 import { ProductsOrdersToggle } from "@/components/profitability/ProductsOrdersToggle";
@@ -83,6 +84,7 @@ export default function ProfitabilityDashboard() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const [cogsProduct, setCogsProduct] = useState<ProfitabilityProduct | null>(null);
+  const [bulkCogsOpen, setBulkCogsOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState<ProfitabilityProduct | null>(null);
   const [trendsProduct, setTrendsProduct] = useState<ProfitabilityProduct | null>(null);
   const [breakdownSummary, setBreakdownSummary] = useState<ProfitabilitySummary | null>(null);
@@ -180,12 +182,9 @@ export default function ProfitabilityDashboard() {
               showDeltas={showDeltas}
               onShowDeltasChange={setShowDeltas}
               showUpload
-              onUpload={(files) => {
-                toast.info(`Analyzing ${files[0]?.name}...`);
-                setTimeout(() => toast.success("COGS uploaded successfully. Table refreshed."), 1500);
-              }}
-              uploadTitle="Upload COGS"
-              uploadAccept=".csv,.xlsx,.xls"
+              onUploadClick={() => setBulkCogsOpen(true)}
+              uploadTitle="Upload Cogs"
+              uploadLabel="Upload Cogs"
               onDownload={handleDownload}
               sortableFields={SORTABLE_FIELDS}
               sortField={sortField}
@@ -221,6 +220,7 @@ export default function ProfitabilityDashboard() {
         onClose={() => setCogsProduct(null)}
         onSave={handleCogsSave}
       />
+      <BulkCogsUploadModal isOpen={bulkCogsOpen} onClose={() => setBulkCogsOpen(false)} />
       <ProductTrendsModal
         product={trendsProduct}
         isOpen={!!trendsProduct}
