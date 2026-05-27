@@ -25,18 +25,34 @@ const METRICS: { key: string; label: string; color: string }[] = [
 export function ProfitabilityTrendChart({ data, periodLabel }: ProfitabilityTrendChartProps) {
   const [frequency, setFrequency] = useState<"weekly" | "daily" | "monthly">("weekly");
   const [chartType, setChartType] = useState<ChartType>("line");
-  const [activeMetrics, setActiveMetrics] = useState<string[]>(["orders", "units"]);
+  const [activeMetric, setActiveMetric] = useState<string>("orders");
 
   const metrics: ChartMetric[] = METRICS.map((m) => ({
     ...m,
-    active: activeMetrics.includes(m.key),
+    active: activeMetric === m.key,
   }));
 
   const toggleMetric = (key: string) => {
-    setActiveMetrics((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
+    setActiveMetric(key);
   };
+
+  const metricDropdown = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+          {METRICS.find((m) => m.key === activeMetric)?.label || "Metric"}
+          <ChevronDown className="h-3 w-3" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {METRICS.map((m) => (
+          <DropdownMenuItem key={m.key} onClick={() => setActiveMetric(m.key)}>
+            {m.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   const frequencyDropdown = (
     <DropdownMenu>
@@ -62,8 +78,8 @@ export function ProfitabilityTrendChart({ data, periodLabel }: ProfitabilityTren
           <XAxis dataKey="week" tick={{ fontSize: 12 }} className="text-muted-foreground" tickLine={false} />
           <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" tickLine={false} axisLine={false} />
           <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-          {activeMetrics.includes("orders") && <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />}
-          {activeMetrics.includes("units") && <Bar dataKey="units" fill="hsl(var(--chart-2))" radius={[3, 3, 0, 0]} />}
+          {activeMetric === "orders" && <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />}
+          {activeMetric === "units" && <Bar dataKey="units" fill="hsl(var(--chart-2))" radius={[3, 3, 0, 0]} />}
         </BarChart>
       ) : chartType === "area" ? (
         <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -71,8 +87,8 @@ export function ProfitabilityTrendChart({ data, periodLabel }: ProfitabilityTren
           <XAxis dataKey="week" tick={{ fontSize: 12 }} className="text-muted-foreground" tickLine={false} />
           <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" tickLine={false} axisLine={false} />
           <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-          {activeMetrics.includes("orders") && <Area type="monotone" dataKey="orders" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />}
-          {activeMetrics.includes("units") && <Area type="monotone" dataKey="units" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.15} strokeWidth={2} />}
+          {activeMetric === "orders" && <Area type="monotone" dataKey="orders" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />}
+          {activeMetric === "units" && <Area type="monotone" dataKey="units" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.15} strokeWidth={2} />}
         </AreaChart>
       ) : (
         <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -80,8 +96,8 @@ export function ProfitabilityTrendChart({ data, periodLabel }: ProfitabilityTren
           <XAxis dataKey="week" tick={{ fontSize: 12 }} className="text-muted-foreground" tickLine={false} />
           <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" tickLine={false} axisLine={false} />
           <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-          {activeMetrics.includes("orders") && <Line type="monotone" dataKey="orders" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />}
-          {activeMetrics.includes("units") && <Line type="monotone" dataKey="units" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ fill: "hsl(var(--chart-2))", strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />}
+          {activeMetric === "orders" && <Line type="monotone" dataKey="orders" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />}
+          {activeMetric === "units" && <Line type="monotone" dataKey="units" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ fill: "hsl(var(--chart-2))", strokeWidth: 0, r: 4 }} activeDot={{ r: 6 }} />}
         </LineChart>
       )}
     </ResponsiveContainer>
@@ -95,7 +111,7 @@ export function ProfitabilityTrendChart({ data, periodLabel }: ProfitabilityTren
       onMetricToggle={toggleMetric}
       chartType={chartType}
       onChartTypeChange={setChartType}
-      extraControls={frequencyDropdown}
+      extraControls={<div className="flex items-center gap-1.5">{metricDropdown}{frequencyDropdown}</div>}
       expandedChildren={renderChart(500)}
       className="h-full"
     >
