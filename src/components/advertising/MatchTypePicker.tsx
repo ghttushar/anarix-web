@@ -36,19 +36,18 @@ export function MatchTypePicker({ value, onChange }: MatchTypePickerProps) {
     onChange({ ...value, [mt]: { ...value[mt], bid } });
   };
 
-  const anySelected = ORDER.some((mt) => value[mt].selected);
-
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-col gap-1">
       {ORDER.map((mt) => {
         const state = value[mt];
+        const disabled = !state.selected;
         return (
-          <div key={mt} className="flex items-center gap-1">
+          <div key={mt} className="grid grid-cols-[72px_1fr] items-center gap-2">
             <button
               type="button"
               onClick={() => toggle(mt)}
               className={cn(
-                "h-6 px-2 rounded-md border text-[10px] uppercase tracking-wide font-medium transition-colors",
+                "h-7 w-full rounded-md border text-[10px] uppercase tracking-wide font-semibold transition-colors cursor-pointer",
                 state.selected
                   ? "border-primary/40 bg-primary/10 text-primary"
                   : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30"
@@ -56,25 +55,28 @@ export function MatchTypePicker({ value, onChange }: MatchTypePickerProps) {
             >
               {mt}
             </button>
-            {state.selected && (
-              <div className="flex items-center gap-0.5">
-                {symbol && <span className="text-[10px] text-muted-foreground">{symbol}</span>}
-                <Input
-                  type="number"
-                  value={state.bid}
-                  step={0.01}
-                  onChange={(e) => setBid(mt, parseFloat(e.target.value) || 0)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-6 w-14 text-center text-xs px-1 shadow-none"
-                />
-              </div>
-            )}
+            <div
+              className={cn(
+                "flex items-center gap-1 h-7 rounded-md border px-1.5 transition-colors",
+                disabled
+                  ? "border-border/60 bg-muted/30 opacity-60"
+                  : "border-border bg-background"
+              )}
+            >
+              <span className="text-[11px] text-muted-foreground select-none">{symbol}</span>
+              <Input
+                type="number"
+                value={state.bid}
+                step={0.01}
+                disabled={disabled}
+                onChange={(e) => setBid(mt, parseFloat(e.target.value) || 0)}
+                onClick={(e) => e.stopPropagation()}
+                className="h-6 w-full text-xs px-1 shadow-none border-0 bg-transparent focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-100"
+              />
+            </div>
           </div>
         );
       })}
-      {!anySelected && (
-        <span className="text-[11px] text-muted-foreground italic">Select match type</span>
-      )}
     </div>
   );
 }
