@@ -8,7 +8,7 @@ interface FeatureToggleContextType {
 }
 
 const FeatureToggleContext = createContext<FeatureToggleContextType>({
-  newFeaturesVisible: true,
+  newFeaturesVisible: false,
   toggleNewFeatures: () => {},
 });
 
@@ -16,9 +16,9 @@ export function FeatureToggleProvider({ children }: { children: ReactNode }) {
   const [newFeaturesVisible, setNewFeaturesVisible] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored !== null ? JSON.parse(stored) : true;
+      return stored !== null ? JSON.parse(stored) : false;
     } catch {
-      return true;
+      return false;
     }
   });
 
