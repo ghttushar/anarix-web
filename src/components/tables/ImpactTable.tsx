@@ -76,13 +76,40 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
 
   const sp = { sortField, sortDirection, onSort: handleSort, pinnedColumns, onPinToggle: handlePinToggle };
 
+  const pageIds = paginatedData.map((d) => d.id);
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds?.has(id));
+  const someOnPageSelected = pageIds.some((id) => selectedIds?.has(id));
+
+  const toggleAllOnPage = () => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedIds ?? []);
+    if (allOnPageSelected) pageIds.forEach((id) => next.delete(id));
+    else pageIds.forEach((id) => next.add(id));
+    onSelectionChange(next);
+  };
+
+  const toggleOne = (id: string) => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedIds ?? []);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onSelectionChange(next);
+  };
+
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted hover:bg-muted">
-              <SortableTableHead field="name" {...sp} isFixed className="min-w-[250px] sticky left-0 z-10 bg-muted">Name</SortableTableHead>
+              <TableHead className="w-10 sticky left-0 z-10 bg-muted">
+                <Checkbox
+                  checked={allOnPageSelected ? true : someOnPageSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleAllOnPage}
+                  aria-label="Select all rows on this page"
+                />
+              </TableHead>
+              <SortableTableHead field="name" {...sp} isFixed className="min-w-[250px] sticky left-10 z-10 bg-muted">Name</SortableTableHead>
               <SortableTableHead field="impactPercentage" {...sp} className={cn("w-28 text-center", pc("impactPercentage", true))} style={ps("impactPercentage")} align="center">Impact</SortableTableHead>
               <SortableTableHead field="impressions" {...sp} className={cn("min-w-[180px] text-right", pc("impressions", true))} style={ps("impressions")} align="right">Impressions</SortableTableHead>
               <SortableTableHead field="clicks" {...sp} className={cn("min-w-[150px] text-right", pc("clicks", true))} style={ps("clicks")} align="right">Clicks</SortableTableHead>
@@ -93,7 +120,8 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
               <SortableTableHead field="acos" {...sp} className={cn("min-w-[140px] text-right", pc("acos", true))} style={ps("acos")} align="right">ACOS</SortableTableHead>
             </TableRow>
             <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
-              <TableHead className="sticky left-0 z-10 bg-muted/50 h-6" />
+              <TableHead className="sticky left-0 z-10 bg-muted/50 h-6 w-10" />
+              <TableHead className="sticky left-10 z-10 bg-muted/50 h-6" />
               <TableHead className="h-6" />
               {["impressions", "clicks", "ctr", "adSpend", "adSales", "roas", "acos"].map((field) => (
                 <TableHead key={field} className={cn("h-6 text-center", pc(field, true))} style={ps(field)}>
@@ -108,9 +136,21 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
             {paginatedData.map((item) => {
               const isPositive = item.impactPercentage > 0;
               const isNeutral = item.impactPercentage === 0;
+              const isSelected = selectedIds?.has(item.id) ?? false;
               return (
-                <TableRow key={item.id} className="group cursor-pointer hover:bg-muted/50 transition-colors">
-                  <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted transition-colors">
+                <TableRow
+                  key={item.id}
+                  data-state={isSelected ? "selected" : undefined}
+                  className="group hover:bg-muted/50 transition-colors data-[state=selected]:bg-primary/5"
+                >
+                  <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted group-data-[state=selected]:bg-primary/5 transition-colors">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleOne(item.id)}
+                      aria-label={`Select ${item.name}`}
+                    />
+                  </TableCell>
+                  <TableCell className="sticky left-10 z-10 bg-background group-hover:bg-muted group-data-[state=selected]:bg-primary/5 transition-colors">
                     <span className="font-medium">{item.name}</span>
                   </TableCell>
                   <TableCell style={ps("impactPercentage")} className={cn("text-center", pc("impactPercentage"))}>
