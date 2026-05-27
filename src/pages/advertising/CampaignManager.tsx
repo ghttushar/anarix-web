@@ -192,6 +192,8 @@ function CampaignManagerInner() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { commitDrafts, discardDrafts } = useTags();
 
   const kpiItems = mockKPIData
     .filter((kpi) => selectedKPIs.includes(kpi.label))
