@@ -50,7 +50,7 @@ const tabs = [
 
 const COLUMN_DEFS: Record<string, { id: string; label: string }[]> = {
   campaigns: [
-    { id: "active", label: "Active" }, { id: "status", label: "Status" }, { id: "type", label: "Type" },
+    { id: "active", label: "Active" }, { id: "status", label: "Status" },
     { id: "name", label: "Campaign Name" },
     { id: "startDate", label: "Start Date" }, { id: "endDate", label: "End Date" },
     { id: "biddingStrategy", label: "Bidding Strategy" }, { id: "dailyBudget", label: "Budget" },
