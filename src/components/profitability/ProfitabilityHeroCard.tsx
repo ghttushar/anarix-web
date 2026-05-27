@@ -75,11 +75,16 @@ function CardDatePicker({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+          onClick={(e) => e.stopPropagation()}
+        >
           <CalendarIcon className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
         {frequency === "daily" ? (
           <Calendar
             mode="single"
@@ -96,7 +101,7 @@ function CardDatePicker({
                 return (
                   <button
                     key={i}
-                    onClick={() => onDateChange(new Date(date.getFullYear(), i, 1))}
+                    onClick={(e) => { e.stopPropagation(); onDateChange(new Date(date.getFullYear(), i, 1)); }}
                     className={cn(
                       "px-3 py-2 text-xs rounded-md transition-colors",
                       isSelected ? "bg-primary text-primary-foreground" : "hover:bg-muted text-foreground"

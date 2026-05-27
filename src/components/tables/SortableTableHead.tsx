@@ -2,6 +2,9 @@ import { ReactNode, CSSProperties, useState } from "react";
 import { TableHead } from "@/components/ui/table";
 import { ArrowUp, ArrowDown, ArrowUpDown, Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+const MAX_PINNED_COLUMNS = 3;
 
 interface SortableTableHeadProps {
   children: ReactNode;
@@ -111,7 +114,15 @@ export function usePinning(allFields: string[], fixedOffset: number = 0, columnW
   const handlePinToggle = (field: string) => {
     setPinnedColumns(prev => {
       const next = new Set(prev);
-      if (next.has(field)) next.delete(field); else next.add(field);
+      if (next.has(field)) {
+        next.delete(field);
+      } else {
+        if (next.size >= MAX_PINNED_COLUMNS) {
+          toast.warning(`You can pin up to ${MAX_PINNED_COLUMNS} columns. Unpin one to add another.`);
+          return prev;
+        }
+        next.add(field);
+      }
       return next;
     });
   };

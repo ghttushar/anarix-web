@@ -34,10 +34,10 @@ const tabs = [
 
 const impactChartData = mockImpactCampaigns.map((c) => ({
   name: c.name.length > 20 ? c.name.slice(0, 20) + "…" : c.name,
-  "Baseline Spend": c.baseline.adSpend,
-  "Impact Spend": c.impact.adSpend,
-  "Baseline Sales": c.baseline.adSales,
-  "Impact Sales": c.impact.adSales,
+  "Previous Spend": c.baseline.adSpend,
+  "Current Spend": c.impact.adSpend,
+  "Previous Sales": c.baseline.adSales,
+  "Current Sales": c.impact.adSales,
 }));
 
 const SORTABLE_FIELDS = [
@@ -63,16 +63,16 @@ export default function ImpactAnalysis() {
 
   const getTabData = () => {
     switch (activeTab) {
-      case "campaigns": return { data: mockImpactCampaigns, showType: true };
-      case "ad-groups": return { data: mockImpactAdGroups, showType: false };
-      case "products": return { data: mockImpactProducts, showType: false };
-      case "keywords": return { data: mockImpactKeywords, showType: false };
-      case "search-terms": return { data: mockImpactSearchTerms, showType: false };
-      default: return { data: mockImpactCampaigns, showType: true };
+      case "campaigns": return { data: mockImpactCampaigns };
+      case "ad-groups": return { data: mockImpactAdGroups };
+      case "products": return { data: mockImpactProducts };
+      case "keywords": return { data: mockImpactKeywords };
+      case "search-terms": return { data: mockImpactSearchTerms };
+      default: return { data: mockImpactCampaigns };
     }
   };
 
-  const { data, showType } = getTabData();
+  const { data } = getTabData();
 
   const handleDownload = () => {
     toast.success("Exporting impact data as CSV...");
@@ -88,14 +88,14 @@ export default function ImpactAnalysis() {
         <AppTaskbar showRunButton onRun={() => toast.info("Analyzing impact comparison...")} breadcrumbItems={breadcrumbItems}>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2.5 py-1">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Baseline</span>
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Previous period</span>
               <Button variant="ghost" size="sm" className="h-8 gap-1 text-sm font-normal px-1.5 cursor-pointer">
                 <Calendar className="h-3 w-3" />Jan 1 – Jan 7<ChevronDown className="h-3 w-3" />
               </Button>
             </div>
             <span className="text-xs font-medium text-muted-foreground">vs</span>
             <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2.5 py-1">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Impact</span>
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Current period</span>
               <Button variant="ghost" size="sm" className="h-8 gap-1 text-sm font-normal px-1.5 cursor-pointer">
                 <Calendar className="h-3 w-3" />Jan 15 – Jan 22<ChevronDown className="h-3 w-3" />
               </Button>
@@ -132,10 +132,10 @@ export default function ImpactAnalysis() {
               <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
               <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "12px" }} />
               <Legend wrapperStyle={{ fontSize: "11px" }} />
-              <Bar dataKey="Baseline Spend" fill="hsl(var(--muted-foreground))" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="Impact Spend" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="Baseline Sales" fill="hsl(var(--muted-foreground) / 0.5)" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="Impact Sales" fill="hsl(var(--success))" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="Previous Spend" fill="hsl(var(--muted-foreground))" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="Current Spend" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="Previous Sales" fill="hsl(var(--muted-foreground) / 0.5)" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="Current Sales" fill="hsl(var(--success))" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -153,7 +153,7 @@ export default function ImpactAnalysis() {
           onSortChange={(f, d) => { setSortField(f); setSortDirection(d); }}
         />
 
-        <ImpactTable data={data} searchQuery={searchQuery} showType={showType} />
+        <ImpactTable data={data} searchQuery={searchQuery} />
       </div>
 </AppLayout>
   );

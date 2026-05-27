@@ -8,6 +8,8 @@ import { StatusBadge } from "@/components/status/StatusBadge";
 import { DeltaBadge } from "@/components/ui/delta-badge";
 import { getDelta } from "@/lib/utils/deltaGenerator";
 import { mockProductAds, productAdsTotals } from "@/data/mockProductAds";
+import { mockCampaigns } from "@/data/mockCampaigns";
+import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { AddProductAdsModal } from "@/components/advertising/AddProductAdsModal";
 import { TablePagination } from "./TablePagination";
@@ -134,7 +136,21 @@ export function ProductAdsTable({ searchQuery = "", showAddButton = false, showD
                     </div>
                   </TableCell>
                   <TableCell style={ps("adGroupName")} className={cn("text-foreground", pc("adGroupName"))}>{ad.adGroupName}</TableCell>
-                  <TableCell style={ps("campaignName")} className={cn("text-foreground", pc("campaignName"))}>{ad.campaignName}</TableCell>
+                  <TableCell style={ps("campaignName")} className={cn(pc("campaignName"))}>
+                    {(() => {
+                      const ct = mockCampaigns.find((c) => c.name === ad.campaignName)?.type;
+                      return (
+                        <div className="flex items-center gap-2">
+                          {ct && (
+                            <Badge variant="outline" className={cn("text-xs", ct === "auto" ? "border-primary/30 bg-primary/5 text-primary" : "border-secondary/30 bg-secondary/5 text-secondary-foreground")}>
+                              {ct === "auto" ? "Auto" : "Manual"}
+                            </Badge>
+                          )}
+                          <span className="text-foreground">{ad.campaignName}</span>
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell style={ps("impressions")} className={cn("text-right", pc("impressions"))}><NumCell formatted={formatNumber(ad.impressions)} id={ad.id} metric="impressions" /></TableCell>
                   <TableCell style={ps("clicks")} className={cn("text-right", pc("clicks"))}><NumCell formatted={formatNumber(ad.clicks)} id={ad.id} metric="clicks" /></TableCell>
                   <TableCell style={ps("ctr")} className={cn("text-right", pc("ctr"))}><NumCell formatted={formatPercent(ad.ctr)} id={ad.id} metric="ctr" /></TableCell>

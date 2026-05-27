@@ -111,7 +111,9 @@ export function ProductTargetingTable({ searchQuery = "", showDeltas = false }: 
                 <TableCell style={ps("adGroupName")} className={cn("text-foreground", pc("adGroupName"))}>{target.adGroupName}</TableCell>
                 <TableCell style={ps("campaignName")} className={cn(pc("campaignName"))}>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs border-secondary/30 bg-secondary/5 text-secondary-foreground">Manual</Badge>
+                    <Badge variant="outline" className={cn("text-xs", target.campaignType === "auto" ? "border-primary/30 bg-primary/5 text-primary" : "border-secondary/30 bg-secondary/5 text-secondary-foreground")}>
+                      {target.campaignType === "auto" ? "Auto" : "Manual"}
+                    </Badge>
                     <span className="text-foreground">{target.campaignName}</span>
                   </div>
                 </TableCell>

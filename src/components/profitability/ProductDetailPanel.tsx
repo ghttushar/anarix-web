@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ChevronDown, ChevronRight } from "lucide-react";
+import { X, ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfitabilityProduct } from "@/types/profitability";
 import { Button } from "@/components/ui/button";
@@ -131,7 +131,21 @@ export function ProductDetailPanel({ product, isOpen, onClose }: ProductDetailPa
 
           {/* P&L Breakdown — expandable sections */}
           <div>
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">P&L Breakdown</h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">P&L Breakdown</h3>
+              <button
+                onClick={() => {
+                  const allIds = pnlSections.filter((s) => s.children && s.children.length > 0).map((s) => s.id);
+                  const allExpanded = allIds.every((id) => expandedSections.has(id));
+                  setExpandedSections(allExpanded ? new Set() : new Set(allIds));
+                }}
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                title="Expand or collapse all sections"
+              >
+                <ChevronsUpDown className="h-3 w-3" />
+                {pnlSections.filter((s) => s.children?.length).every((s) => expandedSections.has(s.id)) ? "Collapse all" : "Expand all"}
+              </button>
+            </div>
             <div className="space-y-1">
               {pnlSections.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
