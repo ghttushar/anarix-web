@@ -58,9 +58,12 @@ interface DataTableToolbarProps {
   showDeltas?: boolean;
   onShowDeltasChange?: (show: boolean) => void;
   onUpload?: (files: File[]) => void;
+  /** Override: when provided, the Upload button calls this instead of opening the internal UploadDialog. */
+  onUploadClick?: () => void;
   showUpload?: boolean;
   uploadAccept?: string;
   uploadTitle?: string;
+  uploadLabel?: string;
   pinnedColumns?: string[];
   onPinColumn?: (columnId: string) => void;
   // Sort props
@@ -96,9 +99,11 @@ export function DataTableToolbar({
   showDeltas,
   onShowDeltasChange,
   onUpload,
+  onUploadClick,
   showUpload = false,
   uploadAccept,
   uploadTitle,
+  uploadLabel,
   pinnedColumns = [],
   onPinColumn,
   sortableFields = [],
@@ -218,10 +223,10 @@ export function DataTableToolbar({
           {rightContent}
 
           {/* Upload Button */}
-          {(showUpload || onUpload) && (
-            <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={() => setUploadOpen(true)} title={uploadTitle || "Upload files"}>
+          {(showUpload || onUpload || onUploadClick) && (
+            <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={() => (onUploadClick ? onUploadClick() : setUploadOpen(true))} title={uploadTitle || "Upload files"}>
               <Upload className="h-3.5 w-3.5" />
-              Upload
+              {uploadLabel || "Upload"}
             </Button>
           )}
 
