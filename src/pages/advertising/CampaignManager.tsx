@@ -166,6 +166,14 @@ const breadcrumbItems = [
   { label: "Campaign Manager" },
 ];
 export default function CampaignManager() {
+  return (
+    <TagsProvider>
+      <CampaignManagerInner />
+    </TagsProvider>
+  );
+}
+
+function CampaignManagerInner() {
   const navigate = useNavigate();
   const { isWalmart } = useMarketplace();
   const { adType, setAdType } = useFilter();
