@@ -209,25 +209,23 @@ export function CampaignTable({
                       </TableCell>
                     )}
                     {show("status") && <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted transition-colors"><StatusBadge status={campaign.status} /></TableCell>}
-                    {show("type") && (
-                      <TableCell>
-                        <span className={cn(
-                          "rounded-full px-2.5 py-0.5 text-xs font-medium border",
-                          campaign.type === "auto"
-                            ? "border-primary/30 text-primary bg-primary/5"
-                            : "border-border text-foreground bg-muted"
-                        )}>
-                          {campaign.type === "auto" ? "Auto" : "Manual"}
-                        </span>
-                      </TableCell>
-                    )}
                     {show("name") && <TableCell className={cn("font-medium sticky z-10 bg-background group-hover:bg-muted transition-colors", isEdit ? "left-[64px]" : "left-[112px]")}>
                       <div className="space-y-1 min-w-[200px]">
                         {isEdit ? (
                           <Input defaultValue={campaign.name} className="h-8 text-sm" onBlur={(e) => onCampaignUpdate?.(campaign.id, { name: e.target.value })} onClick={(e) => e.stopPropagation()} />
                         ) : <span className="text-primary hover:underline cursor-pointer">{campaign.name}</span>}
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <CampaignTagBar campaignId={campaign.id} isEdit={isEdit} />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={cn(
+                            "rounded-full px-2 py-0.5 text-[10px] font-medium border whitespace-nowrap",
+                            campaign.type === "auto"
+                              ? "border-primary/30 text-primary bg-primary/5"
+                              : "border-border text-muted-foreground bg-muted"
+                          )}>
+                            {campaign.type === "auto" ? "Auto" : "Manual"}
+                          </span>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <CampaignTagBar campaignId={campaign.id} isEdit={isEdit} />
+                          </div>
                         </div>
                       </div>
                     </TableCell>}
