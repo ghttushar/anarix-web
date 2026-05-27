@@ -163,7 +163,6 @@ export function CampaignTable({
               )}
               {isEdit && show("active") && <TableHead className="w-16">Active</TableHead>}
               {show("status") && <TableHead className="w-28 sticky left-0 z-10 bg-muted">Status</TableHead>}
-              {show("type") && <TableHead className="w-24">Type</TableHead>}
               {show("name") && <TableHead className={cn("min-w-[220px] sticky z-10 bg-muted", isEdit ? "left-[64px]" : "left-[112px]")}>
                 Campaign Name
               </TableHead>}
