@@ -23,8 +23,8 @@ interface MatchTypePickerProps {
 const ORDER: MatchType[] = ["broad", "exact", "phrase"];
 
 export function MatchTypePicker({ value, onChange }: MatchTypePickerProps) {
-  const { currencySymbol } = useCurrency() as { currencySymbol?: string } & ReturnType<typeof useCurrency>;
-  const symbol = currencySymbol ?? "";
+  const { currencyConfig } = useCurrency();
+  const symbol = currencyConfig.symbol;
 
   const toggle = (mt: MatchType) => {
     if (!onChange) return;
