@@ -13,13 +13,12 @@ import { SortableTableHead, sortData, usePinning } from "./SortableTableHead";
 interface ImpactTableProps {
   data: ImpactComparison[];
   searchQuery?: string;
-  showType?: boolean;
 }
 
 const PINNABLE = ["impactPercentage", "impressions", "clicks", "ctr", "adSpend", "adSales", "roas", "acos"];
 const FIXED_OFFSET = 250;
 
-export function ImpactTable({ data, searchQuery = "", showType = true }: ImpactTableProps) {
+export function ImpactTable({ data, searchQuery = "" }: ImpactTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [sortField, setSortField] = useState<string | null>(null);
@@ -95,9 +94,9 @@ export function ImpactTable({ data, searchQuery = "", showType = true }: ImpactT
               <TableHead className="h-6" />
               {["impressions", "clicks", "ctr", "adSpend", "adSales", "roas", "acos"].map((field) => (
                 <TableHead key={field} className={cn("h-6 text-center", pc(field, true))} style={ps(field)}>
-                  <span className="text-[10px] text-muted-foreground">base</span>
+                  <span className="text-[10px] text-muted-foreground">previous</span>
                   <span className="text-[10px] text-muted-foreground/40 mx-1">→</span>
-                  <span className="text-[10px] text-foreground">impact</span>
+                  <span className="text-[10px] text-foreground">current</span>
                 </TableHead>
               ))}
             </TableRow>
@@ -109,14 +108,7 @@ export function ImpactTable({ data, searchQuery = "", showType = true }: ImpactT
               return (
                 <TableRow key={item.id} className="group cursor-pointer hover:bg-muted/50 transition-colors">
                   <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted transition-colors">
-                    <div className="flex items-center gap-2">
-                      {showType && item.type && (
-                        <Badge variant="outline" className={cn("text-xs", item.type === "auto" ? "border-primary/30 bg-primary/5 text-primary" : "border-secondary/30 bg-secondary/5 text-secondary-foreground")}>
-                          {item.type === "auto" ? "Auto" : "Manual"}
-                        </Badge>
-                      )}
-                      <span className="font-medium">{item.name}</span>
-                    </div>
+                    <span className="font-medium">{item.name}</span>
                   </TableCell>
                   <TableCell style={ps("impactPercentage")} className={cn("text-center", pc("impactPercentage"))}>
                     <Badge variant="outline" className={cn("gap-1", isNeutral ? "border-muted bg-muted text-muted-foreground" : isPositive ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive")}>
