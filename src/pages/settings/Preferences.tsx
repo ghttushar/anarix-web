@@ -372,38 +372,6 @@ export default function Preferences() {
           </div>
         </section>
 
-        <Separator />
-
-        {/* Visual Effects */}
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-heading text-lg font-medium text-foreground">Visual Effects</h2>
-            <p className="text-sm text-muted-foreground">Control animations and visual enhancements</p>
-          </div>
-          <div className="space-y-0 rounded-lg border border-border bg-card divide-y divide-border">
-            <label className="flex items-center justify-between cursor-pointer p-4">
-              <div>
-                <p className="font-medium text-foreground">Ambient Background</p>
-                <p className="text-xs text-muted-foreground">Subtle animated dot pattern</p>
-              </div>
-              <Switch checked={effects.ambientBackground} onCheckedChange={() => toggle("ambientBackground")} />
-            </label>
-            <label className="flex items-center justify-between cursor-pointer p-4">
-              <div>
-                <p className="font-medium text-foreground">Number Animations</p>
-                <p className="text-xs text-muted-foreground">Smooth morphing transitions for metrics</p>
-              </div>
-              <Switch checked={effects.numberAnimations} onCheckedChange={() => toggle("numberAnimations")} />
-            </label>
-            <label className="flex items-center justify-between cursor-pointer p-4">
-              <div>
-                <p className="font-medium text-foreground">Floating Action Island</p>
-                <p className="text-xs text-muted-foreground">Quick actions bar at bottom</p>
-              </div>
-              <Switch checked={effects.floatingIsland} onCheckedChange={() => toggle("floatingIsland")} />
-            </label>
-          </div>
-        </section>
       </div>
 </AppLayout>
   );
