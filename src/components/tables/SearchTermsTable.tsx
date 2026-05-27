@@ -8,6 +8,7 @@ import {
 import { DeltaBadge } from "@/components/ui/delta-badge";
 import { getDelta } from "@/lib/utils/deltaGenerator";
 import { mockSearchTerms, searchTermsTotals } from "@/data/mockSearchTerms";
+import { mockCampaigns } from "@/data/mockCampaigns";
 import { cn } from "@/lib/utils";
 import { TablePagination } from "./TablePagination";
 import { SortableTableHead, sortData, usePinning } from "./SortableTableHead";
@@ -114,7 +115,21 @@ export function SearchTermsTable({ searchQuery = "", showDeltas = false }: Searc
                 <TableCell style={ps("keyword")} className={cn("text-foreground", pc("keyword"))}>{term.keyword}</TableCell>
                 <TableCell><Badge variant="outline" className={cn("text-xs uppercase", matchTypeColors[term.matchType])}>{term.matchType}</Badge></TableCell>
                 <TableCell style={ps("adGroupName")} className={cn("text-foreground", pc("adGroupName"))}>{term.adGroupName}</TableCell>
-                <TableCell style={ps("campaignName")} className={cn("text-foreground", pc("campaignName"))}>{term.campaignName}</TableCell>
+                <TableCell style={ps("campaignName")} className={cn(pc("campaignName"))}>
+                  {(() => {
+                    const ct = mockCampaigns.find((c) => c.name === term.campaignName)?.type;
+                    return (
+                      <div className="flex items-center gap-2">
+                        {ct && (
+                          <Badge variant="outline" className={cn("text-xs", ct === "auto" ? "border-primary/30 bg-primary/5 text-primary" : "border-secondary/30 bg-secondary/5 text-secondary-foreground")}>
+                            {ct === "auto" ? "Auto" : "Manual"}
+                          </Badge>
+                        )}
+                        <span className="text-foreground">{term.campaignName}</span>
+                      </div>
+                    );
+                  })()}
+                </TableCell>
                 <TableCell style={ps("impressions")} className={cn("text-right", pc("impressions"))}><NumCell formatted={formatNumber(term.impressions)} id={term.id} metric="impressions" /></TableCell>
                 <TableCell style={ps("clicks")} className={cn("text-right", pc("clicks"))}><NumCell formatted={formatNumber(term.clicks)} id={term.id} metric="clicks" /></TableCell>
                 <TableCell style={ps("ctr")} className={cn("text-right", pc("ctr"))}><NumCell formatted={formatPercent(term.ctr)} id={term.id} metric="ctr" /></TableCell>
