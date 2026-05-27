@@ -223,9 +223,14 @@ export function CampaignTable({
                       </TableCell>
                     )}
                     {show("name") && <TableCell className={cn("font-medium sticky z-10 bg-background group-hover:bg-muted transition-colors", isEdit ? "left-[64px]" : "left-[112px]")}>
-                      {isEdit ? (
-                        <Input defaultValue={campaign.name} className="h-8 text-sm" onBlur={(e) => onCampaignUpdate?.(campaign.id, { name: e.target.value })} onClick={(e) => e.stopPropagation()} />
-                      ) : <span className="text-primary hover:underline cursor-pointer">{campaign.name}</span>}
+                      <div className="space-y-1 min-w-[200px]">
+                        {isEdit ? (
+                          <Input defaultValue={campaign.name} className="h-8 text-sm" onBlur={(e) => onCampaignUpdate?.(campaign.id, { name: e.target.value })} onClick={(e) => e.stopPropagation()} />
+                        ) : <span className="text-primary hover:underline cursor-pointer">{campaign.name}</span>}
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <CampaignTagBar campaignId={campaign.id} isEdit={isEdit} />
+                        </div>
+                      </div>
                     </TableCell>}
                     {show("startDate") && <TableCell>
                       {isEdit ? (
