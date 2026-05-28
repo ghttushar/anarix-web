@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
+import { ViewBadge } from "@/components/layout/ViewBadge";
 
 interface BreadcrumbItem {
   label: string;
@@ -222,6 +223,8 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
             {/* Last synced */}
             <Clock className="h-3 w-3 text-muted-foreground" />
             <span className="text-[11px] text-muted-foreground whitespace-nowrap">Last synced: {lastSyncTime}</span>
+            <div className="h-3.5 w-px bg-border" />
+            <ViewBadge />
           </div>
         </div>
       )}

@@ -21,6 +21,9 @@ import { ActivePanelProvider } from "@/contexts/ActivePanelContext";
 import { AanProvider } from "@/components/aan";
 import { InsightsProvider } from "@/components/insights";
 import { CreativeFeatures } from "@/features/creative";
+import { ViewportProvider } from "@/contexts/ViewportContext";
+import TabletPlaceholder from "@/views/tablet/TabletPlaceholder";
+import MobilePlaceholder from "@/views/mobile/MobilePlaceholder";
 import { toast } from "sonner";
 import NotFound from "./pages/NotFound";
 
@@ -162,6 +165,14 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/onboarding/connect" element={<ConnectAccounts />} />
 
+      {/* Viewport variants — Phase 1 scaffold. Tablet/Mobile screens land in later phases. */}
+      <Route path="/desktop" element={<Navigate to="/profitability/dashboard" replace />} />
+      <Route path="/desktop/*" element={<Navigate to="/profitability/dashboard" replace />} />
+      <Route path="/tablet" element={<TabletPlaceholder />} />
+      <Route path="/tablet/*" element={<TabletPlaceholder />} />
+      <Route path="/mobile" element={<MobilePlaceholder />} />
+      <Route path="/mobile/*" element={<MobilePlaceholder />} />
+
       {/* Hidden dev utility: pin a trial state and render any nav-bar page underneath */}
       <Route path="/_state/:state/*" element={<TrialStateRoute />} />
 
@@ -276,6 +287,7 @@ function AppRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ViewportProvider>
     <ThemeProvider>
       <ColorSchemeProvider>
       <DensityProvider>
@@ -319,6 +331,7 @@ const App = () => (
       </DensityProvider>
       </ColorSchemeProvider>
     </ThemeProvider>
+    </ViewportProvider>
   </QueryClientProvider>
 );
 
