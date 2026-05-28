@@ -129,6 +129,27 @@ export function buildImpactSeries(
   for (const day of prevDays) out.push(buildDayPoint(day, "previous", "baseline", prevDays.length));
   for (const day of gapDays) out.push(buildDayPoint(day, "gap", null, 0));
   for (const day of impactDays) out.push(buildDayPoint(day, "impact", "impact", impactDays.length));
+
+  // Bridge boundary so Previous and Impact lines visually connect without a missing-day gap.
+  // Only bridge when the two periods are adjacent (no gap days between them).
+  if (gapDays.length === 0 && prevDays.length > 0 && impactDays.length > 0) {
+    const lastPrevIdx = prevDays.length - 1;
+    const firstImpactIdx = prevDays.length; // immediately after last previous
+    const lastPrev = out[lastPrevIdx];
+    const firstImpact = out[firstImpactIdx];
+    for (const metric of metrics) {
+      const prevKey = `${metric}_previous`;
+      const impKey = `${metric}_impact`;
+      // Cross-populate so each line has an endpoint on the boundary day.
+      if (lastPrev[impKey] == null && firstImpact[impKey] != null) {
+        lastPrev[impKey] = firstImpact[impKey];
+      }
+      if (firstImpact[prevKey] == null && lastPrev[prevKey] != null) {
+        firstImpact[prevKey] = lastPrev[prevKey];
+      }
+    }
+  }
+
   return out;
 }
 

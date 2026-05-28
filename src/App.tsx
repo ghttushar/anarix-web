@@ -31,6 +31,8 @@ import ConnectAccounts from "./pages/onboarding/ConnectAccounts";
 // Advertising
 import CampaignManager from "./pages/advertising/CampaignManager";
 import ImpactAnalysis from "./pages/advertising/ImpactAnalysis";
+import ImpactCampaignDetail from "./pages/advertising/ImpactCampaignDetail";
+import ImpactAdGroupDetail from "./pages/advertising/ImpactAdGroupDetail";
 import TargetingActions from "./pages/advertising/TargetingActions";
 import AdvCampaignDetail from "./pages/advertising/CampaignDetail";
 import AdGroupDetail from "./pages/advertising/AdGroupDetail";
@@ -182,6 +184,8 @@ function AppRoutes() {
       <Route path="/advertising/campaigns/:campaignId/:adGroupId" element={<AdGroupDetail />} />
       <Route path="/advertising/campaigns/:campaignId/:adGroupId/:productAdId" element={<ProductAdDetail />} />
       <Route path="/advertising/impact" element={<ImpactAnalysis />} />
+      <Route path="/advertising/impact/campaigns/:campaignId" element={<ImpactCampaignDetail />} />
+      <Route path="/advertising/impact/campaigns/:campaignId/:adGroupId" element={<ImpactAdGroupDetail />} />
       <Route path="/advertising/targeting" element={<TargetingActions />} />
       <Route path="/advertising/budget-pacing" element={<BudgetPacing />} />
       <Route path="/advertising/search-harvesting" element={<SearchHarvesting />} />
