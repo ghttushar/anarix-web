@@ -1,83 +1,101 @@
-# Phase 3 — Tablet Tables, Filters, Date Picker
+# Phase 4 — Advertising Module (Tablet)
 
-Goal: deliver touch-optimized versions of the three highest-traffic interactive primitives — data tables, the multi-rule filter builder, and the date range picker — so module-screen ports (Phase 4+) have ready-to-use building blocks.
-
-Same data, same containers from `src/app/*`. Only presentation forks under `src/views/tablet/`.
+Goal: port the Advertising module screens to the tablet shell using Phase 3 primitives. Same routes, same data, no feature or behavior changes. Only presentation forks.
 
 ## Scope (in)
 
-### 1. Tablet Data Table (`src/views/tablet/data/`)
-- `TabletDataTable.tsx` — generic table wrapper preserving existing density rules (`whitespace-nowrap`, black numbers, sticky first column, sticky header, `bg-card` container).
-  - Row height: 52px (vs desktop 36px) — keeps tap targets >= 44px while staying data-dense.
-  - Each row wrapped in `SwipeableRow`; swipe-left reveals row actions (Pin / Edit / More).
-  - Sort / Pin / column-menu icons are **always visible** per row-header (no hover-reveal).
-  - Cell text remains 14px Noto Sans, numbers black.
-  - Selection: tap row checkbox (44×44 hit area); bulk action bar slides in from top when >0 selected.
-- `TabletTableToolbar.tsx` — touch-sized toolbar (column visibility, filter, density, export). Buttons use `TouchTarget`; labels use `LongPressTooltip`.
-- `TabletColumnMenu.tsx` — sheet-style column visibility picker (slides up from bottom on portrait, right-drawer on landscape). Search input, checkboxes 44×44.
+Tablet routes mounted under the existing `TabletAppShell` nested `<Routes>`:
 
-### 2. Tablet Filter Builder (`src/views/tablet/filters/`)
-- `TabletFilterBuilder.tsx` — right-side `TabletRightPanel` hosting the multi-rule builder. Rules stack vertically with large tap targets; AND/OR toggle is a segmented control.
-- `TabletFilterRule.tsx` — one rule per card (column / operator / value), drag-handle on the left (long-press to start drag), delete button 44×44 on the right.
-- `TabletFilterChips.tsx` — applied-filter chips rendered in toolbar; each chip has a 44×44 dismiss target.
+| Route | Tablet screen | Underlying data / hooks |
+|---|---|---|
+| `/tablet/advertising` | redirect → `/tablet/advertising/campaigns` | — |
+| `/tablet/advertising/campaigns` | `TabletCampaignManager` | reuses mock data + hooks from `src/pages/advertising/CampaignManager.tsx` |
+| `/tablet/advertising/campaigns/:campaignId` | `TabletCampaignDetail` | reuses `CampaignDetail` data |
+| `/tablet/advertising/campaigns/:campaignId/:adGroupId` | `TabletAdGroupDetail` | reuses `AdGroupDetail` data |
+| `/tablet/advertising/impact` | `TabletImpactAnalysis` | reuses `ImpactAnalysis` data |
+| `/tablet/advertising/impact/campaigns/:campaignId` | `TabletImpactCampaignDetail` | reuses data |
+| `/tablet/advertising/impact/campaigns/:campaignId/:adGroupId` | `TabletImpactAdGroupDetail` | reuses data |
+| `/tablet/advertising/targeting` | `TabletTargetingActions` | reuses data |
+| `/tablet/advertising/budget-pacing` | `TabletBudgetPacing` | reuses data |
+| `/tablet/advertising/search-harvesting` | `TabletSearchHarvesting` | reuses data |
+| `/tablet/advertising/anomaly-alerts` | `TabletAnomalyAlerts` | reuses data |
+| `/tablet/advertising/creative-analyzer` | `TabletCreativeAnalyzer` | reuses data |
+| `/tablet/advertising/rules/agents` | `TabletRuleAgents` | reuses data |
+| `/tablet/advertising/rules/applied` | `TabletAppliedRules` | reuses data |
+| `/tablet/advertising/rules/create[/:templateId]` | `TabletRuleCreation` | reuses data |
+| `/tablet/advertising/rules/edit/:ruleId` | `TabletRuleCreation` | reuses data |
 
-### 3. Tablet Date Range Picker (`src/views/tablet/datepicker/`)
-- `TabletDateRangePicker.tsx` — opens a sheet (portrait) / popover (landscape) using shadcn `Calendar` (mode="range") with `p-3 pointer-events-auto`.
-  - Preset rail on the left (Today, Yesterday, 7d, 28d, MTD, QTD, YTD, Custom) — each preset is a 48px-tall pill.
-  - Explicit **Apply** (primary) and **Cancel** (secondary) buttons fixed to the sheet footer.
-  - Two-month calendar in landscape, single-month in portrait (driven by `matchMedia`).
-  - Keyboard-aware via `useVisualViewportInset` so the footer is never hidden.
-
-### 4. Wiring & demo
-- Add a sample mounted route under `/tablet/_preview/tables` that renders `TabletDataTable` with mock rows + the toolbar + filter panel + date picker, so Phase 3 is verifiable end-to-end without touching real module screens.
-- Demo links added to the Tablet shell's empty-state center card.
+Each tablet screen is a thin presentational shell that:
+- Pulls the existing data / mock structures from the matching desktop page (import or extract into a small `src/views/tablet/advertising/data.ts` if reuse is non-trivial).
+- Renders a `TabletTableToolbar` (title, KPI chips, filter, columns, date range, export).
+- Renders a `TabletDataTable<T>` with column defs mapping the same fields as desktop.
+- Opens config workflows (Rule Create/Edit, Targeting actions) in a `TabletRightPanel` instead of inline-everything.
+- Detail screens reuse the existing 3-level analytical hierarchy and breadcrumb trail rendered by `TabletTaskbar`.
 
 ## Scope (out)
-- Any real module screen (Advertising, Profitability, Reports, BI, Catalog, AMC, Settings) — Phase 4+.
-- Desktop changes (existing desktop data table / filter / date picker untouched).
-- Mobile variants.
-- Business logic / data shape changes.
-- New dependencies.
+- Any change to data, business logic, KPIs, validation rules, or feature set.
+- Mobile screens.
+- Desktop screens.
+- Building a full Aan Copilot port (Phase 6).
+- Reports / Profitability / BI / Catalog / AMC / Settings ports (later phases).
 
-## Technical notes
-- Reuses existing shadcn `Calendar`, `Checkbox`, `Input`, `Button`, `Select` primitives — only layout & sizing change.
-- All new components live under `src/views/tablet/` and consume only shared utilities (`cn`, `lib/utils`) plus Phase 2 primitives (`TouchTarget`, `LongPressTooltip`, `SwipeableRow`, `TabletRightPanel`, `useVisualViewportInset`).
-- Generic table API mirrors a minimal subset of TanStack-style column defs to make Phase 4+ porting trivial:
-  ```ts
-  type TabletColumn<T> = {
-    id: string;
-    header: string;
-    cell: (row: T) => ReactNode;
-    align?: "left" | "right";
-    sticky?: boolean;
-    sortable?: boolean;
-  };
-  ```
-- Preserves Core memory rules: `whitespace-nowrap`, black numbers, `bg-card` container, no backdrop blur, no right-edge shadows, independent scroll containers (`flex-1 min-h-0`), sticky header inside scroll container.
+## Technical approach
 
-## Files to create
+1. **Data extraction**: For each desktop page that defines mock data inline, extract it into `src/views/tablet/advertising/data/<name>.ts` (or import directly when already centralized in `src/data/*`). No semantic changes — same shapes, same values.
+2. **Column defs**: Each tablet screen defines `TabletColumn<T>[]` matching the desktop columns. Numeric columns get `align: "right"`; first column is `sticky: true`.
+3. **Toolbar wiring**: `TabletTableToolbar` is the universal control surface — title slot for KPI band (rendered as inline chips on portrait, full row on landscape).
+4. **Workflows**: Rule creation and Targeting "Add Keyword Target" mount in `TabletRightPanel` (440px wide), reusing existing form logic.
+5. **Routing**: Extend the nested `<Routes>` in `TabletAppShell` with the advertising subtree. Existing tablet shell + sidebar already has the Advertising nav entry from Phase 2.
+6. **Sidebar**: Update `TabletSidebar` so the "Advertising" item routes to `/tablet/advertising/campaigns` and adds a secondary collapsed group of sub-items visible only when active (Campaigns, Impact, Targeting, Budget Pacing, Search Harvesting, Anomaly Alerts, Creative Analyzer, Rule Agents, Applied Rules).
+7. **No new deps**.
+
+## File map
+
+Create:
 ```
-src/views/tablet/data/TabletDataTable.tsx
-src/views/tablet/data/TabletTableToolbar.tsx
-src/views/tablet/data/TabletColumnMenu.tsx
-src/views/tablet/data/types.ts
-src/views/tablet/filters/TabletFilterBuilder.tsx
-src/views/tablet/filters/TabletFilterRule.tsx
-src/views/tablet/filters/TabletFilterChips.tsx
-src/views/tablet/filters/types.ts
-src/views/tablet/datepicker/TabletDateRangePicker.tsx
-src/views/tablet/datepicker/presets.ts
-src/views/tablet/_preview/TablePreview.tsx
+src/views/tablet/advertising/index.ts                       (route export aggregator)
+src/views/tablet/advertising/AdvertisingRoutes.tsx          (Routes element)
+src/views/tablet/advertising/data/campaigns.ts              (extracted mock if needed)
+src/views/tablet/advertising/data/impact.ts
+src/views/tablet/advertising/data/targeting.ts
+src/views/tablet/advertising/data/rules.ts
+src/views/tablet/advertising/data/misc.ts                   (budget-pacing, search-harvesting, anomaly, creative)
+src/views/tablet/advertising/screens/TabletCampaignManager.tsx
+src/views/tablet/advertising/screens/TabletCampaignDetail.tsx
+src/views/tablet/advertising/screens/TabletAdGroupDetail.tsx
+src/views/tablet/advertising/screens/TabletImpactAnalysis.tsx
+src/views/tablet/advertising/screens/TabletImpactCampaignDetail.tsx
+src/views/tablet/advertising/screens/TabletImpactAdGroupDetail.tsx
+src/views/tablet/advertising/screens/TabletTargetingActions.tsx
+src/views/tablet/advertising/screens/TabletBudgetPacing.tsx
+src/views/tablet/advertising/screens/TabletSearchHarvesting.tsx
+src/views/tablet/advertising/screens/TabletAnomalyAlerts.tsx
+src/views/tablet/advertising/screens/TabletCreativeAnalyzer.tsx
+src/views/tablet/advertising/screens/TabletRuleAgents.tsx
+src/views/tablet/advertising/screens/TabletAppliedRules.tsx
+src/views/tablet/advertising/screens/TabletRuleCreation.tsx
+src/views/tablet/advertising/workflows/TabletRuleCreationPanel.tsx
+src/views/tablet/advertising/workflows/TabletAddKeywordPanel.tsx
+src/views/tablet/advertising/kpi/TabletKpiBand.tsx          (touch KPI chip strip)
 ```
 
-## Files to edit
-- `src/App.tsx` — add `/tablet/_preview/tables` route under `TabletAppShell`.
-- `src/views/tablet/shell/TabletAppShell.tsx` — empty-state card links to the Phase 3 preview route.
+Edit:
+```
+src/views/tablet/shell/TabletAppShell.tsx   (add /advertising/* nested route + index redirect)
+src/views/tablet/shell/TabletSidebar.tsx    (Advertising -> /tablet/advertising/campaigns + secondary group)
+```
 
 ## Verification
-- Visit `/tablet/_preview/tables` (after switching to Tab in Preferences) — table renders with sticky header/column, 52px rows, swipe-left actions on a row, working toolbar, filter panel, date picker.
-- Rotate portrait↔landscape — date picker swaps sheet/popover; sidebar swaps rail/expanded.
-- Focus the filter rule value input on a tablet emulation — keyboard overlays, input scrolls into view, Apply button stays visible.
+- Switch to Tab view → tap Advertising in sidebar → lands on `/tablet/advertising/campaigns` with KPI band + touch-friendly table.
+- Navigate into a campaign → ad group → product ad via row taps; back via breadcrumbs.
+- Open Rule Create from `/tablet/advertising/rules/create` → workflow renders in a right panel; Apply/Cancel footer visible above keyboard.
+- Filter + columns + date range work as in Phase 3 preview.
 - Desktop routes unchanged.
 
-Awaiting approval to execute Phase 3.
+## Caveats
+- Some desktop pages contain large bespoke layouts (e.g. `ImpactCampaignDetail`, `RuleCreation`, `CreativeAnalyzer`) that mix tables + cards + workflows. Tablet ports preserve content fidelity but **simplify layout to a vertically stacked table-first composition** (toolbar → KPI band → primary table → optional right panel). No analytical fields are removed.
+- For screens that are not table-centric (CreativeAnalyzer, BudgetPacing visualizations), the tablet port renders the existing chart components from `src/components/**` directly inside a `bg-card` container with touch-sized controls. No chart rewrites.
+
+This is the largest single phase. Approve to execute as one batch; otherwise I can split into Phase 4a (Campaigns + Impact) and Phase 4b (Targeting, Rules, misc).
+
+Awaiting approval.
