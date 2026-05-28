@@ -11,9 +11,11 @@ import { useBranding } from "@/contexts/BrandingContext";
 import { useBillingFlow } from "@/contexts/BillingFlowContext";
 import { useTrial } from "@/contexts/TrialContext";
 import { cn } from "@/lib/utils";
-import { Pencil, RotateCcw, Globe } from "lucide-react";
+import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
+import { useViewport, AppView } from "@/contexts/ViewportContext";
+import { useNavigate } from "react-router-dom";
 
 const CUSTOM_SHORTCUTS_KEY = "anarix-custom-shortcuts";
 
@@ -153,9 +155,18 @@ export default function Preferences() {
   const { newBranding, toggleNewBranding } = useBranding();
   const { billingFlowEnabled, toggleBillingFlow } = useBillingFlow();
   const { trial, startSync, forceExpire, reset: resetTrial } = useTrial();
+  const { view, setView, entryPath } = useViewport();
+  const navigate = useNavigate();
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+
+  const handleViewChange = (next: AppView) => {
+    if (next === view) return;
+    setView(next);
+    toast.success(`Switched to ${next.charAt(0).toUpperCase() + next.slice(1)} view`);
+    navigate(entryPath(next));
+  };
 
   const handleCaptured = useCallback((desc: string, keys: string[]) => {
     const next = { ...customShortcuts, [desc]: keys };
