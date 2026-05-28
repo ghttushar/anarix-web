@@ -16,12 +16,13 @@ interface ImpactTableProps {
   searchQuery?: string;
   selectedIds?: Set<string>;
   onSelectionChange?: (ids: Set<string>) => void;
+  onRowClick?: (id: string) => void;
 }
 
 const PINNABLE = ["impactPercentage", "impressions", "clicks", "ctr", "adSpend", "adSales", "roas", "acos"];
 const FIXED_OFFSET = 250;
 
-export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionChange }: ImpactTableProps) {
+export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionChange, onRowClick }: ImpactTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [sortField, setSortField] = useState<string | null>(null);
@@ -141,9 +142,16 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
                 <TableRow
                   key={item.id}
                   data-state={isSelected ? "selected" : undefined}
-                  className="group hover:bg-muted/50 transition-colors data-[state=selected]:bg-primary/5"
+                  onClick={onRowClick ? () => onRowClick(item.id) : undefined}
+                  className={cn(
+                    "group hover:bg-muted/50 transition-colors data-[state=selected]:bg-primary/5",
+                    onRowClick && "cursor-pointer"
+                  )}
                 >
-                  <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted group-data-[state=selected]:bg-primary/5 transition-colors">
+                  <TableCell
+                    className="sticky left-0 z-10 bg-background group-hover:bg-muted group-data-[state=selected]:bg-primary/5 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleOne(item.id)}
@@ -151,7 +159,7 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
                     />
                   </TableCell>
                   <TableCell className="sticky left-10 z-10 bg-background group-hover:bg-muted group-data-[state=selected]:bg-primary/5 transition-colors">
-                    <span className="font-medium">{item.name}</span>
+                    <span className={cn("font-medium", onRowClick && "text-primary hover:underline")}>{item.name}</span>
                   </TableCell>
                   <TableCell style={ps("impactPercentage")} className={cn("text-center", pc("impactPercentage"))}>
                     <Badge variant="outline" className={cn("gap-1", isNeutral ? "border-muted bg-muted text-muted-foreground" : isPositive ? "border-success/30 bg-success/10 text-success" : "border-destructive/30 bg-destructive/10 text-destructive")}>

@@ -174,6 +174,8 @@ export interface ImpactComparison {
   id: string;
   name: string;
   type?: string;
+  campaignId?: string;
+  adGroupId?: string;
   impactPercentage: number;
   baseline: {
     impressions: number;
