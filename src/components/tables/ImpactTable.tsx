@@ -127,7 +127,7 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
                 <TableHead key={field} className={cn("h-6 text-center", pc(field, true))} style={ps(field)}>
                   <span className="text-[10px] text-muted-foreground">previous</span>
                   <span className="text-[10px] text-muted-foreground/40 mx-1">→</span>
-                  <span className="text-[10px] text-foreground">current</span>
+                  <span className="text-[10px] text-foreground">Impact</span>
                 </TableHead>
               ))}
             </TableRow>
