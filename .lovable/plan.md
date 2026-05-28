@@ -1,83 +1,52 @@
-## A. Impact Analysis page (`/advertising/impact`)
+## 1. Fix the "missing day" in the Performance Comparison chart
 
-### A1. App-level selector — functional date pairing
-- Rename "Current period" → **Impact period**. "Previous period" stays.
-- Both pickers become real `Popover` + `Calendar` (range mode), wrapped in a new local component `ImpactDateRangePair`.
-- Pairing logic (state lifted into `ImpactAnalysis.tsx`):
-  - When the user changes the **Impact period** to a range of N days starting on date X, set **Previous period** = N days ending the day before X.
-  - When the user changes the **Previous period** to a range of N days starting on date X, set **Impact period** = N days starting the day after the previous period ends.
-  - Example: Impact = 1–5 → Previous auto = 26–30 of prior month. Previous = 1–5 → Impact auto = 6–10.
-- Default state matches the existing labels (Jan 1–7 / Jan 15–22 replaced by a sensible paired default like last-7 vs prior-7).
+**Problem:** With Previous = May 15–21 and Impact = May 22–28, the Previous line ends at May 21 and the Impact line begins at May 22. Because they are stored as separate series (`{metric}_previous` vs `{metric}_impact`), recharts renders them as two disconnected segments and the visual "step" between May 21 and May 22 reads as a missing day.
 
-### A2. Metrics dropdown — multi-select (max 4)
-- Replace the single `<Select>` with a `Popover` containing checkbox rows (reuse the pattern in `src/components/charts/MetricSelector.tsx`).
-- Options = all impact metrics: **Impressions, Clicks, CTR, Ad Spend, Ad Sales, ROAS, ACOS, Orders, Units, CPC, CVR, AOV** (full list lives in a new `IMPACT_METRICS` constant; uses same keys as `ImpactComparison.baseline/impact`). Mock data only carries 7 today — extras render as "no data" until backend; we'll keep options consistent with available metric keys (`impressions, clicks, ctr, adSpend, adSales, roas, acos`) and mark the rest as disabled with a "soon" hint. Default selected: `adSpend, adSales`.
-- Cap at 4; further options become disabled until one is removed (mirrors `MetricSelector`).
+**Fix (in `src/lib/utils/impactSeries.ts`):**
+- Add a bridging point so the two lines meet. On the last day of the Previous period, also emit the Impact series' first value (and vice versa on the first Impact day for Previous), so each line has a connecting endpoint at the boundary.
+- Concretely: when building the last `previous` day point, also populate `${metric}_impact` using the Impact period's day-0 value. When building the first `impact` day point, also populate `${metric}_previous` using the Previous period's last-day value.
+- Result: a continuous 14-day timeline (May 15–28) with no visual gap, both lines visibly meeting at the May 21 / May 22 boundary.
+- No change to data semantics — tooltips still attribute each day to its true period (`point.period` unchanged).
 
-### A3. Bar chart → Line chart with date-bridged x-axis
-- Replace the Recharts `<BarChart>` with `<LineChart>` in the same card.
-- X axis = the **bridged date range** from start of Previous period to end of Impact period (e.g. Jan 23 → Feb 7). Daily ticks.
-- Two visually distinct line segments per selected metric:
-  - **Previous period** segment → muted color (`hsl(var(--muted-foreground))`).
-  - **Impact period** segment → metric color from `CHART_COLORS`.
-  - Connect with a dashed bridge line across any gap days.
-- Data source: new helper `buildImpactSeries(selectedItems, previousRange, impactRange, selectedMetrics)` that returns one combined dataset with `{ date, [metricKey_previous]: n, [metricKey_impact]: n }`. Since mock data has aggregates only, we synthesize a daily distribution per item across the range deterministically (same approach used elsewhere in mocks). No backend changes.
-- Tooltip on hover shows the date, period label (Previous vs Impact), metric values, and a small list of the top contributing items (campaigns / products from the selected rows). This is the "campaigns or products visualization popup" — rendered as a custom `<Tooltip content>`.
-- Only render lines for items selected in the table (see A4). If none selected, fall back to "all items in current tab" so the chart is never empty.
+## 2. Two-level drill-down in the Impact table
 
-### A4. Table item selection drives the chart
-- Add a leading checkbox column to `ImpactTable.tsx`:
-  - Header checkbox = select all on current page (tri-state).
-  - Row checkbox → toggles selection in a new `selectedIds: Set<string>` prop.
-- Lift selection into `ImpactAnalysis.tsx` as `selectedRowIds` (per-tab map keyed by `activeTab` so switching tabs doesn't bleed selection).
-- Pass `selectedRowIds` down to the line chart helper. Selecting/deselecting updates lines live.
+Mirror Campaign Manager's navigation pattern (no inline expand — route-based detail pages).
 
-### A5. Out of scope (do not touch)
-- Table columns, sorting, pagination, KPI math.
-- Toolbar download/search.
-- Any other advertising page.
+**Surface level → Level 1 → Level 2:**
+- `Impact Analysis (Campaigns tab)` → click campaign row → `Ad Groups for that campaign`
+- → click ad-group row → `Products for that ad group`
 
----
+**Implementation:**
 
-## B. Preferences page (`/settings/preferences`)
+**Routes (`src/App.tsx`):**
+- `/advertising/impact/campaigns/:campaignId` → `ImpactCampaignDetail` (shows Ad Groups under the campaign, with the same date-pair + metric + chart + table layout)
+- `/advertising/impact/campaigns/:campaignId/:adGroupId` → `ImpactAdGroupDetail` (shows Products under the ad group)
 
-### B1. Color scheme — lock to Periwinkle Refined
-- In `ColorSchemeContext.tsx`: keep only the `periwinkle-refined` entry in the `schemes` array. Default + fallback id = `"periwinkle-refined"`. If `localStorage` holds a stale id, coerce to refined.
-- In `Preferences.tsx`: remove the entire "Color Scheme" section (selector + grid). The single scheme is applied automatically; no UI needed.
+**New pages (`src/pages/advertising/`):**
+- `ImpactCampaignDetail.tsx` — reuses `ImpactDateRangePair`, `ImpactMetricMultiSelect`, `ImpactLineChart`, `ImpactTable`. Data source: `mockImpactAdGroups` filtered to the campaign id. Breadcrumb: Advertising › Impact Analysis › {Campaign Name}.
+- `ImpactAdGroupDetail.tsx` — same shell. Data source: `mockImpactProducts` filtered to the ad group id. Breadcrumb adds › {Ad Group Name}.
 
-### B2. Display Density — lock to Comfortable
-- Remove the Display Density section from `Preferences.tsx`.
-- In `DensityContext.tsx` (already wired): hardcode `density = "comfortable"`, make `setDensity` a no-op, clear any stored override on mount. Keeps the hook contract so consumers don't break.
+**Mock data link-up (`src/data/mockImpactData.ts`):**
+- Add `campaignId` to `mockImpactAdGroups` entries (mapping each to an existing campaign in `mockImpactCampaigns`).
+- Add `adGroupId` to `mockImpactProducts` entries.
+- Type addition in `src/types/advertising.ts`: optional `campaignId?: string; adGroupId?: string;` on `ImpactComparison`.
 
-### B3. Default toggles OFF
-- `FeatureToggleContext.tsx`: default `newFeaturesVisible` → `false` (initial state and fallback both `false`).
-- `BillingFlowContext.tsx`: already defaults to `false` — verified, no change.
-- Existing users with stored `true` keep their choice (we only change the default for fresh state).
-
-### B4. Remove Visual Effects section
-- Delete the entire "Visual Effects" `<section>` from `Preferences.tsx` (Ambient Background, Number Animations, Floating Action Island toggles).
-- Leave `VisualEffectsContext` + creative feature wiring intact (still used by `CreativeFeatures.tsx`); just no user-facing toggles. Defaults in `VisualEffectsContext.tsx` stay as today so the app behavior is unchanged.
-
-### B5. Out of scope
-- Theme (light/dark) switcher stays.
-- Currency, Keyboard Shortcuts, New Branding, Billing Flow sections stay.
-
----
+**Table click wiring (`src/components/tables/ImpactTable.tsx` + `src/pages/advertising/ImpactAnalysis.tsx`):**
+- Add optional `onRowClick?: (id: string) => void` prop to `ImpactTable`. When provided, the Name cell becomes a button-like clickable area (cursor-pointer, hover row highlight). Checkbox column keeps its own click and uses `stopPropagation` so selection doesn't trigger navigation.
+- In `ImpactAnalysis.tsx`, pass `onRowClick` only for the `campaigns` tab → `navigate(/advertising/impact/campaigns/${id})`. Other tabs (ad-groups, products, keywords, search-terms) stay non-clickable at the top level (those tabs are filtered views, not the drill-down hierarchy).
+- In `ImpactCampaignDetail.tsx`, table `onRowClick` → `/advertising/impact/campaigns/${campaignId}/${adGroupId}`.
+- In `ImpactAdGroupDetail.tsx`, no further drill (leaf level).
 
 ## Files touched
+- `src/lib/utils/impactSeries.ts` — bridge boundary values
+- `src/types/advertising.ts` — add optional parent ids
+- `src/data/mockImpactData.ts` — link ad groups → campaigns, products → ad groups
+- `src/components/tables/ImpactTable.tsx` — add `onRowClick` with safe checkbox handling
+- `src/pages/advertising/ImpactAnalysis.tsx` — wire navigation on campaigns tab
+- `src/pages/advertising/ImpactCampaignDetail.tsx` (new)
+- `src/pages/advertising/ImpactAdGroupDetail.tsx` (new)
+- `src/App.tsx` — register the two new routes
 
-**Impact Analysis**
-- `src/pages/advertising/ImpactAnalysis.tsx` — rename label, real date pickers, multi-metric state, lifted row selection, swap chart, wire helper.
-- `src/components/tables/ImpactTable.tsx` — add selection checkbox column + `selectedIds`/`onSelectionChange` props.
-- `src/components/advertising/ImpactDateRangePair.tsx` *(new)* — two paired range popovers + pairing math.
-- `src/components/advertising/ImpactMetricMultiSelect.tsx` *(new)* — multi-select checkbox popover, max 4.
-- `src/components/charts/ImpactLineChart.tsx` *(new)* — bridged line chart + custom hover tooltip.
-- `src/lib/utils/impactSeries.ts` *(new)* — `buildImpactSeries` daily synthesis helper.
-
-**Preferences**
-- `src/pages/settings/Preferences.tsx` — remove Color Scheme, Display Density, Visual Effects sections.
-- `src/contexts/ColorSchemeContext.tsx` — single scheme.
-- `src/contexts/DensityContext.tsx` — lock to comfortable.
-- `src/contexts/FeatureToggleContext.tsx` — default `false`.
-
-No backend / schema / mock data structure changes.
+## Out of scope
+- No new visual styling, no chart type changes, no tooltip changes beyond the bridge points.
+- Other tabs (Keywords / Search Terms) remain non-hierarchical as today.
