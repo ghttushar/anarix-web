@@ -55,6 +55,7 @@ function defaultRanges(): { previous: DateRange; impact: DateRange } {
 }
 
 export default function ImpactAnalysis() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ImpactTab>("campaigns");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMetrics, setSelectedMetrics] = useState<ImpactMetricKey[]>(["adSpend", "adSales"]);
