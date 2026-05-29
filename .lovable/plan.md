@@ -1,101 +1,97 @@
-# Phase 4 — Advertising Module (Tablet)
 
-Goal: port the Advertising module screens to the tablet shell using Phase 3 primitives. Same routes, same data, no feature or behavior changes. Only presentation forks.
+# Tablet Parity & Touch Accessibility — Phased Plan
 
-## Scope (in)
+## Goal
 
-Tablet routes mounted under the existing `TabletAppShell` nested `<Routes>`:
+The `/tablet/*` experience must be visually and functionally identical to the desktop app (same routes, pages, components, charts, KPI cards, AppTaskbar, AppLevelSelector, AppSidebar, Floating Action Island, Aan island, Insights panel, etc.). No layout, copy, feature, or design changes. The only differences allowed are:
 
-| Route | Tablet screen | Underlying data / hooks |
-|---|---|---|
-| `/tablet/advertising` | redirect → `/tablet/advertising/campaigns` | — |
-| `/tablet/advertising/campaigns` | `TabletCampaignManager` | reuses mock data + hooks from `src/pages/advertising/CampaignManager.tsx` |
-| `/tablet/advertising/campaigns/:campaignId` | `TabletCampaignDetail` | reuses `CampaignDetail` data |
-| `/tablet/advertising/campaigns/:campaignId/:adGroupId` | `TabletAdGroupDetail` | reuses `AdGroupDetail` data |
-| `/tablet/advertising/impact` | `TabletImpactAnalysis` | reuses `ImpactAnalysis` data |
-| `/tablet/advertising/impact/campaigns/:campaignId` | `TabletImpactCampaignDetail` | reuses data |
-| `/tablet/advertising/impact/campaigns/:campaignId/:adGroupId` | `TabletImpactAdGroupDetail` | reuses data |
-| `/tablet/advertising/targeting` | `TabletTargetingActions` | reuses data |
-| `/tablet/advertising/budget-pacing` | `TabletBudgetPacing` | reuses data |
-| `/tablet/advertising/search-harvesting` | `TabletSearchHarvesting` | reuses data |
-| `/tablet/advertising/anomaly-alerts` | `TabletAnomalyAlerts` | reuses data |
-| `/tablet/advertising/creative-analyzer` | `TabletCreativeAnalyzer` | reuses data |
-| `/tablet/advertising/rules/agents` | `TabletRuleAgents` | reuses data |
-| `/tablet/advertising/rules/applied` | `TabletAppliedRules` | reuses data |
-| `/tablet/advertising/rules/create[/:templateId]` | `TabletRuleCreation` | reuses data |
-| `/tablet/advertising/rules/edit/:ruleId` | `TabletRuleCreation` | reuses data |
+- Touch and stylus hit-targets, gestures, and pointer semantics.
+- Hover-only affordances replaced with touch-equivalent affordances (tap-toggle and long-press / stylus-hover).
+- Portrait/landscape behavior on iPad 11 and iPad Pro.
+- On-screen keyboard overlays the app (input never gets covered or pushed off-screen) without changing layout.
 
-Each tablet screen is a thin presentational shell that:
-- Pulls the existing data / mock structures from the matching desktop page (import or extract into a small `src/views/tablet/advertising/data.ts` if reuse is non-trivial).
-- Renders a `TabletTableToolbar` (title, KPI chips, filter, columns, date range, export).
-- Renders a `TabletDataTable<T>` with column defs mapping the same fields as desktop.
-- Opens config workflows (Rule Create/Edit, Targeting actions) in a `TabletRightPanel` instead of inline-everything.
-- Detail screens reuse the existing 3-level analytical hierarchy and breadcrumb trail rendered by `TabletTaskbar`.
+Mobile is out of scope.
 
-## Scope (out)
-- Any change to data, business logic, KPIs, validation rules, or feature set.
-- Mobile screens.
-- Desktop screens.
-- Building a full Aan Copilot port (Phase 6).
-- Reports / Profitability / BI / Catalog / AMC / Settings ports (later phases).
+## Strategy (locked from clarifying answers)
 
-## Technical approach
+- Replace the existing tablet forks under `src/views/tablet/{advertising,profitability,reports,aan}` with a thin shell that **renders the desktop pages and chrome** at `/tablet/*`.
+- Tablet chrome = desktop chrome (AppLayout + AppSidebar + AppTaskbar + AppLevelSelector + FloatingActionIsland + InsightsPanel + NotificationsPanel + AskAanTooltip + AanCopilotPanel). Tablet-only widgets (`TabletSidebar`, `TabletTaskbar`, `TabletFloatingIsland`, `TabletKpiBand`, `TabletDataTable`, `TabletAanController`, `FloatingAanFab`) get removed.
+- Touch behavior = **both** stylus/long-press hover and tap-to-toggle for popovers/tooltips, with no layout change.
+- Acceptance validation = iPad 11 (834×1194 / 1194×834) and iPad Pro (1024×1366 / 1366×1024), portrait and landscape, plus keyboard overlay.
 
-1. **Data extraction**: For each desktop page that defines mock data inline, extract it into `src/views/tablet/advertising/data/<name>.ts` (or import directly when already centralized in `src/data/*`). No semantic changes — same shapes, same values.
-2. **Column defs**: Each tablet screen defines `TabletColumn<T>[]` matching the desktop columns. Numeric columns get `align: "right"`; first column is `sticky: true`.
-3. **Toolbar wiring**: `TabletTableToolbar` is the universal control surface — title slot for KPI band (rendered as inline chips on portrait, full row on landscape).
-4. **Workflows**: Rule creation and Targeting "Add Keyword Target" mount in `TabletRightPanel` (440px wide), reusing existing form logic.
-5. **Routing**: Extend the nested `<Routes>` in `TabletAppShell` with the advertising subtree. Existing tablet shell + sidebar already has the Advertising nav entry from Phase 2.
-6. **Sidebar**: Update `TabletSidebar` so the "Advertising" item routes to `/tablet/advertising/campaigns` and adds a secondary collapsed group of sub-items visible only when active (Campaigns, Impact, Targeting, Budget Pacing, Search Harvesting, Anomaly Alerts, Creative Analyzer, Rule Agents, Applied Rules).
-7. **No new deps**.
+## Phase 0 — Audit & demolition prep (no behavior change yet)
 
-## File map
+- Inventory every existing tablet file under `src/views/tablet/**` and mark for removal vs keep.
+  - Keep: `useVisualViewportInset` (keyboard overlay hook), `ViewportContext`, `ViewBadge`, `TabletPlaceholder` (rewrite later), and the `/tablet/_preview/tables` route for QA.
+  - Remove: `TabletAppShell`, `TabletSidebar`, `TabletTaskbar`, `TabletFloatingIsland`, `TabletKpiBand`, `TabletDataTable`, `TabletTableToolbar`, `TabletColumnMenu`, `TabletFilterBuilder`, `TabletFilterChips`, `TabletFilterRule`, `TabletDateRangePicker`, `TabletRightPanel`, `TabletAanController`, `TabletAanWorkspace`, `FloatingAanFab`, and every screen under `tablet/{advertising,profitability,reports,aan}`.
+- Add `/tablet/*` router that **renders the existing desktop pages** so nothing is "missing" anymore. No new pages, no layout forks.
+- Acceptance: at end of Phase 0, every `/tablet/<route>` shows the exact desktop page (same DOM as desktop) inside a `data-view="tablet"` wrapper. No KPI cards, charts, taskbars, islands, or panels are missing.
 
-Create:
-```
-src/views/tablet/advertising/index.ts                       (route export aggregator)
-src/views/tablet/advertising/AdvertisingRoutes.tsx          (Routes element)
-src/views/tablet/advertising/data/campaigns.ts              (extracted mock if needed)
-src/views/tablet/advertising/data/impact.ts
-src/views/tablet/advertising/data/targeting.ts
-src/views/tablet/advertising/data/rules.ts
-src/views/tablet/advertising/data/misc.ts                   (budget-pacing, search-harvesting, anomaly, creative)
-src/views/tablet/advertising/screens/TabletCampaignManager.tsx
-src/views/tablet/advertising/screens/TabletCampaignDetail.tsx
-src/views/tablet/advertising/screens/TabletAdGroupDetail.tsx
-src/views/tablet/advertising/screens/TabletImpactAnalysis.tsx
-src/views/tablet/advertising/screens/TabletImpactCampaignDetail.tsx
-src/views/tablet/advertising/screens/TabletImpactAdGroupDetail.tsx
-src/views/tablet/advertising/screens/TabletTargetingActions.tsx
-src/views/tablet/advertising/screens/TabletBudgetPacing.tsx
-src/views/tablet/advertising/screens/TabletSearchHarvesting.tsx
-src/views/tablet/advertising/screens/TabletAnomalyAlerts.tsx
-src/views/tablet/advertising/screens/TabletCreativeAnalyzer.tsx
-src/views/tablet/advertising/screens/TabletRuleAgents.tsx
-src/views/tablet/advertising/screens/TabletAppliedRules.tsx
-src/views/tablet/advertising/screens/TabletRuleCreation.tsx
-src/views/tablet/advertising/workflows/TabletRuleCreationPanel.tsx
-src/views/tablet/advertising/workflows/TabletAddKeywordPanel.tsx
-src/views/tablet/advertising/kpi/TabletKpiBand.tsx          (touch KPI chip strip)
-```
+## Phase 1 — Tablet routing + viewport substrate
 
-Edit:
-```
-src/views/tablet/shell/TabletAppShell.tsx   (add /advertising/* nested route + index redirect)
-src/views/tablet/shell/TabletSidebar.tsx    (Advertising -> /tablet/advertising/campaigns + secondary group)
-```
+- Replace `TabletAppShell` with a `TabletRouterAdapter` that mounts the existing desktop `<AppRoutes>` under `/tablet/*` by prefix-stripping (so all desktop routes work unchanged: profitability, advertising, BI, catalog, AMC, dayparting, reports, settings, aan).
+- Update `ViewportContext.entryPath("tablet")` and Preferences switcher so toggling to Tab now lands on the same default route (`/tablet/profitability/dashboard`) and "switch back" preserves the equivalent path.
+- Add a body-level `data-view="tablet"` and an `html.tablet` hook so CSS in Phase 2 can scope tablet-only deltas without rewriting components.
+- Keyboard overlay: ensure the root layout uses `h-dvh`, never `h-screen`; verify the existing `useVisualViewportInset` pattern is wired only at the inputs that need it (Aan input, modals/popovers with text inputs).
 
-## Verification
-- Switch to Tab view → tap Advertising in sidebar → lands on `/tablet/advertising/campaigns` with KPI band + touch-friendly table.
-- Navigate into a campaign → ad group → product ad via row taps; back via breadcrumbs.
-- Open Rule Create from `/tablet/advertising/rules/create` → workflow renders in a right panel; Apply/Cancel footer visible above keyboard.
-- Filter + columns + date range work as in Phase 3 preview.
-- Desktop routes unchanged.
+## Phase 2 — Hit-target & cursor accessibility pass (CSS-only)
 
-## Caveats
-- Some desktop pages contain large bespoke layouts (e.g. `ImpactCampaignDetail`, `RuleCreation`, `CreativeAnalyzer`) that mix tables + cards + workflows. Tablet ports preserve content fidelity but **simplify layout to a vertically stacked table-first composition** (toolbar → KPI band → primary table → optional right panel). No analytical fields are removed.
-- For screens that are not table-centric (CreativeAnalyzer, BudgetPacing visualizations), the tablet port renders the existing chart components from `src/components/**` directly inside a `bg-card` container with touch-sized controls. No chart rewrites.
+Goal: meet 44×44 minimum tap target for every interactive element on desktop pages, without changing visual layout.
 
-This is the largest single phase. Approve to execute as one batch; otherwise I can split into Phase 4a (Campaigns + Impact) and Phase 4b (Targeting, Rules, misc).
+- Add a tablet-scoped stylesheet that bumps padding on the components most commonly under-sized on touch:
+  - `Button` `size="icon"` and `size="sm"` → enforce `min-h-11 min-w-11` under `[data-view="tablet"]`.
+  - Table row action icons, taskbar icon buttons, DropdownMenu/Popover triggers, ChartContainer "Metrics", "Chart type", "Expand", MetricSelector, Calendar prev/next, close (X) buttons, and Floating Action Island action buttons.
+  - Sidebar collapse trigger and AppSidebar nav rows get 44px hit area.
+- Replace `cursor-pointer` decoration semantics with explicit `touch-action: manipulation` to remove 300ms tap delay.
+- No visible padding changes for desktop: scope all of the above under `[data-view="tablet"] …`.
 
-Awaiting approval.
+## Phase 3 — Hover → touch + stylus translation
+
+Hover-only affordances become reachable by finger AND stylus, with no layout change:
+
+- Global tooltip rule under `[data-view="tablet"]`:
+  - Native `title=""` tooltips become `Popover`-style on tap (open on first tap, close on outside tap / Esc / second tap on same target). Implemented via a shared `useTabletTooltip` hook that wraps the existing Radix Tooltip primitive (no DOM/structure change for desktop).
+  - Long press (450ms) and stylus hover (`pointerType: "pen"`) both open the same tooltip; tap still triggers the underlying click for buttons.
+- Table row hover affordances (row highlight, row-action icons) become always-visible at low opacity on tablet, full opacity on touch/press, so users do not need to hover to discover them.
+- Aan mascot's pointer-following micro-interaction is replaced on tablet with a passive idle animation (no mouse listener). The "Ask Aan" tooltip auto-opens on text selection (already implemented) and on long-press of selected text.
+- Floating Action Island stops relying on `onMouseEnter` to expand: under `[data-view="tablet"]` it is always in expanded state (or toggled by tapping the grip handle). The drag-to-reposition handle gets `pointerdown` (not `mousedown`) so it works with finger and stylus.
+
+## Phase 4 — Orientation, density, and overflow
+
+- Verify every desktop page renders correctly at 834×1194 (portrait) and 1194×834 (landscape) — and the same for 1024×1366 / 1366×1024.
+- Tablet-only safeguards (no layout change):
+  - `AppSidebar` auto-collapses to icon rail in portrait <900px width; expanded in landscape. Already a `SidebarProvider` so we flip `defaultOpen` based on `matchMedia("(orientation: portrait)")` only when `data-view="tablet"`.
+  - `min-w-0` already enforced on `main` and flex containers; audit any new overflow regressions caused by the larger tap targets in Phase 2.
+  - Right-side panels (Insights, Notifications, Aan Copilot, Product Detail, Period Breakdown) keep desktop width on landscape; in portrait they become full-height drawers with the same content, opened/closed by the same triggers (no new triggers).
+
+## Phase 5 — Keyboard overlay & input safety
+
+- App root uses `h-dvh` so the on-screen keyboard overlays the layout instead of resizing it (already true in current `TabletAppShell`; carry over to AppLayout under `[data-view="tablet"]`).
+- For every text input inside a Popover/Dialog/Side panel (date picker, filter builder, COGS edit, rule creation, report creation, Aan input, Add Keyword target), the active input is kept visible above the keyboard using `useVisualViewportInset` — the panel scrolls internally, the layout does not shift.
+- Aan input (`/aan` workspace and copilot panel) anchors to the visual viewport bottom; the composer is never hidden by the keyboard, and the conversation list scrolls beneath it.
+
+## Phase 6 — Removal of tablet forks + QA
+
+- Delete every file in `src/views/tablet/` that is not the router adapter or kept primitive (see Phase 0 list).
+- Remove Phase 4/5/6 entries from `.lovable/plan.md` and add a single "Tablet parity" entry referencing this plan.
+- QA matrix (manual, with screenshots stored under `/mnt/documents/tablet-qa/`):
+  - For each top-level module (Profitability dashboard/trends/pnl/geo/unified-pnl, Advertising campaigns/impact/targeting/budget-pacing/search-harvesting/anomaly-alerts/creative-analyzer/rules-{agents,applied,create,edit}, BI brand-sov/keyword-sov/product-sov/keyword-tracker/competitor-pricing, Catalog products/inventory-ads, AMC instances/queries/executed/schedules/audiences/created-audiences, Day Parting, Reports client-portal, Aan workspace, Settings preferences/accounts/team/system/integrations/billing): capture iPad 11 portrait + landscape and iPad Pro portrait + landscape.
+  - Verify: KPI cards present, chart toolbars present, metric selector present, data table toolbar present, AppTaskbar present, AppLevelSelector present, AppSidebar present, Floating Action Island present, Insights/Notifications/Aan panels open on their triggers, all tap targets ≥44×44, all hover tooltips open on tap and on long-press/stylus-hover, on-screen keyboard does not push the layout.
+
+## Technical details
+
+- Tablet routing adapter:
+  ```text
+  /tablet/*  →  TabletRouterAdapter  →  <AppRoutes basePath="/tablet" />
+  ```
+  Implemented either by mounting `<AppRoutes />` inside a `<BasenameRouter base="/tablet">` wrapper, or by adding a parallel route table that points each `/tablet/<x>` at the same page component used at `/<x>`. The chosen approach must not duplicate page imports.
+- `data-view="tablet"` is set on `<html>` by `ViewportContext` (already done) and is the single CSS hook used for all tablet-only deltas. No component gets a `if (isTablet)` branch unless behavior (not layout) actually changes (Floating Action Island expand, tooltip-on-tap, sidebar default-open by orientation, Aan mascot listener).
+- `useTabletTooltip` is a new shared hook in `src/hooks/useTabletTooltip.ts` that wires `pointerdown` (tap), `pointerType === "pen"` (stylus hover), and a 450ms long-press timer; it integrates with the existing Radix `Tooltip` and `Popover` primitives.
+- `useVisualViewportInset` is reused as-is for keyboard-aware popovers/panels.
+- No changes to `src/integrations/supabase/*`, no DB changes, no new dependencies.
+
+## Out of scope
+
+- Mobile (`/mobile/*`) stays on `MobilePlaceholder`.
+- Any visual, copy, or feature change to desktop pages.
+- New tablet-only screens, navigation entries, KPI sets, or charts.
