@@ -423,5 +423,14 @@ html[data-view="tablet"] [class*="overflow-y-auto"],
 html[data-view="tablet"] [class*="overflow-x-auto"] {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
+}
+
+/* 7. Table rows must remain vertically pannable even when they have an
+      onClick handler. Without this, finger drag inside a clickable row
+      is consumed as a tap and the table never scrolls. */
+html[data-view="tablet"] table tr,
+html[data-view="tablet"] [role="row"] {
+  touch-action: pan-y;
 }
 
