@@ -58,6 +58,7 @@ export function MarketplaceHoverPopup({
   return createPortal(
     <div
       ref={popupRef}
+      data-mp-popup
       className={cn(
         "fixed z-[9999]",
         "min-w-[220px] rounded-lg border border-border bg-popover shadow-xl",
@@ -81,14 +82,14 @@ export function MarketplaceHoverPopup({
       </div>
 
       {/* Account list */}
-      <div className="p-1.5 max-h-[200px] overflow-auto">
+      <div className="p-1.5 max-h-[60vh] overflow-auto">
         {filtered.length > 0 ? (
           filtered.map((acc) => (
             <button
               key={acc.id}
               onClick={() => onSelectAccount?.(acc.id)}
               className={cn(
-                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm w-full text-left transition-colors",
+                "flex items-center gap-2.5 rounded-md px-3 py-2.5 min-h-11 text-sm w-full text-left transition-colors",
                 currentAccountId === acc.id
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-popover-foreground hover:bg-muted hover:text-foreground"

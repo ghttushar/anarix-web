@@ -231,12 +231,28 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
               const isExpanded = expandedOrders.has(order.id);
               return (
                 <>
-                  <TableRow key={order.id} className="hover:bg-muted/30 group cursor-pointer" onClick={() => toggleOrderExpand(order.id)}>
+                  <TableRow
+                    key={order.id}
+                    className="hover:bg-muted/30 group cursor-pointer"
+                    onClick={(e) => {
+                      // On tablet, require explicit chevron tap so finger
+                      // scrolling on the row doesn't toggle expand.
+                      const isTablet = typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "tablet";
+                      if (isTablet && !(e.target as HTMLElement).closest("[data-row-toggle]")) return;
+                      toggleOrderExpand(order.id);
+                    }}
+                  >
                     <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted transition-colors border-r border-border/20">
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center h-8 w-8 rounded border border-border bg-muted flex-shrink-0">
+                        <button
+                          type="button"
+                          data-row-toggle
+                          onClick={(e) => { e.stopPropagation(); toggleOrderExpand(order.id); }}
+                          className="flex items-center justify-center h-8 w-8 rounded border border-border bg-muted flex-shrink-0 hover:bg-muted/70"
+                          aria-label={isExpanded ? "Collapse order" : "Expand order"}
+                        >
                           {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-                        </div>
+                        </button>
                         <div className="flex flex-col min-w-0">
                           <span className="font-medium text-foreground text-sm">{order.orderId}</span>
                           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">

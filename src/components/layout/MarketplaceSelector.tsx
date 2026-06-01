@@ -47,20 +47,50 @@ export function MarketplaceSelector() {
   const collapsed = state === "collapsed";
 
   const [hoveredMp, setHoveredMp] = useState<Marketplace | null>(null);
+  const [pinnedMp, setPinnedMp] = useState<Marketplace | null>(null);
   const [triggerRects, setTriggerRects] = useState<Record<string, DOMRect | null>>({});
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const isTabletView = typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "tablet";
 
-  const handleMouseEnter = useCallback((id: Marketplace) => {
-    if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; }
+  const updateRect = useCallback((id: Marketplace) => {
     const trigger = triggerRefs.current[id];
     if (trigger) setTriggerRects(prev => ({ ...prev, [id]: trigger.getBoundingClientRect() }));
-    setHoveredMp(id);
   }, []);
 
+  const handleMouseEnter = useCallback((id: Marketplace) => {
+    if (isTabletView) return;
+    if (hoverTimeoutRef.current) { clearTimeout(hoverTimeoutRef.current); hoverTimeoutRef.current = null; }
+    updateRect(id);
+    setHoveredMp(id);
+  }, [isTabletView, updateRect]);
+
   const handleMouseLeave = useCallback(() => {
+    if (isTabletView) return;
     hoverTimeoutRef.current = setTimeout(() => setHoveredMp(null), 200);
-  }, []);
+  }, [isTabletView]);
+
+  const handleTriggerClick = useCallback((id: Marketplace) => {
+    setMarketplace(id);
+    if (isTabletView) {
+      updateRect(id);
+      setPinnedMp((prev) => (prev === id ? null : id));
+    }
+  }, [isTabletView, setMarketplace, updateRect]);
+
+  // Dismiss pinned popup on outside tap (tablet only).
+  useEffect(() => {
+    if (!isTabletView || !pinnedMp) return;
+    const onDown = (ev: PointerEvent) => {
+      const target = ev.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest("[data-mp-popup]")) return;
+      if (target.closest("[data-mp-trigger]")) return;
+      setPinnedMp(null);
+    };
+    window.addEventListener("pointerdown", onDown);
+    return () => window.removeEventListener("pointerdown", onDown);
+  }, [isTabletView, pinnedMp]);
 
   useEffect(() => {
     return () => { if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current); };
@@ -95,6 +125,12 @@ export function MarketplaceSelector() {
       <div className={cn("flex flex-col", collapsed ? "items-center gap-1" : "gap-0.5")}>
         {marketplaceOptions.map((opt) => {
           const isSelected = marketplace === opt.id;
+          const popupOpen = hoveredMp === opt.id || pinnedMp === opt.id;
+
+          const handleAccountPick = (id: string) => {
+            setCurrentAccount(id);
+            setPinnedMp(null);
+          };
 
           if (collapsed) {
             return (
@@ -103,7 +139,8 @@ export function MarketplaceSelector() {
                   <TooltipTrigger asChild>
                     <button
                       ref={(el) => { triggerRefs.current[opt.id] = el; }}
-                      onClick={() => setMarketplace(opt.id)}
+                      data-mp-trigger
+                      onClick={() => handleTriggerClick(opt.id)}
                       onMouseEnter={() => handleMouseEnter(opt.id)}
                       onMouseLeave={handleMouseLeave}
                       className={cn(
@@ -122,12 +159,12 @@ export function MarketplaceSelector() {
                 <MarketplaceHoverPopup
                   marketplace={opt.id}
                   label={opt.label}
-                  isVisible={hoveredMp === opt.id}
+                  isVisible={popupOpen}
                   triggerRect={triggerRects[opt.id] || null}
                   onMouseEnter={() => handleMouseEnter(opt.id)}
                   onMouseLeave={handleMouseLeave}
                   currentAccountId={currentAccount?.id}
-                  onSelectAccount={setCurrentAccount}
+                  onSelectAccount={handleAccountPick}
                 />
               </div>
             );
@@ -137,7 +174,8 @@ export function MarketplaceSelector() {
             <div key={opt.id}>
               <button
                 ref={(el) => { triggerRefs.current[opt.id] = el; }}
-                onClick={() => setMarketplace(opt.id)}
+                data-mp-trigger
+                onClick={() => handleTriggerClick(opt.id)}
                 onMouseEnter={() => handleMouseEnter(opt.id)}
                 onMouseLeave={handleMouseLeave}
                 className={cn(
@@ -155,12 +193,12 @@ export function MarketplaceSelector() {
               <MarketplaceHoverPopup
                 marketplace={opt.id}
                 label={opt.label}
-                isVisible={hoveredMp === opt.id}
+                isVisible={popupOpen}
                 triggerRect={triggerRects[opt.id] || null}
                 onMouseEnter={() => handleMouseEnter(opt.id)}
                 onMouseLeave={handleMouseLeave}
                 currentAccountId={currentAccount?.id}
-                onSelectAccount={setCurrentAccount}
+                onSelectAccount={handleAccountPick}
               />
             </div>
           );

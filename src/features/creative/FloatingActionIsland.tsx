@@ -28,12 +28,13 @@ const hiddenRoutes = ["/login", "/onboarding", "/settings"];
 
 export function FloatingActionIsland() {
   const isTabletView = typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "tablet";
-  const [isExpanded, setIsExpanded] = useState(isTabletView);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; pointerId: number; el: HTMLElement } | null>(null);
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tabletIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { openCopilot, mode } = useAan();
@@ -52,33 +53,54 @@ export function FloatingActionIsland() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isWebsite]);
 
-  const handleDragStart = useCallback((e: React.PointerEvent | React.MouseEvent) => {
+  const scheduleTabletCollapse = useCallback(() => {
+    if (!isTabletView) return;
+    if (tabletIdleTimer.current) clearTimeout(tabletIdleTimer.current);
+    tabletIdleTimer.current = setTimeout(() => setIsExpanded(false), 4000);
+  }, [isTabletView]);
+
+  const handleDragStart = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     const rect = (e.currentTarget.closest("[data-island]") as HTMLElement)?.getBoundingClientRect();
     if (!rect) return;
-    const startClientX = "clientX" in e ? e.clientX : 0;
-    const startClientY = "clientY" in e ? e.clientY : 0;
+    const target = e.currentTarget;
+    try { target.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     setIsDragging(true);
-    dragRef.current = { startX: startClientX, startY: startClientY, startPosX: rect.left + rect.width / 2, startPosY: rect.top };
-    const handleMove = (ev: PointerEvent) => {
-      if (!dragRef.current) return;
-      setPosition({ x: dragRef.current.startPosX + (ev.clientX - dragRef.current.startX), y: dragRef.current.startPosY + (ev.clientY - dragRef.current.startY) });
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startPosX: rect.left + rect.width / 2,
+      startPosY: rect.top,
+      pointerId: e.pointerId,
+      el: target,
     };
-    const handleUp = () => {
+    const handleMove = (ev: PointerEvent) => {
+      if (!dragRef.current || ev.pointerId !== dragRef.current.pointerId) return;
+      setPosition({
+        x: dragRef.current.startPosX + (ev.clientX - dragRef.current.startX),
+        y: dragRef.current.startPosY + (ev.clientY - dragRef.current.startY),
+      });
+    };
+    const handleUp = (ev: PointerEvent) => {
+      if (!dragRef.current || ev.pointerId !== dragRef.current.pointerId) return;
+      try { dragRef.current.el.releasePointerCapture(dragRef.current.pointerId); } catch { /* ignore */ }
       setIsDragging(false);
       dragRef.current = null;
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
+      target.removeEventListener("pointermove", handleMove);
+      target.removeEventListener("pointerup", handleUp);
+      target.removeEventListener("pointercancel", handleUp);
     };
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerup", handleUp);
+    target.addEventListener("pointermove", handleMove);
+    target.addEventListener("pointerup", handleUp);
+    target.addEventListener("pointercancel", handleUp);
   }, []);
 
   const shouldHide = hiddenRoutes.some((route) => location.pathname.startsWith(route));
   if (shouldHide) return null;
 
   const handleMouseEnter = () => {
-    if (isTabletView) return; // tablet stays expanded; no hover semantics
+    if (isTabletView) return;
     if (collapseTimer.current) {
       clearTimeout(collapseTimer.current);
       collapseTimer.current = null;
@@ -91,6 +113,14 @@ export function FloatingActionIsland() {
     collapseTimer.current = setTimeout(() => {
       setIsExpanded(false);
     }, 300);
+  };
+
+  const toggleTabletExpand = () => {
+    setIsExpanded((v) => {
+      const next = !v;
+      if (next) scheduleTabletCollapse();
+      return next;
+    });
   };
 
   const { setDataPanel } = useActivePanel();
@@ -157,11 +187,25 @@ export function FloatingActionIsland() {
           <div className="flex items-center gap-1.5">
             <button
               onPointerDown={handleDragStart}
+              style={{ touchAction: "none" }}
               className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-grab active:cursor-grabbing shrink-0"
               title="Drag to reposition"
             >
               <GripVertical className="h-3.5 w-3.5" />
             </button>
+            {isTabletView && (
+              <button
+                type="button"
+                onClick={toggleTabletExpand}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                title={isExpanded ? "Collapse" : "Expand"}
+                aria-label={isExpanded ? "Collapse action island" : "Expand action island"}
+              >
+                <span className={cn("inline-block transition-transform", isExpanded ? "rotate-180" : "")}>
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                </span>
+              </button>
+            )}
             <div className="h-5 w-px bg-border" />
             {newBranding && mode !== "copilot" && (
               <button
@@ -181,7 +225,7 @@ export function FloatingActionIsland() {
                   key={index}
                   variant="ghost"
                   size="sm"
-                  onClick={action.onClick}
+                  onClick={() => { action.onClick(); scheduleTabletCollapse(); }}
                   className={cn(
                     "rounded-full transition-all duration-200 relative h-8",
                     (isExpanded || action.alwaysShowLabel) ? "px-3 gap-1.5" : "px-2",
