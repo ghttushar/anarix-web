@@ -125,6 +125,12 @@ export function MarketplaceSelector() {
       <div className={cn("flex flex-col", collapsed ? "items-center gap-1" : "gap-0.5")}>
         {marketplaceOptions.map((opt) => {
           const isSelected = marketplace === opt.id;
+          const popupOpen = hoveredMp === opt.id || pinnedMp === opt.id;
+
+          const handleAccountPick = (id: string) => {
+            setCurrentAccount(id);
+            setPinnedMp(null);
+          };
 
           if (collapsed) {
             return (
@@ -133,7 +139,8 @@ export function MarketplaceSelector() {
                   <TooltipTrigger asChild>
                     <button
                       ref={(el) => { triggerRefs.current[opt.id] = el; }}
-                      onClick={() => setMarketplace(opt.id)}
+                      data-mp-trigger
+                      onClick={() => handleTriggerClick(opt.id)}
                       onMouseEnter={() => handleMouseEnter(opt.id)}
                       onMouseLeave={handleMouseLeave}
                       className={cn(
@@ -152,12 +159,12 @@ export function MarketplaceSelector() {
                 <MarketplaceHoverPopup
                   marketplace={opt.id}
                   label={opt.label}
-                  isVisible={hoveredMp === opt.id}
+                  isVisible={popupOpen}
                   triggerRect={triggerRects[opt.id] || null}
                   onMouseEnter={() => handleMouseEnter(opt.id)}
                   onMouseLeave={handleMouseLeave}
                   currentAccountId={currentAccount?.id}
-                  onSelectAccount={setCurrentAccount}
+                  onSelectAccount={handleAccountPick}
                 />
               </div>
             );
@@ -167,7 +174,8 @@ export function MarketplaceSelector() {
             <div key={opt.id}>
               <button
                 ref={(el) => { triggerRefs.current[opt.id] = el; }}
-                onClick={() => setMarketplace(opt.id)}
+                data-mp-trigger
+                onClick={() => handleTriggerClick(opt.id)}
                 onMouseEnter={() => handleMouseEnter(opt.id)}
                 onMouseLeave={handleMouseLeave}
                 className={cn(
@@ -185,12 +193,12 @@ export function MarketplaceSelector() {
               <MarketplaceHoverPopup
                 marketplace={opt.id}
                 label={opt.label}
-                isVisible={hoveredMp === opt.id}
+                isVisible={popupOpen}
                 triggerRect={triggerRects[opt.id] || null}
                 onMouseEnter={() => handleMouseEnter(opt.id)}
                 onMouseLeave={handleMouseLeave}
                 currentAccountId={currentAccount?.id}
-                onSelectAccount={setCurrentAccount}
+                onSelectAccount={handleAccountPick}
               />
             </div>
           );
