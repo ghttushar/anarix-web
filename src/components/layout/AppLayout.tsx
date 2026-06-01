@@ -54,6 +54,17 @@ function LayoutInner({ children }: { children: ReactNode }) {
     prevHasPanelRef.current = hasAnyPanel;
   }, [hasAnyPanel, open, setOpen]);
 
+  // Tablet portrait: auto-collapse sidebar to icon rail for usable width.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.documentElement.getAttribute("data-view") !== "tablet") return;
+    const mq = window.matchMedia("(orientation: portrait)");
+    const apply = () => setOpen(!mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [setOpen]);
+
   return (
     <div className="flex min-h-screen w-full overflow-x-hidden">
       <AppSidebar />
