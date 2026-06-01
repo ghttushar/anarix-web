@@ -417,12 +417,14 @@ html[data-view="tablet"] [data-aan-mascot] {
   pointer-events: none;
 }
 
-/* 6. Ensure scroll containers behave well with momentum/finger scroll. */
+/* 6. Ensure scroll containers behave well with momentum/finger scroll.
+      overscroll-behavior is intentionally `auto` so that once the inner
+      container reaches top/bottom, the gesture chains to the page. */
 html[data-view="tablet"] [class*="overflow-auto"],
 html[data-view="tablet"] [class*="overflow-y-auto"],
 html[data-view="tablet"] [class*="overflow-x-auto"] {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   touch-action: pan-x pan-y;
 }
 
