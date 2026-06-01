@@ -187,11 +187,25 @@ export function FloatingActionIsland() {
           <div className="flex items-center gap-1.5">
             <button
               onPointerDown={handleDragStart}
+              style={{ touchAction: "none" }}
               className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-grab active:cursor-grabbing shrink-0"
               title="Drag to reposition"
             >
               <GripVertical className="h-3.5 w-3.5" />
             </button>
+            {isTabletView && (
+              <button
+                type="button"
+                onClick={toggleTabletExpand}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                title={isExpanded ? "Collapse" : "Expand"}
+                aria-label={isExpanded ? "Collapse action island" : "Expand action island"}
+              >
+                <span className={cn("inline-block transition-transform", isExpanded ? "rotate-180" : "")}>
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                </span>
+              </button>
+            )}
             <div className="h-5 w-px bg-border" />
             {newBranding && mode !== "copilot" && (
               <button
