@@ -225,7 +225,7 @@ export function FloatingActionIsland() {
                   key={index}
                   variant="ghost"
                   size="sm"
-                  onClick={action.onClick}
+                  onClick={() => { action.onClick(); scheduleTabletCollapse(); }}
                   className={cn(
                     "rounded-full transition-all duration-200 relative h-8",
                     (isExpanded || action.alwaysShowLabel) ? "px-3 gap-1.5" : "px-2",
