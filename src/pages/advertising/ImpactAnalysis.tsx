@@ -77,18 +77,11 @@ export default function ImpactAnalysis() {
     }
   }, [activeTab]);
 
-  const selectedIds = selectionByTab[activeTab];
-  const selectedItems = useMemo(
-    () => (selectedIds.size > 0 ? data.filter((d) => selectedIds.has(d.id)) : data),
-    [data, selectedIds],
-  );
+  const selectedItems = data;
 
   const handleDownload = () => {
     toast.success("Exporting impact data as CSV...");
   };
-
-  const setSelection = (next: Set<string>) =>
-    setSelectionByTab((prev) => ({ ...prev, [activeTab]: next }));
 
   return (
     <AppLayout>
