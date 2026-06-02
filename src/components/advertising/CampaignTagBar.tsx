@@ -20,9 +20,24 @@ export function CampaignTagBar({ campaignId, isEdit }: CampaignTagBarProps) {
 
   if (!isEdit && tags.length === 0) return null;
 
+  // One-tag enforcement: render at most the first tag; selecting a new tag
+  // replaces the existing one. The "+ Tag" trigger is hidden once a tag exists.
+  const visibleTags = tags.slice(0, 1);
+
+  const handleToggle = (t: string) => {
+    // If the selected tag is already applied → remove it.
+    // Otherwise clear any existing tag first, then apply the new one.
+    if (tags.includes(t)) {
+      removeTag(campaignId, t);
+      return;
+    }
+    tags.forEach((existing) => removeTag(campaignId, existing));
+    toggleTag(campaignId, t);
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
-      {tags.map((tag) => (
+      {visibleTags.map((tag) => (
         <span
           key={tag}
           className={cn(
@@ -44,10 +59,10 @@ export function CampaignTagBar({ campaignId, isEdit }: CampaignTagBarProps) {
           )}
         </span>
       ))}
-      {isEdit && (
+      {isEdit && visibleTags.length === 0 && (
         <TagPopover
           selectedTags={tags}
-          onToggle={(t) => toggleTag(campaignId, t)}
+          onToggle={handleToggle}
           trigger={
             <button
               className="inline-flex items-center gap-0.5 rounded-md border border-dashed border-muted-foreground/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-primary hover:border-primary/50 cursor-pointer transition-colors"
@@ -62,3 +77,4 @@ export function CampaignTagBar({ campaignId, isEdit }: CampaignTagBarProps) {
     </div>
   );
 }
+
