@@ -67,6 +67,9 @@ export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPl
   const [expanded, setExpanded] = useState(false);
   const [chartView, setChartView] = useState<ChartView>("scatter");
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [areaSelectMode, setAreaSelectMode] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
   const hasSelection = (selectedIds?.length ?? 0) > 0;
 
   const maxSales = Math.max(...data.map((d) => d.totalSales)) * 1.1;
@@ -79,7 +82,35 @@ export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPl
 
   const handleZoomIn = () => setZoomLevel((z) => Math.min(z * 1.3, 4));
   const handleZoomOut = () => setZoomLevel((z) => Math.max(z / 1.3, 0.5));
-  const handleReset = () => setZoomLevel(1);
+  const handleReset = () => { setZoomLevel(1); setDragStart(null); setDragEnd(null); };
+
+  const handleMouseDown = (e: any) => {
+    if (!areaSelectMode || !e || e.xValue == null || e.yValue == null) return;
+    setDragStart({ x: e.xValue, y: e.yValue });
+    setDragEnd({ x: e.xValue, y: e.yValue });
+  };
+  const handleMouseMove = (e: any) => {
+    if (!areaSelectMode || !dragStart || !e || e.xValue == null || e.yValue == null) return;
+    setDragEnd({ x: e.xValue, y: e.yValue });
+  };
+  const handleMouseUp = () => {
+    if (!areaSelectMode || !dragStart || !dragEnd || !onPointToggle) {
+      setDragStart(null); setDragEnd(null); return;
+    }
+    const x1 = Math.min(dragStart.x, dragEnd.x);
+    const x2 = Math.max(dragStart.x, dragEnd.x);
+    const y1 = Math.min(dragStart.y, dragEnd.y);
+    const y2 = Math.max(dragStart.y, dragEnd.y);
+    let count = 0;
+    data.forEach((d) => {
+      if (d.profitMargin >= x1 && d.profitMargin <= x2 && d.totalSales >= y1 && d.totalSales <= y2) {
+        if (!selectedIds?.includes(d.id)) { onPointToggle(d.id); count++; }
+      }
+    });
+    if (count > 0) toast.success(`Selected ${count} product${count === 1 ? "" : "s"}`);
+    setDragStart(null); setDragEnd(null);
+  };
+
 
   // Aggregate data for bar/line views
   const quadrantAggregates = Object.keys(quadrantLabels).map((q) => {
