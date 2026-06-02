@@ -1,141 +1,74 @@
-# Implementation Plan — Profitability, Advertising, Tablet Fixes
 
-Scope is large. Split into **3 phases** so each batch lands fully verified. Every change ports to tablet view in the same phase. No shortcuts. All mock data populated to 40–50 rows per table with 3–4 pages and functional rows-per-page.
+# Recheck of Phases 1–3 — what is actually missing
 
----
+I audited the codebase against every claim from the last three "continue" loops. Most items are in fact wired up, but the user is right that several were never landed. Here is the verified gap list and the exact work to close it.
 
-## Phase 1 — Profitability Module (Dashboard, Trends, P&L)
+## Verified done (no action needed)
+- Dual Y-axis on `PerformanceChart` and `ImpactLineChart`
+- Show Impact tooltip with Top 3 / Bottom 2 + "View in Table" button
+- `ImpactTable` `hideSelection` prop wired in `ImpactAnalysis`
+- Alert nudge icons in `CampaignTable` (ACOS > 30 / out_of_budget)
+- Targeting Actions: marketplace tabs, row checkboxes, bulk Archive, Archive column removed
+- `AppTaskbar` date presets: Last 3 / 7 / 14 / 30 / 60 days
+- `AppSidebar` `overflow-hidden` on `SidebarContent`
+- Mock data expanded to 45 rows (Campaigns, Keywords, Search Terms, Product Ads, Ad Groups, Product Targeting, Catalog, Competitor Pricing, Targeting Actions — runtime length verified)
+- Profitability Dashboard parent/child expand in `ProductsPnLTable`
+- `MetricFrequencyChart` exists
+- ProfitLoss product multi-select search
 
-### 1.1 Dashboard — Cards "View More" panel
-- Expand `PeriodBreakdownPanel` to show all P&L metrics, not the current subset.
-- Two collapsible sections (Radix `Collapsible`):
-  - **Individual-level metrics** (per-unit values)
-  - **Total metrics** (period aggregates)
-- Each row shows value + % share of revenue.
+## Verified NOT done — to fix
 
-### 1.2 Dashboard — Graph section
-- Add **Metric multi-select dropdown**, capped at 4 metrics (disable further options when 4 selected).
-- Add **Frequency dropdown** (Daily / Weekly / Monthly).
-- Chart re-renders on metric/frequency change.
-- When user clicks/selects cards in the row above, those cards drive the chart metrics (two-way binding with the dropdown).
-- Below the chart: a metric legend strip showing current value + delta for each selected metric.
+### Gap 1 — `AddProductAds` bid fields still present
+`AddProductAdsModal.tsx` and `AddProductAdsPanel.tsx` still declare and seed `suggestedBid: 0.75`. Strip the `suggestedBid` field from the row type, mock seed, and any rendered cell so the modal is product-selection only (Phase 2.1 spec).
 
-### 1.3 Dashboard — Products table
-- Parent/Child expand-collapse rows in `ProductsPnLTable`.
-  - Collapsed: parent ASIN (category) only.
-  - Expanded: child rows with **ASIN, SKU, Price, COG, Trends** (clickable trend opens `ProductTrendsModal`).
-- Driven by date frequency (day/week/month from filter context).
+### Gap 2 — 11 pages still render `PageBreadcrumb` instead of `AppTaskbar`
+Files still importing `PageBreadcrumb`:
+- `src/pages/workspace/Dashboard.tsx`
+- `src/pages/advertising/RuleAgents.tsx`
+- `src/pages/advertising/AppliedRules.tsx`
+- `src/pages/settings/Team.tsx`
+- `src/pages/settings/System.tsx`
+- `src/pages/settings/ComponentLibrary.tsx`
+- `src/pages/settings/Integrations.tsx`
+- `src/pages/settings/Accounts.tsx`
+- `src/pages/settings/ConnectAmazon.tsx`
+- `src/pages/settings/ConnectWalmart.tsx`
+- `src/pages/settings/Preferences.tsx`
 
-### 1.4 Trends page
-- Add metric multi-select dropdown (max 4).
-- Move scatter point logic: each dot = product; selection state persists across view changes (so changing view always has meaning).
-- Add **"More Info"** column (rightmost) → opens detail panel mirroring the Dashboard breakdown panel with Trends-specific metrics.
-- **Add area-select tool** alongside zoom controls on the scatter chart.
-- **App-level search bar** with multi-select product dropdown. Filter persists until chip removed. Graph + table both react.
-- Date range supports Days / Weeks / Months presets; table groups data accordingly.
-- Table columns: ASIN, SKU, Price, Trends (clickable). **Move Trends** out of far right — group it under the product name cell with ASIN/SKU/Price.
-- Orders mode: expanded rows show ASIN, SKU, Price, Trends.
+Replace `PageBreadcrumb` with `AppTaskbar breadcrumbItems={…}` on each (same pattern already used elsewhere). Keep `showDateRange`/`showRunButton` off for Settings pages; turn them on for the two advertising pages and Workspace Dashboard.
 
-### 1.5 Profit & Loss page
-- Remove Catalog dropdown from `AppTaskbar` (already done previously — verify).
-- Add product search + multi-select; nothing selected = aggregated all-product view.
-- Add every missing P&L metric to `PnLParameterTable` (match the master P&L spec used elsewhere).
-- Fix Day/Week/Month toggle: wire to frequency context **OR** delete the toggle and fold into date range dropdown. Choosing the latter for consistency with Dashboard.
-- The breakdown section below the table mirrors Dashboard updates from 1.1–1.2.
+### Gap 3 — Trends scatter area-select tool missing
+`ScatterPlotChart.tsx` and `pages/profitability/Trends.tsx` contain no brush / area-select code. Add a `<Brush>` (or Recharts `ReferenceArea` drag-to-select) toggleable from the chart toolbar alongside the existing zoom controls. Selected points feed the existing selection state.
 
-### 1.6 Tablet parity for all of Phase 1
-- All new controls render in the tablet shell (`src/views/...` tablet variants) with touch targets.
-- Collapsible rows + dropdowns tested at tablet viewport.
+### Gap 4 — `CampaignTable` not on `usePinning`
+`CampaignTable.tsx` is the only primary advertising table without `usePinning` / sticky-pinned columns. Add `usePinning` with Campaign Name pinned by default to match the other 10 tables already on it.
 
----
+### Gap 5 — Campaign one-tag enforcement
+`CampaignTagBar` currently allows multi-tag. Enforce single-select at the picker level (replace add-tag handler with `setTag(tagId)` and disable checkbox-style multi UI).
 
-## Phase 2 — Advertising Module
+### Gap 6 — Filter button on Product-level page
+The Product Ads / Product-level page in advertising is missing the `DataTableToolbar` filter affordance — add `activeFilters` + `filterFields` props so the Filter button renders, matching Impact Analysis.
 
-### 2.1 Campaign Manager
-- **Remove standalone Metric dropdown**. KPI card selections become the chart metrics (already partially linked — make it the single source).
-- Chart gets **dual Y-axis**:
-  - Left: numeric (0K–100K auto-scaled)
-  - Right: percentage (0%–100%)
-  - Recharts `YAxis yAxisId="left"` / `"right"`.
-- Cap at 4 active metrics (disable extra KPI selection when 4 are on).
-- **Show Impact** mode: hover tooltip lists Top 3 + Bottom 2 campaigns for that date.
-  - Tooltip footer button **"View in Table"** → navigates to `/advertising/impact` pre-filtered to that date with top/bottom rows.
-- Campaign table cells: tag chips under campaign name (Auto/Manual + SP/SB).
-- **Alert nudge** icon right of campaign name; click opens campaign insights panel (port behavior from existing app).
-- Tagging flow: enforce **one tag per campaign** (single-select tag picker).
-- Campaign detail view:
-  - Daily Budget field: remove clickable affordance when not editable (no border/hover/cursor).
-  - Inner table's Campaign column matches the master Campaign Manager listing exactly.
-- **Pin Column** feature: audit every advertising table and add `usePinning` where missing. Default-on across all advertising pages.
-- **Filter button**: add to Product-level page and any Campaign Manager subpage missing it.
-- **Add Product Ads** modal: strip bid adjustment fields; only product selection allowed here.
-- Checkbox alignment: fix in code (`items-center` + consistent `h-4 w-4` slot).
+### Gap 7 — Tablet parity for Phase 1 & 2 work
+`src/views/tablet/` contains only `TabletRedirect.tsx`. Tablet variants for Profitability (Dashboard / Trends / P&L) and Advertising (Campaign Manager / Impact / Targeting Actions) were never created. Add tablet variants that reuse the desktop pages inside the tablet shell with touch-sized controls (44px hit targets, collapsible Right Panel, dropdowns full-width).
 
-### 2.2 Impact Analysis
-- Same dual Y-axis chart as Campaign Manager.
-- **Remove all checkboxes** (no row selection, no edit mode).
-- Add **Filter button** above table.
-- Add **Metric dropdown** above table.
+### Gap 8 — `Campaign Manager`: standalone metric dropdown
+Verify and, if still present, remove the standalone `MetricSelector` so KPI cards are the single source of truth for chart metrics (cap of 4). Current grep finds no `MetricSelector` usage on the page — confirm during build and remove any lingering dead import.
 
-### 2.3 Targeting Actions
-- Tabs by marketplace:
-  - **Amazon**: Product Action, Keyword Negation, Product Negation (+ existing).
-  - **Walmart**: Keyword Action, History, Archives (only).
-- Populate functionality for new tabs (mirror existing patterns).
-- Search terms table: add row checkboxes. **Add Keyword** button disabled by default, enabled when ≥1 selected.
-- App-level **Date Range** presets: Last 3 / 7 / 14 / 30 / 60 days.
-- Remove **Archives** column from table. Surface Archives as a bulk action above table + per-row action in row menu.
-
-### 2.4 Tablet parity for Phase 2
-- All new controls + dual-axis chart render correctly in tablet shell.
-
----
-
-## Phase 3 — Global Polish, Data Population, Tablet Sidebar Fix
-
-### 3.1 Tablet sidebar (left nav) fix
-- Bug: not expanding/collapsing, height behaves oddly.
-- Inspect tablet shell layout (`src/views/tablet/...` + `AppSidebar`). Fix:
-  - Sidebar wrapper to `h-[100dvh]` with `flex flex-col`.
-  - Collapse trigger wired through `ViewportContext` (touch-friendly).
-  - Remove conflicting `overflow-hidden` on parent that traps height.
-
-### 3.2 App-level selector audit
-- Walk every page's `AppTaskbar` selectors (metric, frequency, marketplace, date range).
-- Verify each is wired to real state (no placeholders, no dead-end mock dropdowns).
-- Fix any non-functional ones.
-
-### 3.3 Mock data population
-- Expand every primary table dataset to **40–50 rows**:
-  - `mockCampaigns`, `mockProductAds`, `mockAdGroups`, `mockKeywords`, `mockProductTargeting`, `mockSearchTerms`, `mockImpactData` (all 5 entities), `mockProfitability`, `mockCatalog`, `mockBrandSOV`, `mockCompetitorPricing`, `mockBudgetPacing`, `mockAnomalyAlerts`, `mockTargetingActions`, etc.
-- `TablePagination`: ensure **rows-per-page** selector is functional everywhere it's rendered (25/50/100 + current selection persists).
-- Verify pagination shows **3–4 pages** at default page size.
-
-### 3.4 Tablet parity sweep
-- Re-run through every Phase 1 + Phase 2 change at tablet viewport.
-- Confirm touch scroll, sidebar collapse, dropdowns, and modals all behave.
-
----
-
-## Technical Notes
-
-- **Files touched (high-level)**:
-  - Phase 1: `src/pages/profitability/*.tsx`, `src/components/profitability/*`, `src/data/mockProfitability.ts`.
-  - Phase 2: `src/pages/advertising/*.tsx`, `src/components/advertising/*`, `src/components/tables/*`, `src/components/charts/PerformanceChart.tsx` + `ImpactLineChart.tsx`, `src/data/mock*.ts`.
-  - Phase 3: `src/views/tablet/*`, `src/components/layout/AppSidebar.tsx`, `src/components/tables/TablePagination.tsx`, all `src/data/mock*.ts`.
-- **Charts**: Recharts dual-axis via `yAxisId`. Metric cap enforced in selector component.
-- **Persistence**: extend `FilterContext` for product multi-select and frequency where missing.
-- **No design system drift**: use existing tokens, periwinkle palette, Satoshi/Noto. No new colors.
-- **Safety**: destructive actions keep confirmation modals; Add Keyword / Archives bulk actions get preview confirmation.
+## Execution order
+1. Gaps 1, 4, 5, 6, 8 — small surgical edits in advertising components.
+2. Gap 2 — bulk swap `PageBreadcrumb` → `AppTaskbar` across 11 pages.
+3. Gap 3 — Trends area-select tool.
+4. Gap 7 — Tablet variants (largest change; one file per screen under `src/views/tablet/`).
 
 ## Out of scope
-- Marketplace selector hover behavior (already addressed earlier).
-- Floating Action Island drag (already addressed earlier).
-- Any backend/Supabase work — pure frontend + mock data.
+- Re-doing items already verified above.
+- Backend / data-shape changes.
+- Any new design tokens — strictly periwinkle system.
 
-## Validation per phase
-- Visual check at desktop (1546px) + tablet shell.
-- Click through every new control: dropdown opens, multi-select caps at 4, charts redraw, pagination changes page count, expand/collapse animates.
-- Confirm no console errors, no TypeScript errors.
+## Validation
+- For each gap, grep the previous failing signal and confirm it is gone.
+- Visual check at 1546px and tablet viewport for the migrated pages.
+- Console clean, no TS errors.
 
-Ready to switch to build mode and execute Phase 1.
+Reply **approve** to switch to build mode and execute in the order above, or tell me which gaps to drop / reorder.
