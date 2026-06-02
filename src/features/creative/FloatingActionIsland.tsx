@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { useBranding } from "@/contexts/BrandingContext";
 import { useAan } from "@/components/aan/AanContext";
+import { KeyboardShortcutsDialog } from "@/components/shortcuts/KeyboardShortcutsDialog";
 import html2canvas from "html2canvas";
 
 interface ActionItem {
@@ -30,6 +31,7 @@ export function FloatingActionIsland() {
   const isTabletView = typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "tablet";
   const [isExpanded, setIsExpanded] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; pointerId: number; el: HTMLElement } | null>(null);
@@ -168,6 +170,7 @@ export function FloatingActionIsland() {
     : { left: "50%", bottom: "24px", transform: "translateX(-50%)" };
 
   return (
+    <>
     <div
       className="fixed z-50"
       style={style}
@@ -178,6 +181,7 @@ export function FloatingActionIsland() {
       <div className={cn("relative", isExpanded ? "p-4 -m-4" : "")}>
         <div
           data-island
+          data-tour-id="island"
           className={cn(
             "bg-card/95 backdrop-blur-md border border-primary/60 rounded-full shadow-lg transition-all duration-300 ease-out",
             isExpanded ? "px-2 py-2" : "px-3 py-2",
@@ -259,13 +263,24 @@ export function FloatingActionIsland() {
             </div>
 
             {isExpanded && !isWebsite && (
-              <div className="pl-1.5 border-l border-border">
-                <span className="text-xs text-muted-foreground"><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">⌘K</kbd></span>
+              <div className="pl-1.5 border-l border-border" data-tour-id="island-shortcuts">
+                <button
+                  type="button"
+                  onClick={() => setShortcutsOpen(true)}
+                  title="Keyboard shortcuts — click to rebind"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted hover:bg-primary/10 font-mono text-[10px] transition-colors">⌘K</kbd>
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
     </div>
+    {!isWebsite && (
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+    )}
+    </>
   );
 }
