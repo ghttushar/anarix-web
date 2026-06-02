@@ -126,7 +126,14 @@ export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPl
 
   const renderScatter = (height: number) => (
     <ResponsiveContainer width="100%" height={height}>
-      <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
+      <ScatterChart
+        margin={{ top: 20, right: 30, bottom: 20, left: 20 }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{ cursor: areaSelectMode ? "crosshair" : undefined }}
+      >
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <ReferenceArea x1={0} x2={midMargin} y1={midSales} y2={zoomedMaxSales} fill={quadrantColors.optimize} fillOpacity={0.1} />
         <ReferenceArea x1={midMargin} x2={zoomedMaxMargin} y1={midSales} y2={zoomedMaxSales} fill={quadrantColors.winners} fillOpacity={0.1} />
@@ -137,7 +144,7 @@ export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPl
         <XAxis type="number" dataKey="profitMargin" name="Profit Margin" unit="%" domain={[0, zoomedMaxMargin]} tick={{ fontSize: 12 }} className="text-muted-foreground" label={{ value: "Profit Margin (%)", position: "bottom", offset: 0 }} />
         <YAxis type="number" dataKey="totalSales" name="Total Sales" domain={[0, zoomedMaxSales]} tick={{ fontSize: 12 }} className="text-muted-foreground" tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} label={{ value: "Total Sales ($)", angle: -90, position: "insideLeft" }} />
         <ZAxis range={[80, 200]} />
-        <Tooltip content={<CustomTooltip />} />
+        {!areaSelectMode && <Tooltip content={<CustomTooltip />} />}
         {Object.keys(quadrantColors).map((quadrant) => {
           const quadrantData = data.filter((d) => d.quadrant === quadrant);
           return (
@@ -147,8 +154,8 @@ export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPl
               data={quadrantData}
               fill={quadrantColors[quadrant as keyof typeof quadrantColors]}
               fillOpacity={hasSelection ? 0.25 : 1}
-              onClick={(p: any) => onPointToggle?.(p?.id)}
-              style={{ cursor: onPointToggle ? "pointer" : "default" }}
+              onClick={(p: any) => !areaSelectMode && onPointToggle?.(p?.id)}
+              style={{ cursor: areaSelectMode ? "crosshair" : (onPointToggle ? "pointer" : "default") }}
             />
           );
         })}
@@ -157,13 +164,27 @@ export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPl
             name="Selected"
             data={data.filter((d) => selectedIds!.includes(d.id))}
             fill="hsl(var(--primary))"
-            onClick={(p: any) => onPointToggle?.(p?.id)}
-            style={{ cursor: onPointToggle ? "pointer" : "default" }}
+            onClick={(p: any) => !areaSelectMode && onPointToggle?.(p?.id)}
+            style={{ cursor: areaSelectMode ? "crosshair" : (onPointToggle ? "pointer" : "default") }}
+          />
+        )}
+        {dragStart && dragEnd && (
+          <ReferenceArea
+            x1={Math.min(dragStart.x, dragEnd.x)}
+            x2={Math.max(dragStart.x, dragEnd.x)}
+            y1={Math.min(dragStart.y, dragEnd.y)}
+            y2={Math.max(dragStart.y, dragEnd.y)}
+            stroke="hsl(var(--primary))"
+            strokeOpacity={0.8}
+            fill="hsl(var(--primary))"
+            fillOpacity={0.15}
+            strokeDasharray="4 4"
           />
         )}
       </ScatterChart>
     </ResponsiveContainer>
   );
+
 
   const renderBar = (height: number) => (
     <ResponsiveContainer width="100%" height={height}>
