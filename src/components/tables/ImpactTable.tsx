@@ -17,12 +17,13 @@ interface ImpactTableProps {
   selectedIds?: Set<string>;
   onSelectionChange?: (ids: Set<string>) => void;
   onRowClick?: (id: string) => void;
+  hideSelection?: boolean;
 }
 
 const PINNABLE = ["impactPercentage", "impressions", "clicks", "ctr", "adSpend", "adSales", "roas", "acos"];
 const FIXED_OFFSET = 250;
 
-export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionChange, onRowClick }: ImpactTableProps) {
+export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionChange, onRowClick, hideSelection = false }: ImpactTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [sortField, setSortField] = useState<string | null>(null);
