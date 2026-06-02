@@ -22,6 +22,10 @@ import { AanProvider } from "@/components/aan";
 import { InsightsProvider } from "@/components/insights";
 import { CreativeFeatures } from "@/features/creative";
 import { ViewportProvider } from "@/contexts/ViewportContext";
+import { GestureProvider } from "@/contexts/GestureContext";
+import { GestureFeedback } from "@/components/gestures/GestureFeedback";
+import { TutorialProvider } from "@/features/tutorial/TutorialContext";
+import { OnboardingTutorial } from "@/features/tutorial/OnboardingTutorial";
 import TabletRedirect from "@/views/tablet/TabletRedirect";
 import MobilePlaceholder from "@/views/mobile/MobilePlaceholder";
 import { toast } from "sonner";
@@ -308,11 +312,16 @@ const App = () => (
                           <Toaster />
                           <Sonner position="bottom-left" />
                           <BrowserRouter>
-                            <CreativeFeatures>
-                              <WelcomeToasts />
-                              <AppRoutes />
-                              
-                            </CreativeFeatures>
+                            <TutorialProvider>
+                              <GestureProvider>
+                                <CreativeFeatures>
+                                  <WelcomeToasts />
+                                  <AppRoutes />
+                                  <GestureFeedback />
+                                  <OnboardingTutorial />
+                                </CreativeFeatures>
+                              </GestureProvider>
+                            </TutorialProvider>
                           </BrowserRouter>
                         </TooltipProvider>
                         </TrialProvider>

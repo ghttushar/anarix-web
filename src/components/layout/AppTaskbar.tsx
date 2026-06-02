@@ -204,7 +204,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
   const hasRow2 = showAdType || showFrequency || showDateRange || showRunButton || children || islandOff;
 
   return (
-    <div data-app-taskbar className="flex flex-col rounded-lg border bg-card shrink-0 sticky top-0 z-30 border-primary">
+    <div data-app-taskbar data-tour-id="taskbar" className="flex flex-col rounded-lg border bg-card shrink-0 sticky top-0 z-30 border-primary">
       {/* Row 1: Breadcrumb left, Account + Sync right */}
       {hasRow1 && (
         <div className={cn(
