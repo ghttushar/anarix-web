@@ -105,12 +105,16 @@ export default function ProductAdDetail() {
             onDownload={() => toast.success("Exporting data as CSV...")}
             showDeltas={showDeltas}
             onShowDeltasChange={setShowDeltas}
+            activeFilters={activeFilters}
+            onFiltersChange={setActiveFilters}
+            filterFields={["Search Term", "Impressions", "Clicks", "CTR", "Spend", "Sales", "ACOS", "ROAS"]}
             leftContent={
               <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => setDataPanel("addProductAd")}>
                 <Plus className="h-3.5 w-3.5" />Add Product Ad
               </Button>
             }
           />
+
 
           <SearchTermsTable searchQuery={searchQuery} showDeltas={showDeltas} />
         </div>
