@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
+import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { useAccounts, ConnectedAccount } from "@/contexts/AccountContext";
 import { toast } from "sonner";
 // Walmart logo
