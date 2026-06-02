@@ -108,9 +108,7 @@ export default function ImpactAnalysis() {
             <div>
               <h3 className="font-heading text-sm font-medium text-foreground">Performance Comparison</h3>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                {selectedIds.size > 0
-                  ? `Showing ${selectedIds.size} selected item${selectedIds.size === 1 ? "" : "s"}`
-                  : `Showing all ${data.length} items — select rows below to filter`}
+                Showing all {data.length} items
               </p>
             </div>
             <div className="flex items-center gap-1">
@@ -133,6 +131,9 @@ export default function ImpactAnalysis() {
           onSearchChange={setSearchQuery}
           searchPlaceholder={`Search ${activeTab.replace("-", " ")}...`}
           onDownload={handleDownload}
+          activeFilters={activeFilters}
+          onFiltersChange={setActiveFilters}
+          filterFields={FILTER_FIELDS}
           sortableFields={SORTABLE_FIELDS}
           sortField={sortField}
           sortDirection={sortDirection}
@@ -142,8 +143,7 @@ export default function ImpactAnalysis() {
         <ImpactTable
           data={data}
           searchQuery={searchQuery}
-          selectedIds={selectedIds}
-          onSelectionChange={setSelection}
+          hideSelection
           onRowClick={activeTab === "campaigns" ? (id) => navigate(`/advertising/impact/campaigns/${id}`) : undefined}
         />
       </div>
