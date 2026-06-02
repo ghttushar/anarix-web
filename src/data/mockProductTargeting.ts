@@ -226,3 +226,29 @@ export const productTargetsTotals = {
   get roas() { return this.adSpend ? this.adSales / this.adSpend : 0; },
   get acos() { return this.adSales ? (this.adSpend / this.adSales) * 100 : 0; },
 };
+
+
+// ──────────── Synthetic expansion (Phase 3.3) ────────────
+// Procedurally clones existing rows to reach 45 total records
+// for realistic pagination demos. Generated at module load.
+(() => {
+  const base = mockProductTargets.slice();
+  const baseLen = base.length;
+  if (baseLen === 0) return;
+  let nextId = baseLen + 1;
+  while (mockProductTargets.length < 45) {
+    const src = base[(mockProductTargets.length - baseLen) % baseLen];
+    const variance = 0.7 + ((mockProductTargets.length * 37) % 60) / 100;
+    const clone: any = { ...src };
+    clone.id = "pt-" + nextId;
+    if ((clone as any)["targetLabel"]) (clone as any)["targetLabel"] = (clone as any)["targetLabel"] + " #" + nextId;
+    for (const k of Object.keys(clone)) {
+      const v = (clone as any)[k];
+      if (typeof v === "number" && k !== "id" && !k.toLowerCase().includes("date")) {
+        (clone as any)[k] = Math.round(v * variance * 100) / 100;
+      }
+    }
+    mockProductTargets.push(clone);
+    nextId++;
+  }
+})();

@@ -18,3 +18,29 @@ export const mockCompetitorProducts: CompetitorProduct[] = [
   { id: "cp4", competitorName: "PowerMax", asin: "B0COMP004", productName: "Pre-Workout Energy 30srv", currentPrice: 32.99, priceHistory: [{ date: "2026-02-01", price: 34.99 }, { date: "2026-02-08", price: 34.99 }, { date: "2026-02-15", price: 32.99 }, { date: "2026-02-22", price: 31.99 }, { date: "2026-03-01", price: 32.99 }], yourPrice: 29.99, yourSalesImpact: 8.6, yourCvrImpact: 5.3, lastUpdated: "2026-03-05" },
   { id: "cp5", competitorName: "NutraFit Pro", asin: "B0COMP005", productName: "BCAA Recovery Powder", currentPrice: 19.99, priceHistory: [{ date: "2026-02-01", price: 21.99 }, { date: "2026-02-08", price: 20.99 }, { date: "2026-02-15", price: 19.99 }, { date: "2026-02-22", price: 19.99 }, { date: "2026-03-01", price: 19.99 }], yourPrice: 21.99, yourSalesImpact: -6.8, yourCvrImpact: -4.5, lastUpdated: "2026-03-05" },
 ];
+
+
+// ──────────── Synthetic expansion (Phase 3.3) ────────────
+// Procedurally clones existing rows to reach 45 total records
+// for realistic pagination demos. Generated at module load.
+(() => {
+  const base = mockCompetitorProducts.slice();
+  const baseLen = base.length;
+  if (baseLen === 0) return;
+  let nextId = baseLen + 1;
+  while (mockCompetitorProducts.length < 45) {
+    const src = base[(mockCompetitorProducts.length - baseLen) % baseLen];
+    const variance = 0.7 + ((mockCompetitorProducts.length * 37) % 60) / 100;
+    const clone: any = { ...src };
+    clone.id = "cp-" + nextId;
+    if ((clone as any)["productName"]) (clone as any)["productName"] = (clone as any)["productName"] + " #" + nextId;
+    for (const k of Object.keys(clone)) {
+      const v = (clone as any)[k];
+      if (typeof v === "number" && k !== "id" && !k.toLowerCase().includes("date")) {
+        (clone as any)[k] = Math.round(v * variance * 100) / 100;
+      }
+    }
+    mockCompetitorProducts.push(clone);
+    nextId++;
+  }
+})();

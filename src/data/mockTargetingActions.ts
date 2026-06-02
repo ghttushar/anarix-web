@@ -183,3 +183,29 @@ export const mockTargetAdGroups = [
   { id: "tag-7", name: "Clearance All Match", campaignId: "tc-4" },
   { id: "tag-8", name: "Brand Defense Exact", campaignId: "tc-5" },
 ];
+
+
+// ──────────── Synthetic expansion (Phase 3.3) ────────────
+// Procedurally clones existing rows to reach 45 total records
+// for realistic pagination demos. Generated at module load.
+(() => {
+  const base = mockTargetingActions.slice();
+  const baseLen = base.length;
+  if (baseLen === 0) return;
+  let nextId = baseLen + 1;
+  while (mockTargetingActions.length < 45) {
+    const src = base[(mockTargetingActions.length - baseLen) % baseLen];
+    const variance = 0.7 + ((mockTargetingActions.length * 37) % 60) / 100;
+    const clone: any = { ...src };
+    clone.id = "ta-" + nextId;
+    if ((clone as any)["searchTerm"]) (clone as any)["searchTerm"] = (clone as any)["searchTerm"] + " #" + nextId;
+    for (const k of Object.keys(clone)) {
+      const v = (clone as any)[k];
+      if (typeof v === "number" && k !== "id" && !k.toLowerCase().includes("date")) {
+        (clone as any)[k] = Math.round(v * variance * 100) / 100;
+      }
+    }
+    mockTargetingActions.push(clone);
+    nextId++;
+  }
+})();

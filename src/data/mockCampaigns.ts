@@ -206,3 +206,29 @@ export const campaignTotals = {
   get cpc() { return this.clicks > 0 ? this.spend / this.clicks : 0; },
   get acos() { return this.sales > 0 ? (this.spend / this.sales) * 100 : 0; },
 };
+
+
+// ──────────── Synthetic expansion (Phase 3.3) ────────────
+// Procedurally clones existing rows to reach 45 total records
+// for realistic pagination demos. Generated at module load.
+(() => {
+  const base = mockCampaigns.slice();
+  const baseLen = base.length;
+  if (baseLen === 0) return;
+  let nextId = baseLen + 1;
+  while (mockCampaigns.length < 45) {
+    const src = base[(mockCampaigns.length - baseLen) % baseLen];
+    const variance = 0.7 + ((mockCampaigns.length * 37) % 60) / 100;
+    const clone: any = { ...src };
+    clone.id = "camp-" + nextId;
+    if ((clone as any)["name"]) (clone as any)["name"] = (clone as any)["name"] + " #" + nextId;
+    for (const k of Object.keys(clone)) {
+      const v = (clone as any)[k];
+      if (typeof v === "number" && k !== "id" && !k.toLowerCase().includes("date")) {
+        (clone as any)[k] = Math.round(v * variance * 100) / 100;
+      }
+    }
+    mockCampaigns.push(clone);
+    nextId++;
+  }
+})();
