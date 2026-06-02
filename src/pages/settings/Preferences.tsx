@@ -10,12 +10,16 @@ import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useBranding } from "@/contexts/BrandingContext";
 import { useBillingFlow } from "@/contexts/BillingFlowContext";
 import { useTrial } from "@/contexts/TrialContext";
+import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { cn } from "@/lib/utils";
-import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone } from "lucide-react";
+import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { useViewport, AppView } from "@/contexts/ViewportContext";
 import { useNavigate } from "react-router-dom";
+import { ShortcutEditor } from "@/features/shortcuts/ShortcutEditor";
+import { GestureMapper } from "@/components/gestures/GestureMapper";
+import { useTutorial } from "@/features/tutorial/TutorialContext";
 
 const CUSTOM_SHORTCUTS_KEY = "anarix-custom-shortcuts";
 
@@ -156,6 +160,8 @@ export default function Preferences() {
   const { billingFlowEnabled, toggleBillingFlow } = useBillingFlow();
   const { trial, startSync, forceExpire, reset: resetTrial } = useTrial();
   const { view, setView, entryPath } = useViewport();
+  const { effects, toggle: toggleEffect } = useVisualEffects();
+  const { state: tutorialState, setEnabled: setTutorialEnabled, restart: restartTutorial } = useTutorial();
   const navigate = useNavigate();
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
@@ -391,40 +397,88 @@ export default function Preferences() {
 
         <Separator />
 
-        {/* Keyboard Shortcuts */}
+        {/* Floating Action Island */}
         <section className="space-y-4">
           <div>
-            <h2 className="font-heading text-lg font-medium text-foreground">Keyboard Shortcuts</h2>
+            <h2 className="font-heading text-lg font-medium text-foreground">Floating Action Island</h2>
             <p className="text-sm text-muted-foreground">
-              Click <Pencil className="inline h-3 w-3" /> to rebind. Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">?</kbd> anywhere to see all shortcuts.
+              Persistent action hub at the bottom of every screen. When off, all island actions
+              (Insights, Notifications, Aan, Refresh, Export, Screenshot, Theme) move into the App Taskbar.
             </p>
           </div>
-          <div className="space-y-6">
-            {defaultShortcuts.map(section => (
-              <div key={section.category} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-foreground">{section.category}</h3>
-                  {section.shortcuts.some(s => customShortcuts[s.description]) && (
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => resetCategory(section.category)}>
-                      <RotateCcw className="h-3 w-3 mr-1" />Reset
-                    </Button>
-                  )}
-                </div>
-                <div className="rounded-lg border border-border bg-card overflow-hidden divide-y divide-border">
-                  {section.shortcuts.map(shortcut => (
-                    <ShortcutRow
-                      key={shortcut.description}
-                      shortcut={shortcut}
-                      customKeys={customShortcuts[shortcut.description]}
-                      isEditing={editingKey === shortcut.description}
-                      onEdit={() => setEditingKey(editingKey === shortcut.description ? null : shortcut.description)}
-                      onCaptured={(keys) => handleCaptured(shortcut.description, keys)}
-                    />
-                  ))}
-                </div>
+          <div className="rounded-lg border border-border bg-card">
+            <label className="flex items-center justify-between cursor-pointer p-4">
+              <div>
+                <p className="font-medium text-foreground">Show Floating Action Island</p>
+                <p className="text-xs text-muted-foreground">Toggle off for a quieter chrome with all actions in the taskbar.</p>
               </div>
-            ))}
+              <Switch checked={effects.floatingIsland} onCheckedChange={() => toggleEffect("floatingIsland")} />
+            </label>
           </div>
+        </section>
+
+        <Separator />
+
+        {/* Gestures */}
+        <section className="space-y-4" id="gestures">
+          <div className="flex items-center gap-2">
+            <Hand className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-heading text-lg font-medium text-foreground">Gestures</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Hard swipes navigate back/forward. Two- and three-finger gestures trigger any action you map below.
+            Vertical 2-finger gestures only fire when the page is at the very top or bottom — normal scrolling is untouched.
+          </p>
+          <GestureMapper />
+        </section>
+
+        <Separator />
+
+        {/* Tutorial */}
+        <section className="space-y-4" id="tutorial">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-heading text-lg font-medium text-foreground">Tutorial</h2>
+          </div>
+          <div className="rounded-lg border border-border bg-card divide-y divide-border">
+            <label className="flex items-center justify-between cursor-pointer p-4">
+              <div>
+                <p className="font-medium text-foreground">Show product tutorial after sign-in</p>
+                <p className="text-xs text-muted-foreground">
+                  A guided tour highlights every primary surface — sidebar, taskbar, KPIs, panels, Aan, and shortcuts.
+                </p>
+              </div>
+              <Switch checked={tutorialState.enabled} onCheckedChange={setTutorialEnabled} />
+            </label>
+            <div className="flex items-center justify-between p-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">Replay tutorial now</p>
+                <p className="text-xs text-muted-foreground">
+                  {tutorialState.completed && tutorialState.lastSeen
+                    ? `Last completed ${new Date(tutorialState.lastSeen).toLocaleDateString()}`
+                    : "Not completed yet"}
+                </p>
+              </div>
+              <Button size="sm" onClick={restartTutorial}>
+                <Play className="h-3.5 w-3.5 mr-1.5" />
+                Start tour
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Keyboard Shortcuts */}
+        <section className="space-y-4" id="shortcuts">
+          <div className="flex items-center gap-2">
+            <Keyboard className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-heading text-lg font-medium text-foreground">Keyboard Shortcuts</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Click <Pencil className="inline h-3 w-3" /> to rebind. Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">?</kbd> anywhere — or click the <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">⌘K</kbd> chip on the Floating Action Island — to see all shortcuts.
+          </p>
+          <ShortcutEditor />
         </section>
 
       </div>
