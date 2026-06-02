@@ -436,3 +436,119 @@ html[data-view="tablet"] [role="row"] {
   touch-action: pan-y;
 }
 
+
+/* ============================================================
+   TABLET PORTRAIT MODE — scoped optimizations
+   Activated by: html[data-view="tablet"][data-orientation="portrait"]
+   No page-level edits required; all rules below override layout density,
+   right-side panels, KPI grids, tables, charts, sidebar, taskbar, and
+   floating island for narrow portrait viewports. Landscape and desktop
+   are untouched.
+   ============================================================ */
+
+/* --- 1. Right-side panels become full-width overlay drawers --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-app-panel] {
+  position: absolute !important;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 92vw) !important;
+  max-width: 92vw;
+  z-index: 30;
+  box-shadow: -8px 0 24px -12px hsl(var(--foreground) / 0.18);
+}
+/* Copilot panel uses width animation, keep it explicit when open */
+html[data-view="tablet"][data-orientation="portrait"] [data-app-panel="copilot"] {
+  width: min(420px, 92vw) !important;
+}
+/* Backdrop becomes visible + clickable in portrait when a panel is mounted */
+html[data-view="tablet"][data-orientation="portrait"] [data-panel-backdrop] {
+  display: block;
+  pointer-events: auto;
+}
+
+/* --- 2. KPI grids: collapse to 2 columns in portrait --- */
+html[data-view="tablet"][data-orientation="portrait"] [class*="grid-cols-3"],
+html[data-view="tablet"][data-orientation="portrait"] [class*="grid-cols-4"],
+html[data-view="tablet"][data-orientation="portrait"] [class*="grid-cols-5"],
+html[data-view="tablet"][data-orientation="portrait"] [class*="grid-cols-6"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+/* …but never collapse table column grids / chart-internal grids */
+html[data-view="tablet"][data-orientation="portrait"] table [class*="grid-cols-"],
+html[data-view="tablet"][data-orientation="portrait"] .recharts-wrapper [class*="grid-cols-"] {
+  grid-template-columns: revert !important;
+}
+
+/* --- 3. Layout density: reduce main padding --- */
+html[data-view="tablet"][data-orientation="portrait"] main.p-6 {
+  padding: 1rem !important;
+}
+
+/* --- 4. AppTaskbar compaction --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-app-taskbar] .taskbar-account-name,
+html[data-view="tablet"][data-orientation="portrait"] [data-app-taskbar] .taskbar-last-synced {
+  display: none;
+}
+html[data-view="tablet"][data-orientation="portrait"] [data-app-taskbar] .taskbar-filter-label {
+  display: none;
+}
+html[data-view="tablet"][data-orientation="portrait"] [data-app-taskbar] nav {
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- 5. Tables: tighter cell density, allow horizontal scroll --- */
+html[data-view="tablet"][data-orientation="portrait"] table th,
+html[data-view="tablet"][data-orientation="portrait"] table td {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+html[data-view="tablet"][data-orientation="portrait"] table tr {
+  height: 40px;
+}
+
+/* --- 6. Sidebar locked to icon rail in portrait (already auto-collapsed
+       by AppLayout effect; this prevents accidental expand) --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-sidebar="sidebar"] {
+  pointer-events: auto;
+}
+
+/* --- 7. Floating Action Island: hide when a panel drawer is open;
+       reposition to safe-area corner; enforce 44px hit targets --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-island] {
+  bottom: max(1rem, env(safe-area-inset-bottom, 1rem)) !important;
+  right: max(1rem, env(safe-area-inset-right, 1rem)) !important;
+}
+html[data-view="tablet"][data-orientation="portrait"]:has([data-app-panel]) [data-island] {
+  display: none;
+}
+
+/* --- 8. Charts: tighter axes / legends / tooltip clamps --- */
+html[data-view="tablet"][data-orientation="portrait"] .recharts-cartesian-axis-tick text,
+html[data-view="tablet"][data-orientation="portrait"] .recharts-legend-wrapper {
+  font-size: 11px !important;
+}
+html[data-view="tablet"][data-orientation="portrait"] .recharts-tooltip-wrapper {
+  max-width: 240px;
+}
+html[data-view="tablet"][data-orientation="portrait"] .recharts-legend-wrapper {
+  white-space: normal !important;
+  line-height: 1.4;
+}
+
+/* --- 9. Prevent horizontal page scroll caused by wide inner content;
+       any overflow is delegated to inner scroll containers. --- */
+html[data-view="tablet"][data-orientation="portrait"] body,
+html[data-view="tablet"][data-orientation="portrait"] main {
+  overflow-x: hidden;
+}
+
+/* --- 10. Pagination/toolbar wraps instead of squashing --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-table-toolbar],
+html[data-view="tablet"][data-orientation="portrait"] [data-table-pagination] {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
