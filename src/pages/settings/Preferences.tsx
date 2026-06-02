@@ -13,7 +13,7 @@ import { useTrial } from "@/contexts/TrialContext";
 import { cn } from "@/lib/utils";
 import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone } from "lucide-react";
 import { toast } from "sonner";
-import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
+import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { useViewport, AppView } from "@/contexts/ViewportContext";
 import { useNavigate } from "react-router-dom";
 
