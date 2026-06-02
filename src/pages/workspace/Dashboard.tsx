@@ -121,7 +121,7 @@ export default function WorkspaceDashboard() {
   return (
     <AppLayout>
       <div className="space-y-4">
-        <PageBreadcrumb items={[{ label: "Sandbox" }, { label: activeDashboard.name }]} />
+        <AppTaskbar breadcrumbItems={[...breadcrumbItems, { label: activeDashboard.name }]} />
 
         {/* Dashboard Header */}
         <div className="flex items-center justify-between">
