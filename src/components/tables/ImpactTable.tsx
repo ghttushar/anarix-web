@@ -124,8 +124,8 @@ export function ImpactTable({ data, searchQuery = "", selectedIds, onSelectionCh
               <SortableTableHead field="acos" {...sp} className={cn("min-w-[140px] text-right", pc("acos", true))} style={ps("acos")} align="right">ACOS</SortableTableHead>
             </TableRow>
             <TableRow className="bg-muted/50 hover:bg-muted/50 border-b border-border">
-              <TableHead className="sticky left-0 z-10 bg-muted/50 h-6 w-10" />
-              <TableHead className="sticky left-10 z-10 bg-muted/50 h-6" />
+              {!hideSelection && <TableHead className="sticky left-0 z-10 bg-muted/50 h-6 w-10" />}
+              <TableHead className={cn("sticky z-10 bg-muted/50 h-6", hideSelection ? "left-0" : "left-10")} />
               <TableHead className="h-6" />
               {["impressions", "clicks", "ctr", "adSpend", "adSales", "roas", "acos"].map((field) => (
                 <TableHead key={field} className={cn("h-6 text-center", pc(field, true))} style={ps(field)}>
