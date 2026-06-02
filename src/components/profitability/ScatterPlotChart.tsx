@@ -16,6 +16,8 @@ import { toast } from "sonner";
 
 interface ScatterPlotChartProps {
   data: ScatterDataPoint[];
+  selectedIds?: string[];
+  onPointToggle?: (id: string) => void;
 }
 
 type ChartView = "scatter" | "bar" | "line";
