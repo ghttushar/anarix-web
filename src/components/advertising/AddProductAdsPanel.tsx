@@ -4,9 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, X } from "lucide-react";
-import { StatusBadge } from "@/components/status/StatusBadge";
 import { catalogProducts } from "@/data/mockCatalog";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 
 interface StagedProduct {
@@ -14,12 +12,9 @@ interface StagedProduct {
   name: string;
   image: string;
   itemId: string;
-  suggestedBid: number;
-  bid: number;
 }
 
 export function AddProductAdsPanel() {
-  const { formatCurrency } = useCurrency();
   const { dataPanel, closeDataPanel } = useActivePanel();
   const isOpen = dataPanel === "addProductAd";
 
@@ -46,8 +41,6 @@ export function AddProductAdsPanel() {
           name: product.name,
           image: product.image,
           itemId: product.itemId,
-          suggestedBid: 0.75,
-          bid: 0.75,
         },
       ]);
     }
@@ -63,11 +56,6 @@ export function AddProductAdsPanel() {
     });
   };
 
-  const updateBid = (id: string, bid: number) => {
-    setStagedProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, bid } : p))
-    );
-  };
 
   const handleAdd = () => {
     closeDataPanel();
