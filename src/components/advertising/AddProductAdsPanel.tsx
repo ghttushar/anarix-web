@@ -147,16 +147,7 @@ export function AddProductAdsPanel() {
                   <img src={product.image} alt={product.name} className="h-6 w-6 rounded object-cover bg-muted shrink-0" />
                   <div className="flex-1 min-w-0">
                     <span className="text-xs text-foreground truncate block">{product.name}</span>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-muted-foreground">Bid:</span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={product.bid}
-                        onChange={(e) => updateBid(product.id, parseFloat(e.target.value) || 0)}
-                        className="h-6 w-16 text-right text-xs"
-                      />
-                    </div>
+                    <span className="text-[10px] text-muted-foreground">{product.itemId}</span>
                   </div>
                   <button onClick={() => removeStaged(product.id)} className="text-muted-foreground hover:text-foreground cursor-pointer shrink-0">
                     <X className="h-3.5 w-3.5" />
