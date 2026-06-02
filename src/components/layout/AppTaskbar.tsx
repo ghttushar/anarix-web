@@ -204,7 +204,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
   const hasRow2 = showAdType || showFrequency || showDateRange || showRunButton || children || islandOff;
 
   return (
-    <div className="flex flex-col rounded-lg border bg-card shrink-0 sticky top-0 z-30 border-primary">
+    <div data-app-taskbar className="flex flex-col rounded-lg border bg-card shrink-0 sticky top-0 z-30 border-primary">
       {/* Row 1: Breadcrumb left, Account + Sync right */}
       {hasRow1 && (
         <div className={cn(
@@ -220,11 +220,11 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
               {renderMarketplaceLogo()}
             </div>
             <StatusDot status={accountStatus} className="h-1.5 w-1.5" />
-            <span className="text-xs font-medium text-foreground truncate max-w-[120px]">{accountName}</span>
-            <div className="h-3.5 w-px bg-border" />
+            <span className="taskbar-account-name text-xs font-medium text-foreground truncate max-w-[120px]">{accountName}</span>
+            <div className="h-3.5 w-px bg-border taskbar-account-name" />
             {/* Last synced */}
-            <Clock className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">Last synced: {lastSyncTime}</span>
+            <Clock className="h-3 w-3 text-muted-foreground taskbar-last-synced" />
+            <span className="taskbar-last-synced text-[11px] text-muted-foreground whitespace-nowrap">Last synced: {lastSyncTime}</span>
             <div className="h-3.5 w-px bg-border" />
             <ViewBadge />
           </div>
@@ -237,7 +237,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
           <div className="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
             {showAdType && (
               <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2.5 py-1">
-                <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Ad Type</span>
+                <span className="taskbar-filter-label text-sm font-medium text-muted-foreground whitespace-nowrap">Ad Type</span>
                 <Select value={adType} onValueChange={(v) => setAdType(v as any)}>
                   <SelectTrigger className="h-8 w-[110px] text-sm border-0 bg-transparent shadow-none px-1.5 cursor-pointer">
                     <SelectValue />
@@ -255,7 +255,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
 
             {showFrequency && (
               <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2.5 py-1">
-                <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Frequency</span>
+                <span className="taskbar-filter-label text-sm font-medium text-muted-foreground whitespace-nowrap">Frequency</span>
                 <Select value={frequency} onValueChange={(v) => setFrequency(v as any)}>
                   <SelectTrigger className="h-8 w-[90px] text-sm border-0 bg-transparent shadow-none px-1.5 cursor-pointer">
                     <SelectValue />
@@ -271,7 +271,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
 
             {showDateRange && (
               <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2.5 py-1">
-                <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Date Range</span>
+                <span className="taskbar-filter-label text-sm font-medium text-muted-foreground whitespace-nowrap">Date Range</span>
                 <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-sm font-normal px-1.5 cursor-pointer">

@@ -18,6 +18,7 @@ export function AanCopilotPanel() {
   return (
     <AanPresenceProvider>
       <div
+        data-app-panel="copilot"
         className={cn(
           "h-full shrink-0 flex flex-col border-l border-border bg-background transition-all duration-200 ease-out overflow-hidden relative",
           isOpen ? "w-[360px] opacity-100" : "w-0 opacity-0 border-l-0"

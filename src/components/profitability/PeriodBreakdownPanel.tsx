@@ -99,7 +99,7 @@ export function PeriodBreakdownPanel({ summary, isOpen, onClose }: PeriodBreakdo
   const toggle = (id: string) => setOpenSections((p) => ({ ...p, [id]: !p[id] }));
 
   return (
-    <div className="flex h-full w-[360px] shrink-0 flex-col border-l border-border bg-background">
+    <div data-app-panel="periodBreakdown" className="flex h-full w-[360px] shrink-0 flex-col border-l border-border bg-background">
       {/* Header */}
       <div className="border-b border-border shrink-0">
         <div className="flex items-center justify-between px-4 py-4">

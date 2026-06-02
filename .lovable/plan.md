@@ -1,74 +1,87 @@
+# Tablet Portrait Optimization
 
-# Recheck of Phases 1–3 — what is actually missing
+Goal: when the app is in tablet view AND `(orientation: portrait)`, the entire shell adapts for narrow width without forking pages. Triggered exclusively by `html[data-view="tablet"]` + the `(orientation: portrait)` media query — width-agnostic, per your choice.
 
-I audited the codebase against every claim from the last three "continue" loops. Most items are in fact wired up, but the user is right that several were never landed. Here is the verified gap list and the exact work to close it.
+## 1. Global activation hook
 
-## Verified done (no action needed)
-- Dual Y-axis on `PerformanceChart` and `ImpactLineChart`
-- Show Impact tooltip with Top 3 / Bottom 2 + "View in Table" button
-- `ImpactTable` `hideSelection` prop wired in `ImpactAnalysis`
-- Alert nudge icons in `CampaignTable` (ACOS > 30 / out_of_budget)
-- Targeting Actions: marketplace tabs, row checkboxes, bulk Archive, Archive column removed
-- `AppTaskbar` date presets: Last 3 / 7 / 14 / 30 / 60 days
-- `AppSidebar` `overflow-hidden` on `SidebarContent`
-- Mock data expanded to 45 rows (Campaigns, Keywords, Search Terms, Product Ads, Ad Groups, Product Targeting, Catalog, Competitor Pricing, Targeting Actions — runtime length verified)
-- Profitability Dashboard parent/child expand in `ProductsPnLTable`
-- `MetricFrequencyChart` exists
-- ProfitLoss product multi-select search
+- Add `data-orientation="portrait|landscape"` on `<html>` (in `ViewportContext` or `AppLayout`), bound to `matchMedia("(orientation: portrait)")`.
+- Single CSS scope used everywhere: `html[data-view="tablet"][data-orientation="portrait"]` (alias `.tp:` via a Tailwind variant added in `tailwind.config.ts` for ergonomic class authoring).
+- All portrait rules live behind this scope so desktop/landscape are byte-identical.
 
-## Verified NOT done — to fix
+## 2. Layout density
 
-### Gap 1 — `AddProductAds` bid fields still present
-`AddProductAdsModal.tsx` and `AddProductAdsPanel.tsx` still declare and seed `suggestedBid: 0.75`. Strip the `suggestedBid` field from the row type, mock seed, and any rendered cell so the modal is product-selection only (Phase 2.1 spec).
+- `AppLayout` `<main>` padding: drop from `p-6` to `p-4` in portrait (compact density still wins if user picked it).
+- `AppTaskbar`:
+  - Collapse marketplace label → icon-only chip.
+  - Date range button shows preset label only (hide explicit date string).
+  - Breadcrumbs truncate to last 2 segments with `…` prefix linking to root.
+  - Overflow extra actions into a single `⋯` menu when row width < container.
+- KPI grids (Profitability hero, CampaignManager, Dashboard): force `grid-cols-2` in portrait regardless of source `lg:grid-cols-5` etc. Done via a `.tp:grid-cols-2` override at the grid wrapper level (no per-page edits — apply via a shared `KpiGrid` wrapper or a CSS layer rule targeting `[data-kpi-grid]`).
+- Tables:
+  - Reduce row height `h-11 → h-10`, cell px `px-3 → px-2`.
+  - Keep sticky first/second cols; allow horizontal scroll on table body wrapper (already structured for this).
+  - Pagination bar wraps to 2 lines instead of squashing.
 
-### Gap 2 — 11 pages still render `PageBreadcrumb` instead of `AppTaskbar`
-Files still importing `PageBreadcrumb`:
-- `src/pages/workspace/Dashboard.tsx`
-- `src/pages/advertising/RuleAgents.tsx`
-- `src/pages/advertising/AppliedRules.tsx`
-- `src/pages/settings/Team.tsx`
-- `src/pages/settings/System.tsx`
-- `src/pages/settings/ComponentLibrary.tsx`
-- `src/pages/settings/Integrations.tsx`
-- `src/pages/settings/Accounts.tsx`
-- `src/pages/settings/ConnectAmazon.tsx`
-- `src/pages/settings/ConnectWalmart.tsx`
-- `src/pages/settings/Preferences.tsx`
+## 3. Right-side panels behavior
 
-Replace `PageBreadcrumb` with `AppTaskbar breadcrumbItems={…}` on each (same pattern already used elsewhere). Keep `showDateRange`/`showRunButton` off for Settings pages; turn them on for the two advertising pages and Workspace Dashboard.
+- `InsightsPanel`, `NotificationsPanel`, `AanCopilotPanel`, `ProductDetailPanel`, `PeriodBreakdownPanel` currently sit beside `<main>`. In portrait:
+  - Render as a full-width overlay drawer (anchored right, width `100vw` minus 56px icon-rail sidebar, max-w-none).
+  - Main content stays mounted but is visually obscured by drawer (z-index above main, below modal layer).
+  - Add a backdrop tap target that closes the panel (only for `productDetail`/`periodBreakdown`/`insights`/`notifications` — Copilot keeps its explicit close button).
+  - Auto-collapse sidebar logic (already in `AppLayout`) is unchanged; in portrait the sidebar is forced to icon rail.
 
-### Gap 3 — Trends scatter area-select tool missing
-`ScatterPlotChart.tsx` and `pages/profitability/Trends.tsx` contain no brush / area-select code. Add a `<Brush>` (or Recharts `ReferenceArea` drag-to-select) toggleable from the chart toolbar alongside the existing zoom controls. Selected points feed the existing selection state.
+## 4. Sidebar + Floating Island ergonomics
 
-### Gap 4 — `CampaignTable` not on `usePinning`
-`CampaignTable.tsx` is the only primary advertising table without `usePinning` / sticky-pinned columns. Add `usePinning` with Campaign Name pinned by default to match the other 10 tables already on it.
+- `AppSidebar`: in portrait, lock to icon-rail (no expand on hover), nav items min-height 44px.
+- `FloatingActionIsland`:
+  - Reposition from current spot to `bottom-4 right-4` with safe-area inset; stays clear of thumb zone.
+  - Bell, Aan, and quick actions buttons → 44×44px hit targets.
+  - When any side panel is open in portrait, island hides (would overlap drawer).
+- Native `title` tooltips only (per Radix guardrail) — no hover popovers since touch can't hover.
 
-### Gap 5 — Campaign one-tag enforcement
-`CampaignTagBar` currently allows multi-tag. Enforce single-select at the picker level (replace add-tag handler with `setTag(tagId)` and disable checkbox-style multi UI).
+## 5. Charts & data viz
 
-### Gap 6 — Filter button on Product-level page
-The Product Ads / Product-level page in advertising is missing the `DataTableToolbar` filter affordance — add `activeFilters` + `filterFields` props so the Filter button renders, matching Impact Analysis.
+Targeted at `PerformanceChart`, `ImpactLineChart`, `ScatterPlotChart`, `MetricFrequencyChart`, heatmaps:
+- X-axis tick interval doubled (`interval="preserveStartEnd"` or explicit `interval={Math.ceil(data.length/5)}`).
+- Y-axis tick font 11px, label width clamped.
+- Legend wraps to 2 lines, font 11px.
+- Tooltip uses `wrapperStyle={{ maxWidth: 240 }}` and `allowEscapeViewView: false` so it never overflows.
+- Dual-axis labels stack vertically when container <520px (already detected via chart wrapper ResizeObserver — add one if absent in `ImpactLineChart`).
+- Heatmaps: cell min-width 32px; horizontal scroll allowed.
 
-### Gap 7 — Tablet parity for Phase 1 & 2 work
-`src/views/tablet/` contains only `TabletRedirect.tsx`. Tablet variants for Profitability (Dashboard / Trends / P&L) and Advertising (Campaign Manager / Impact / Targeting Actions) were never created. Add tablet variants that reuse the desktop pages inside the tablet shell with touch-sized controls (44px hit targets, collapsible Right Panel, dropdowns full-width).
+## 6. Files touched
 
-### Gap 8 — `Campaign Manager`: standalone metric dropdown
-Verify and, if still present, remove the standalone `MetricSelector` so KPI cards are the single source of truth for chart metrics (cap of 4). Current grep finds no `MetricSelector` usage on the page — confirm during build and remove any lingering dead import.
+```
+src/contexts/ViewportContext.tsx          (add orientation tracking → html[data-orientation])
+src/components/layout/AppLayout.tsx       (portrait padding, drawer panel mode, sidebar lock)
+src/components/layout/AppSidebar.tsx      (portrait icon-rail lock, 44px targets)
+src/components/layout/AppTaskbar.tsx      (compact controls, overflow menu, breadcrumb truncation)
+src/components/insights/InsightsPanel.tsx (drawer mode in portrait)
+src/components/notifications/NotificationsPanel.tsx
+src/components/aan/AanCopilotPanel.tsx
+src/components/profitability/ProductDetailPanel.tsx
+src/components/profitability/PeriodBreakdownPanel.tsx
+src/features/creative/FloatingActionIsland.tsx
+src/components/charts/PerformanceChart.tsx
+src/components/charts/ImpactLineChart.tsx
+src/components/charts/MetricFrequencyChart.tsx
+src/components/profitability/ScatterPlotChart.tsx
+src/index.css                              (portrait scope utility rules: KPI grid override, table density, panel drawer)
+tailwind.config.ts                         (add `tp:` variant for tablet-portrait)
+```
 
-## Execution order
-1. Gaps 1, 4, 5, 6, 8 — small surgical edits in advertising components.
-2. Gap 2 — bulk swap `PageBreadcrumb` → `AppTaskbar` across 11 pages.
-3. Gap 3 — Trends area-select tool.
-4. Gap 7 — Tablet variants (largest change; one file per screen under `src/views/tablet/`).
+No page-level files edited — all changes are shell + shared components.
+
+## 7. Verification
+
+- `/profitability/dashboard`, `/advertising/impact`, `/advertising/campaigns`: screenshot in tablet portrait viewport (820×1180) and confirm: 2-col KPIs, compact taskbar, sticky columns intact, no horizontal page scroll.
+- Open Insights → confirm full-width drawer, tap backdrop to close.
+- Open Aan Copilot → confirm drawer + explicit close.
+- Rotate to landscape (1180×820) → confirm layout reverts to desktop-style.
 
 ## Out of scope
-- Re-doing items already verified above.
-- Backend / data-shape changes.
-- Any new design tokens — strictly periwinkle system.
 
-## Validation
-- For each gap, grep the previous failing signal and confirm it is gone.
-- Visual check at 1546px and tablet viewport for the migrated pages.
-- Console clean, no TS errors.
-
-Reply **approve** to switch to build mode and execute in the order above, or tell me which gaps to drop / reorder.
+- Mobile view (separate variant).
+- Tablet landscape changes (already correct).
+- Page-level redesigns or new components.
+- Backend/data changes.

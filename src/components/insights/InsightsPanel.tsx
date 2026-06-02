@@ -22,7 +22,7 @@ export function InsightsPanel() {
   if (!isOpen) return null;
 
   return (
-    <div className="flex h-full w-[320px] shrink-0 flex-col border-l border-border bg-background">
+    <div data-app-panel="insights" className="flex h-full w-[320px] shrink-0 flex-col border-l border-border bg-background">
       <div className="border-b border-border shrink-0">
         <div className="flex items-center justify-between px-3 py-3">
           <div className="flex items-center gap-2">

@@ -47,6 +47,23 @@ export function ViewportProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute("data-view", view);
   }, [view]);
 
+  // Track viewport orientation globally so CSS scoped to
+  // `html[data-view="tablet"][data-orientation="portrait"]` can adapt layout
+  // density, panels, sidebar, charts, and floating island without forking pages.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(orientation: portrait)");
+    const apply = () => {
+      document.documentElement.setAttribute(
+        "data-orientation",
+        mq.matches ? "portrait" : "landscape"
+      );
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   return (
     <ViewportContext.Provider value={{ view, setView, entryPath: entryPathFor }}>
       {children}
