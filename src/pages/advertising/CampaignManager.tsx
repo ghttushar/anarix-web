@@ -293,7 +293,26 @@ function CampaignManagerInner() {
           </AppTaskbar>
 
           <InlineKPIStrip items={kpiItems} availableMetrics={AVAILABLE_METRICS} onMetricChange={handleKPISwap} />
-          <PerformanceChart data={mockChartData} showImpact={showImpact} onShowImpactChange={setShowImpact} />
+          <PerformanceChart
+            data={mockChartData}
+            showImpact={showImpact}
+            onShowImpactChange={setShowImpact}
+            selectedMetrics={(() => {
+              const labelToKey: Record<string, string> = {
+                "Ad Spend": "adSpend", "Ad Sales": "adSales", "Ad Units": "clicks", "Ad Orders": "clicks",
+                "ROAS": "roas", "Impressions": "impressions", "Clicks": "clicks",
+                "CTR": "ctr", "CPC": "cpc", "ACOS": "acos",
+              };
+              return selectedKPIs.slice(0, 4).map((l) => labelToKey[l] || "adSpend") as any;
+            })()}
+            onSelectedMetricsChange={(next) => {
+              const keyToLabel: Record<string, string> = {
+                adSpend: "Ad Spend", adSales: "Ad Sales", roas: "ROAS",
+                impressions: "Impressions", clicks: "Clicks", ctr: "CTR", cpc: "CPC", acos: "ACOS",
+              };
+              setSelectedKPIs(next.map((k) => keyToLabel[k] || k));
+            }}
+          />
           <UnderlineTabs tabs={tabs} value={activeTab} onChange={(v) => setActiveTab(v as TabValue)} />
 
           <DataTableToolbar
