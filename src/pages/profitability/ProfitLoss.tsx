@@ -84,21 +84,7 @@ export default function ProfitLoss() {
             title="Profit & Loss"
             subtitle="Detailed P&L breakdown by period"
           />
-          <AppTaskbar showDateRange showRunButton onRun={() => toast.info("Refreshing data...")} breadcrumbItems={breadcrumbItems}>
-            <div className="flex items-center gap-1.5 rounded-md bg-muted/40 px-2.5 py-1">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Catalogue</span>
-              <Select value={catalogue} onValueChange={setCatalogue}>
-                <SelectTrigger className="h-8 w-[120px] text-sm border-0 bg-transparent shadow-none px-1.5 cursor-pointer">
-                  <SelectValue placeholder="Catalogue" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs cursor-pointer">All Catalogues</SelectItem>
-                  <SelectItem value="electronics" className="text-xs cursor-pointer">Electronics</SelectItem>
-                  <SelectItem value="home" className="text-xs cursor-pointer">Home & Garden</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </AppTaskbar>
+          <AppTaskbar showDateRange showRunButton onRun={() => toast.info("Refreshing data...")} breadcrumbItems={breadcrumbItems} />
 
           {/* P&L Frequency Toggle */}
           <div className="flex items-center gap-2">
