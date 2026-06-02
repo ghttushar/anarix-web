@@ -86,13 +86,8 @@ export default function AppliedRules() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <PageBreadcrumb
-          items={[
-            { label: "Advertising", href: "/advertising" },
-            { label: "Rules", href: "/advertising/rules/agents" },
-            { label: "Applied Rules" },
-          ]}
-        />
+        <AppTaskbar breadcrumbItems={breadcrumbItems} />
+
         <PageHeader
           title="Applied Rules"
           subtitle="Manage and monitor all active automation rules"
