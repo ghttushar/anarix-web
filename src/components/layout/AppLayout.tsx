@@ -65,10 +65,20 @@ function LayoutInner({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", apply);
   }, [setOpen]);
 
+  const showAnyPanel = showInsights || showNotifications || showCopilot;
+
+  const handleBackdropClick = useCallback(() => {
+    // In portrait drawer mode, tapping the backdrop closes closable data panels.
+    // Copilot keeps its explicit close button (no backdrop-close).
+    if (isClosableDataPanel || showInsights || showNotifications) {
+      closeDataPanel();
+    }
+  }, [isClosableDataPanel, showInsights, showNotifications, closeDataPanel]);
+
   return (
     <div className="flex min-h-screen w-full overflow-x-hidden">
       <AppSidebar />
-      <div className="flex flex-1 min-w-0 h-screen overflow-hidden">
+      <div data-panel-host className="relative flex flex-1 min-w-0 h-screen overflow-hidden">
         <main
           className={cn(
             "flex-1 overflow-auto bg-background min-h-0 min-w-0",
@@ -84,6 +94,18 @@ function LayoutInner({ children }: { children: ReactNode }) {
             children
           )}
         </main>
+        {/* Portrait-only backdrop: visible only when a panel is open AND
+            html[data-view=tablet][data-orientation=portrait]. CSS handles
+            visibility; click handler is always wired but only fires when
+            the backdrop is actually displayed (pointer-events gated). */}
+        {showAnyPanel && (
+          <div
+            data-panel-backdrop
+            className="absolute inset-0 z-20 bg-foreground/20 hidden"
+            onClick={handleBackdropClick}
+            aria-hidden="true"
+          />
+        )}
         {showInsights && <InsightsPanel />}
         {showNotifications && <NotificationsPanel />}
         {showCopilot && <Suspense fallback={null}><AanCopilotPanel /></Suspense>}
