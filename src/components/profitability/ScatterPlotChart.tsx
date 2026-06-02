@@ -63,10 +63,11 @@ const viewIcons: Record<ChartView, React.ComponentType<{ className?: string }>> 
   line: Activity,
 };
 
-export function ScatterPlotChart({ data }: ScatterPlotChartProps) {
+export function ScatterPlotChart({ data, selectedIds, onPointToggle }: ScatterPlotChartProps) {
   const [expanded, setExpanded] = useState(false);
   const [chartView, setChartView] = useState<ChartView>("scatter");
   const [zoomLevel, setZoomLevel] = useState(1);
+  const hasSelection = (selectedIds?.length ?? 0) > 0;
 
   const maxSales = Math.max(...data.map((d) => d.totalSales)) * 1.1;
   const maxMargin = Math.max(...data.map((d) => d.profitMargin)) * 1.1;
