@@ -13,7 +13,7 @@ export function MiniSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  const { resolvedTheme, setTheme } = useTheme();
+  const { newFeaturesVisible: _nfvDup } = useFeatureToggle();
   const { newFeaturesVisible } = useFeatureToggle();
   const { closeAan } = useAan();
   
