@@ -336,7 +336,15 @@ export default function ProfitabilityTrends() {
                 </TableBody>
               </Table>
             </div>
+            <TablePagination
+              page={page}
+              pageSize={pageSize}
+              totalItems={filteredProducts.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
+
         </div>
         </div>
 
