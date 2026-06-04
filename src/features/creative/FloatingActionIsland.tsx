@@ -98,8 +98,10 @@ export function FloatingActionIsland() {
     target.addEventListener("pointercancel", handleUp);
   }, []);
 
-  const shouldHide = hiddenRoutes.some((route) => location.pathname.startsWith(route));
+  const isMobileView = typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "mobile";
+  const shouldHide = isMobileView || hiddenRoutes.some((route) => location.pathname.startsWith(route));
   if (shouldHide) return null;
+
 
   const handleMouseEnter = () => {
     if (isTabletView) return;
