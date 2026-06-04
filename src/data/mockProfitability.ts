@@ -99,138 +99,93 @@ export const profitabilitySummaries: ProfitabilitySummary[] = [
   },
 ];
 
-export const profitabilityProducts: ProfitabilityProduct[] = [
-  {
-    id: "prod-001",
-    name: "Premium Wireless Earbuds Pro Max",
-    image: "/placeholder.svg",
-    itemId: "WMT-78234",
-    sku: "AUDIO-EARBUD-001",
-    price: 79.99,
-    cogs: 24.50,
-    units: 156,
-    refundUnits: 8,
-    cancelledUnits: 3,
-    gmv: 12478.44,
-    authSales: 11580.55,
-    refundSales: 639.92,
-    cancelledSales: 239.97,
-    adSpend: 890.45,
-    commissionProduct: 1737.08,
-    commissionShipping: 234.00,
-    wfsFulfillmentFee: 468.00,
-    shippingFees: 312.00,
-    netProfit: 3245.67,
-    additionalFee: 45.00,
-    profitMargin: 28.0,
-    totalSales: 11580.55,
-    weeklyData: { "Week-01": 2890, "Week-02": 3120, "Week-04": 2780, "Week-05": 2790 },
-  },
-  {
-    id: "prod-002",
-    name: "Smart Home Hub Controller 2.0",
-    image: "/placeholder.svg",
-    itemId: "WMT-45678",
-    sku: "SMARTHOME-HUB-002",
-    price: 149.99,
-    cogs: 52.00,
-    units: 89,
-    refundUnits: 4,
-    cancelledUnits: 1,
-    gmv: 13349.11,
-    authSales: 12749.15,
-    refundSales: 599.96,
-    cancelledSales: 149.99,
-    adSpend: 567.80,
-    commissionProduct: 1912.37,
-    commissionShipping: 178.00,
-    wfsFulfillmentFee: 356.00,
-    shippingFees: 178.00,
-    netProfit: 4567.89,
-    additionalFee: 35.00,
-    profitMargin: 35.8,
-    totalSales: 12749.15,
-    weeklyData: { "Week-01": 3180, "Week-02": 3456, "Week-04": 2890, "Week-05": 3223 },
-  },
-  {
-    id: "prod-003",
-    name: "Organic Cotton Bedsheet Set Queen",
-    image: "/placeholder.svg",
-    itemId: "WMT-23456",
-    sku: "HOME-BEDSHEET-003",
-    price: 89.99,
-    cogs: 28.00,
-    units: 234,
-    refundUnits: 12,
-    cancelledUnits: 5,
-    gmv: 21057.66,
-    authSales: 19527.83,
-    refundSales: 1079.88,
-    cancelledSales: 449.95,
-    adSpend: 1234.56,
-    commissionProduct: 2929.17,
-    commissionShipping: 468.00,
-    wfsFulfillmentFee: 936.00,
-    shippingFees: 468.00,
-    netProfit: 5890.12,
-    additionalFee: 67.00,
-    profitMargin: 30.2,
-    totalSales: 19527.83,
-    weeklyData: { "Week-01": 4890, "Week-02": 5234, "Week-04": 4567, "Week-05": 4836 },
-  },
-  {
-    id: "prod-004",
-    name: "Portable Power Bank 20000mAh",
-    image: "/placeholder.svg",
-    itemId: "WMT-67890",
-    sku: "TECH-POWER-004",
-    price: 39.99,
-    cogs: 12.00,
-    units: 412,
-    refundUnits: 18,
-    cancelledUnits: 8,
-    gmv: 16475.88,
-    authSales: 15435.14,
-    refundSales: 719.82,
-    cancelledSales: 319.92,
-    adSpend: 678.90,
-    commissionProduct: 2315.27,
-    commissionShipping: 824.00,
-    wfsFulfillmentFee: 1648.00,
-    shippingFees: 824.00,
-    netProfit: 4201.45,
-    additionalFee: 82.00,
-    profitMargin: 27.2,
-    totalSales: 15435.14,
-    weeklyData: { "Week-01": 3890, "Week-02": 4123, "Week-04": 3678, "Week-05": 3744 },
-  },
-  {
-    id: "prod-005",
-    name: "Stainless Steel Water Bottle 32oz",
-    image: "/placeholder.svg",
-    itemId: "WMT-12345",
-    sku: "OUTDOOR-BOTTLE-005",
-    price: 24.99,
-    cogs: 6.50,
-    units: 567,
-    refundUnits: 23,
-    cancelledUnits: 11,
-    gmv: 14169.33,
-    authSales: 13319.16,
-    refundSales: 574.77,
-    cancelledSales: 274.89,
-    adSpend: 456.78,
-    commissionProduct: 1997.87,
-    commissionShipping: 1134.00,
-    wfsFulfillmentFee: 2268.00,
-    shippingFees: 1134.00,
-    netProfit: 2890.34,
-    additionalFee: 113.00,
-    profitMargin: 21.7,
-    totalSales: 13319.16,
-    weeklyData: { "Week-01": 3345, "Week-02": 3567, "Week-04": 3123, "Week-05": 3284 },
-  },
+// 30 NapQueen-style products. Scatter layout deliberately forms PDF-matching clusters.
+const PRODUCT_TEMPLATES: { name: string; price: number }[] = [
+  { name: "NapQueen 5 Inch Twin Mattress, Memory Foam Blue", price: 159.99 },
+  { name: "NapQueen 6 Inch Twin Mattress, Memory Foam Green", price: 179.99 },
+  { name: "NapQueen Maxima 8\" Hybrid Cool Gel Infused Queen", price: 349.99 },
+  { name: "NapQueen Twin Mattress, 6 Inch Elsa Innerspring", price: 189.99 },
+  { name: "NapQueen Queen Mattress, 10 Inch Memory Foam Pro", price: 449.99 },
+  { name: "NapQueen King Mattress, 12 Inch Hybrid Premium", price: 699.99 },
+  { name: "NapQueen Full Mattress, 8 Inch Memory Foam", price: 279.99 },
+  { name: "NapQueen Pillow Top King Hybrid Mattress", price: 549.99 },
+  { name: "NapQueen Cosmic Purple Shark Pillow Set", price: 49.99 },
+  { name: "NapQueen Cooling Gel Memory Foam Pillow", price: 39.99 },
+  { name: "NapQueen Bamboo Bed Sheet Set Queen", price: 89.99 },
+  { name: "NapQueen Organic Cotton Sheet Set King", price: 119.99 },
+  { name: "NapQueen Weighted Blanket 15lb Grey", price: 79.99 },
+  { name: "NapQueen Down Alternative Comforter Queen", price: 99.99 },
+  { name: "NapQueen Mattress Topper 3 Inch Queen", price: 149.99 },
+  { name: "NapQueen Adjustable Bed Frame Queen", price: 599.99 },
+  { name: "NapQueen Platform Bed Frame King", price: 399.99 },
+  { name: "NapQueen Headboard Velvet Tufted Queen", price: 229.99 },
+  { name: "NapQueen Foldable Floor Mattress Twin", price: 99.99 },
+  { name: "NapQueen Kids Twin Mattress, 6 Inch", price: 149.99 },
+  { name: "NapQueen Crib Mattress Dual Sided", price: 119.99 },
+  { name: "NapQueen Sofa Bed Pull Out Mattress", price: 199.99 },
+  { name: "NapQueen RV Short Queen Memory Foam", price: 299.99 },
+  { name: "NapQueen Air Mattress Queen with Pump", price: 89.99 },
+  { name: "NapQueen Camping Sleeping Pad Self-Inflating", price: 69.99 },
+  { name: "NapQueen Travel Pillow Memory Foam Set", price: 29.99 },
+  { name: "NapQueen Lumbar Support Pillow Office", price: 34.99 },
+  { name: "NapQueen Cervical Contour Pillow", price: 44.99 },
+  { name: "NapQueen Body Pillow Pregnancy Support", price: 59.99 },
+  { name: "NapQueen Silk Pillowcase Set of 2", price: 39.99 },
 ];
+
+// Profit Margin % (x) and Ad Spend $ (y, 0–90) per the PDF scatter layout
+const SCATTER_LAYOUT: { pm: number; ad: number }[] = [
+  // Red loss cluster (~ -30%, $5-12) — produces 5/3/5/10/10 badges in PDF
+  { pm: -32, ad: 8 }, { pm: -33, ad: 6 }, { pm: -30, ad: 11 }, { pm: -22, ad: 9 }, { pm: -18, ad: 10 },
+  // Amber mid cluster (~22-32%, $25-45)
+  { pm: 22, ad: 40 }, { pm: 25, ad: 42 }, { pm: 23, ad: 43 }, { pm: 28, ad: 30 }, { pm: 30, ad: 28 },
+  { pm: 32, ad: 25 }, { pm: 27, ad: 33 }, { pm: 29, ad: 32 }, { pm: 26, ad: 35 }, { pm: 24, ad: 38 },
+  // Green winners cluster (~75-85%, $55-72)
+  { pm: 78, ad: 65 }, { pm: 80, ad: 68 }, { pm: 82, ad: 67 }, { pm: 76, ad: 70 }, { pm: 84, ad: 64 },
+  { pm: 79, ad: 72 }, { pm: 81, ad: 60 }, { pm: 77, ad: 62 }, { pm: 83, ad: 58 }, { pm: 85, ad: 55 },
+  // Scattered outliers
+  { pm: 50, ad: 35 }, { pm: 60, ad: 23 }, { pm: 15, ad: 50 }, { pm: 8, ad: 18 }, { pm: -5, ad: 32 },
+];
+
+export const profitabilityProducts: ProfitabilityProduct[] = PRODUCT_TEMPLATES.map((t, i) => {
+  const layout = SCATTER_LAYOUT[i];
+  const units = 50 + ((i * 37) % 450);
+  const cogs = +(t.price * 0.32).toFixed(2);
+  const gmv = +(t.price * units).toFixed(2);
+  const authSales = +(gmv * 0.92).toFixed(2);
+  const refundSales = +(gmv * 0.05).toFixed(2);
+  const cancelledSales = +(gmv * 0.02).toFixed(2);
+  const adSpend = +(layout.ad * 12 + i * 7).toFixed(2);
+  const commissionProduct = +(authSales * 0.15).toFixed(2);
+  const commissionShipping = +(authSales * 0.02).toFixed(2);
+  const wfsFulfillmentFee = +(units * 3).toFixed(2);
+  const shippingFees = +(units * 2).toFixed(2);
+  const additionalFee = +(units * 0.3).toFixed(2);
+  const profitMargin = layout.pm;
+  const totalSales = authSales;
+  const netProfit = +(totalSales * profitMargin / 100).toFixed(2);
+  const refundUnits = Math.floor(units * 0.04);
+  const cancelledUnits = Math.floor(units * 0.02);
+  const base = Math.round(totalSales / 4);
+  return {
+    id: `prod-${String(i + 1).padStart(3, "0")}`,
+    name: t.name,
+    image: "/placeholder.svg",
+    itemId: `B0BDR${(100000 + i).toString(36).toUpperCase()}`,
+    sku: `NQ${45000 + i}${"BGPRYO"[i % 6]}`,
+    price: t.price,
+    cogs, units, refundUnits, cancelledUnits,
+    gmv, authSales, refundSales, cancelledSales,
+    adSpend, commissionProduct, commissionShipping, wfsFulfillmentFee, shippingFees,
+    netProfit, additionalFee, profitMargin, totalSales,
+    weeklyData: {
+      "Week-01": +(base * 0.95).toFixed(2),
+      "Week-02": +(base * 1.05).toFixed(2),
+      "Week-04": +(base * 0.92).toFixed(2),
+      "Week-05": +(base * 1.08).toFixed(2),
+    },
+  };
+});
 
 export const geographicalData: GeographicalData[] = [
   {
