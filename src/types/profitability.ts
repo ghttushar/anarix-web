@@ -114,5 +114,6 @@ export interface ScatterDataPoint {
   name: string;
   profitMargin: number;
   totalSales: number;
+  adSpend: number;
   quadrant: "winners" | "grow" | "optimize" | "review";
 }
