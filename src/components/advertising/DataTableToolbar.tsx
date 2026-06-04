@@ -188,38 +188,38 @@ export function DataTableToolbar({
   );
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-table-toolbar>
       {/* Main Toolbar Row */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Left Side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Edit Mode Toggle — first position */}
           {showViewToggle && onViewModeChange && (
             <Button
               variant="ghost"
               size="sm"
-              className={cn("h-8 gap-1 text-xs cursor-pointer", viewMode === "edit" && "bg-destructive/10 text-destructive")}
+              className={cn("h-8 gap-1 text-xs cursor-pointer shrink-0", viewMode === "edit" && "bg-destructive/10 text-destructive")}
               onClick={handleEditToggle}
               title={viewMode === "edit" ? "Save & exit edit mode" : "Switch to Edit mode"}
             >
               <Pencil className="h-3.5 w-3.5" />
-              Edit
+              <span data-tb-label>Edit</span>
             </Button>
           )}
           {leftContent}
-          <div className="relative">
+          <div className="relative min-w-0 flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 w-56 pl-8 text-sm"
+              className="h-8 w-full pl-8 text-sm"
             />
           </div>
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap" data-tb-actions>
           {rightContent}
 
           {/* Upload Button */}
