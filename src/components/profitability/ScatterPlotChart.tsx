@@ -139,19 +139,45 @@ function ScatterCanvas({
     void xSpan; void ySpan;
   };
 
-  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
-    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-    zoom(factor, cx, cy);
-  };
+  // Native non-passive wheel listener to actually preventDefault (React onWheel is passive)
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = svg.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const v = viewRef.current;
+      const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      const ax = v.xMin + ((cx - PAD.l) / plotW) * (v.xMax - v.xMin);
+      const ay = v.yMin + ((PAD.t + plotH - cy) / plotH) * (v.yMax - v.yMin);
+      setView({
+        xMin: ax - (ax - v.xMin) / factor,
+        xMax: ax + (v.xMax - ax) / factor,
+        yMin: Math.max(0, ay - (ay - v.yMin) / factor),
+        yMax: ay + (v.yMax - ay) / factor,
+      });
+    };
+    const prevent = (e: Event) => e.preventDefault();
+    svg.addEventListener("wheel", handleWheel, { passive: false });
+    svg.addEventListener("gesturestart", prevent as EventListener);
+    svg.addEventListener("gesturechange", prevent as EventListener);
+    svg.addEventListener("gestureend", prevent as EventListener);
+    return () => {
+      svg.removeEventListener("wheel", handleWheel);
+      svg.removeEventListener("gesturestart", prevent as EventListener);
+      svg.removeEventListener("gesturechange", prevent as EventListener);
+      svg.removeEventListener("gestureend", prevent as EventListener);
+    };
+  }, [plotW, plotH]);
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as Element).closest("[data-bubble]")) return;
     (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
     dragRef.current = { sx: e.clientX, sy: e.clientY, view };
+    setIsDragging(true);
   };
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!dragRef.current) return;
