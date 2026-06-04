@@ -28,6 +28,9 @@ import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { TagsProvider, useTags } from "@/contexts/TagsContext";
 import { CampaignBulkActionsBar } from "@/components/advertising/CampaignBulkActionsBar";
+import { useViewport } from "@/contexts/ViewportContext";
+import { MobileCard, MobileCardList } from "@/views/mobile/MobileCardList";
+import { useCurrency } from "@/contexts/CurrencyContext";
 type TabValue = "campaigns" | "ad-groups" | "product-ads" | "keywords" | "product-targeting" | "search-terms" | "page-type" | "platform";
 
 interface FilterRule {
@@ -194,6 +197,9 @@ function CampaignManagerInner() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { commitDrafts, discardDrafts } = useTags();
+  const { view } = useViewport();
+  const { formatCurrency } = useCurrency();
+  const isMobile = view === "mobile";
 
   const kpiItems = mockKPIData
     .filter((kpi) => selectedKPIs.includes(kpi.label))
@@ -253,6 +259,31 @@ function CampaignManagerInner() {
   };
 
   const renderTable = () => {
+    if (isMobile && activeTab === "campaigns") {
+      const filtered = campaigns.filter((c) =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      return (
+        <MobileCardList>
+          {filtered.map((c) => (
+            <MobileCard
+              key={c.id}
+              title={c.name}
+              meta={`${c.type} • ${c.biddingStrategy}`}
+              onTap={() => navigate(`/advertising/campaigns/${c.id}`)}
+              kpis={[
+                { label: "Spend", value: formatCurrency(c.spend) },
+                { label: "ROAS", value: `${c.roas.toFixed(2)}x` },
+                { label: "ACOS", value: `${c.acos.toFixed(1)}%` },
+              ]}
+            />
+          ))}
+          {filtered.length === 0 && (
+            <div className="text-center py-10 text-sm text-muted-foreground">No campaigns found</div>
+          )}
+        </MobileCardList>
+      );
+    }
     switch (activeTab) {
       case "campaigns": return <CampaignTable campaigns={campaigns} onActiveToggle={handleActiveToggle} onCampaignUpdate={handleCampaignUpdate} showTotalBudget={isWalmart} searchQuery={searchQuery} viewMode={viewMode} onRowClick={(id) => navigate(`/advertising/campaigns/${id}`)} hiddenColumns={hiddenColumns} showDeltas={showDeltas} selectedIds={selectedIds} onSelectionChange={setSelectedIds} />;
       case "ad-groups": return <AdGroupsTable searchQuery={searchQuery} showDeltas={showDeltas} />;
