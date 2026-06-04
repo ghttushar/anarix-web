@@ -155,18 +155,25 @@ function ScatterCanvas({
   const pxToX = (px: number) => view.xMin + ((px - PAD.l) / plotW) * (view.xMax - view.xMin);
   const pxToY = (py: number) => view.yMin + ((PAD.t + plotH - py) / plotH) * (view.yMax - view.yMin);
 
+  const MIN_X_SPAN = 4;   // %
+  const MIN_Y_SPAN = 2;   // $
+  const MAX_X_SPAN = (baseDomain.xMax - baseDomain.xMin) * 2;
+  const MAX_Y_SPAN = (baseDomain.yMax - baseDomain.yMin) * 2;
+  const applyZoom = (v: typeof view, factor: number, ax: number, ay: number) => {
+    let xMin = ax - (ax - v.xMin) / factor;
+    let xMax = ax + (v.xMax - ax) / factor;
+    let yMin = Math.max(0, ay - (ay - v.yMin) / factor);
+    let yMax = ay + (v.yMax - ay) / factor;
+    const xSpan = xMax - xMin;
+    const ySpan = yMax - yMin;
+    if (xSpan < MIN_X_SPAN || xSpan > MAX_X_SPAN) { xMin = v.xMin; xMax = v.xMax; }
+    if (ySpan < MIN_Y_SPAN || ySpan > MAX_Y_SPAN) { yMin = v.yMin; yMax = v.yMax; }
+    setView({ xMin, xMax, yMin, yMax });
+  };
   const zoom = (factor: number, cx?: number, cy?: number) => {
     const ax = cx == null ? (view.xMin + view.xMax) / 2 : pxToX(cx);
     const ay = cy == null ? (view.yMin + view.yMax) / 2 : pxToY(cy);
-    const xSpan = (view.xMax - view.xMin) / factor;
-    const ySpan = (view.yMax - view.yMin) / factor;
-    setView({
-      xMin: ax - (ax - view.xMin) / factor,
-      xMax: ax + (view.xMax - ax) / factor,
-      yMin: Math.max(0, ay - (ay - view.yMin) / factor),
-      yMax: ay + (view.yMax - ay) / factor,
-    });
-    void xSpan; void ySpan;
+    applyZoom(view, factor, ax, ay);
   };
 
   // Native non-passive wheel listener to actually preventDefault (React onWheel is passive)
