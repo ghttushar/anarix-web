@@ -133,9 +133,14 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const { view } = useViewport();
+  if (view === "mobile") {
+    return <MobileShell>{children}</MobileShell>;
+  }
   return (
     <SidebarProvider defaultOpen={true}>
       <LayoutInner>{children}</LayoutInner>
     </SidebarProvider>
   );
 }
+
