@@ -584,3 +584,46 @@ html[data-view="mobile"] [data-table-toolbar] {
   flex-wrap: wrap;
   row-gap: 0.5rem;
 }
+
+/* --- Mobile read-only companion: layout overrides --- */
+html[data-view="mobile"] {
+  --mobile-pad: 12px;
+}
+html[data-view="mobile"] body,
+html[data-view="mobile"] main {
+  overflow-x: hidden;
+}
+/* Stack KPI / card grids regardless of viewport width */
+html[data-view="mobile"] .grid.grid-cols-1.sm\:grid-cols-2,
+html[data-view="mobile"] .grid.sm\:grid-cols-2.lg\:grid-cols-4,
+html[data-view="mobile"] .grid.grid-cols-2.lg\:grid-cols-4,
+html[data-view="mobile"] .grid.lg\:grid-cols-3,
+html[data-view="mobile"] .grid.lg\:grid-cols-4,
+html[data-view="mobile"] .grid.md\:grid-cols-2,
+html[data-view="mobile"] .grid.md\:grid-cols-3,
+html[data-view="mobile"] .grid.md\:grid-cols-4 {
+  grid-template-columns: 1fr !important;
+}
+/* Tables get horizontal scroll; never break the page */
+html[data-view="mobile"] table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+/* Headings shrink */
+html[data-view="mobile"] h1 { font-size: 22px !important; line-height: 1.25 !important; }
+html[data-view="mobile"] h2 { font-size: 18px !important; line-height: 1.3 !important; }
+/* Taskbar wraps */
+html[data-view="mobile"] [data-app-taskbar] {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+  padding: 8px 12px !important;
+}
+/* Hide toolbar action labels (icons only), keep search visible */
+html[data-view="mobile"] [data-tb-actions] [data-tb-label] { display: none !important; }
+/* Page paddings */
+html[data-view="mobile"] [data-page-content],
+html[data-view="mobile"] main > div {
+  padding-left: var(--mobile-pad);
+  padding-right: var(--mobile-pad);
+}
