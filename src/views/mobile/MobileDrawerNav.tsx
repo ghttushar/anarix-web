@@ -117,7 +117,10 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
           >
             <Globe className="h-4 w-4 opacity-80" /> Switch to Desktop
           </button>
-          <div className="flex items-center gap-2 px-2 pt-2 pb-1">
+          <button
+            onClick={() => handleNav("/profile")}
+            className="w-full flex items-center gap-2 px-2 pt-2 pb-1 rounded-md hover:bg-muted text-left"
+          >
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-semibold">JD</AvatarFallback>
             </Avatar>
@@ -125,10 +128,10 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
               <div className="text-sm font-medium text-foreground truncate">John Doe</div>
               <div className="text-[11px] text-muted-foreground truncate">john@anarix.com</div>
             </div>
-            <button className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-muted text-destructive">
+            <span className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground">
               <LogOut className="h-4 w-4" />
-            </button>
-          </div>
+            </span>
+          </button>
         </div>
       </SheetContent>
     </Sheet>
