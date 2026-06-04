@@ -224,7 +224,7 @@ export function DataTableToolbar({
 
           {/* Upload Button */}
           {(showUpload || onUpload || onUploadClick) && (
-            <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={() => (onUploadClick ? onUploadClick() : setUploadOpen(true))} title={uploadTitle || "Upload files"}>
+            <Button data-write-action variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={() => (onUploadClick ? onUploadClick() : setUploadOpen(true))} title={uploadTitle || "Upload files"}>
               <Upload className="h-3.5 w-3.5" />
               <span data-tb-label>{uploadLabel || "Upload"}</span>
             </Button>
