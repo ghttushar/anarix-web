@@ -19,7 +19,7 @@ export function MobileBottomBar() {
 
   return (
     <nav
-      className="h-14 shrink-0 sticky bottom-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border/40 grid grid-cols-4"
+      className="h-14 shrink-0 sticky bottom-0 z-30 bg-background border-t border-border/40 grid grid-cols-4"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <button
