@@ -96,7 +96,7 @@ function ScatterCanvas({
         height: plotH,
         xDomain: [view.xMin, view.xMax],
         yDomain: [view.yMin, view.yMax],
-        cellPx: 28,
+        cellPx: 36,
       }),
     [data, plotW, plotH, view],
   );
@@ -171,9 +171,9 @@ function ScatterCanvas({
 
   const handleBubble = (c: ClusterItem) => {
     if (c.count > 1) {
-      // zoom into bbox with padding
-      const padX = Math.max(2, (c.bbox.x2 - c.bbox.x1) * 0.4);
-      const padY = Math.max(500, (c.bbox.y2 - c.bbox.y1) * 0.4);
+      // zoom into bbox with padding so cluster splits into individual dots
+      const padX = Math.max(4, (c.bbox.x2 - c.bbox.x1) * 0.6);
+      const padY = Math.max(6, (c.bbox.y2 - c.bbox.y1) * 0.6);
       setView({
         xMin: c.bbox.x1 - padX,
         xMax: c.bbox.x2 + padX,
@@ -183,9 +183,12 @@ function ScatterCanvas({
       return;
     }
     const p = c.points[0];
-    onPointToggle?.(p.id);
-    aan.setPendingPrompt(`Why is "${p.name}" (ID: ${p.id}) performing this way?`);
-    aan.openCopilot();
+    if (onPointDetail) onPointDetail(p.id);
+    else {
+      onPointToggle?.(p.id);
+      aan.setPendingPrompt(`Why is "${p.name}" (ID: ${p.id}) performing this way?`);
+      aan.openCopilot();
+    }
   };
 
   const askAan = (p: ScatterDataPoint) => {
