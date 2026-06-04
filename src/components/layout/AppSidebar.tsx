@@ -129,7 +129,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   // (Ask Aan navigates to /aan via react-router)
-  const { resolvedTheme, setTheme } = useTheme();
+  // theme toggle moved to Floating Action Island
   const { newFeaturesVisible } = useFeatureToggle();
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
   const [triggerRects, setTriggerRects] = useState<Record<string, DOMRect | null>>({});
