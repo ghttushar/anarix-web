@@ -386,6 +386,7 @@ function ScatterCanvas({
           x={hover.x}
           y={hover.y}
           onAskAan={askAan}
+          onViewDetails={onPointDetail ? (p) => onPointDetail(p.id) : undefined}
         />
       )}
     </div>
