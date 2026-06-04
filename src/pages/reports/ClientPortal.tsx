@@ -15,6 +15,8 @@ import { SortableTableHead, usePinning, sortData, getSortHandler } from "@/compo
 import { TablePagination } from "@/components/tables/TablePagination";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { CreateReportPanel } from "@/components/panels/CreateReportPanel";
+import { useViewport } from "@/contexts/ViewportContext";
+import { MobileCard, MobileCardList } from "@/views/mobile/MobileCardList";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-muted",
@@ -47,6 +49,9 @@ export default function ClientPortal() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeltas, setShowDeltas] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("performance");
+  const { view } = useViewport();
+  const isMobile = view === "mobile";
+
 
   const { setDataPanel } = useActivePanel();
 
@@ -156,6 +161,24 @@ export default function ClientPortal() {
           onSortChange={(f, d) => { setSortField(f); setSortDirection(d); }}
         />
 
+        {isMobile ? (
+          <MobileCardList>
+            {paginatedReports.map((report) => (
+              <MobileCard
+                key={report.id}
+                title={<span className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground shrink-0" />{report.name}</span>}
+                meta={`${report.clientName} • ${report.period}`}
+                kpis={[
+                  { label: "Status", value: <Badge variant="outline" className={statusStyles[report.status]}>{report.status}</Badge> },
+                  { label: "Sections", value: report.sections.length },
+                ]}
+              />
+            ))}
+            {paginatedReports.length === 0 && (
+              <div className="text-center py-10 text-sm text-muted-foreground">No reports found</div>
+            )}
+          </MobileCardList>
+        ) : (
         <div className="rounded-lg border border-border bg-card overflow-auto">
           <Table>
             <TableHeader>
@@ -222,6 +245,7 @@ export default function ClientPortal() {
             onPageSizeChange={setPageSize}
           />
         </div>
+        )}
 </div>
 
       <CreateReportPanel initialTemplate={selectedTemplate} onSubmit={handleReportSubmit} />
