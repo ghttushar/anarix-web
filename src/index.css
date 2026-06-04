@@ -730,6 +730,11 @@ html[data-view="mobile"] [data-inline-kpi-strip] > * {
   min-width: 0 !important;
   width: 100% !important;
 }
+html[data-view="mobile"] .grid.grid-cols-5,
+html[data-view="mobile"] .grid.xl\:grid-cols-5,
+html[data-view="mobile"] .grid.lg\:grid-cols-3.md\:grid-cols-2 {
+  grid-template-columns: 1fr !important;
+}
 
 /* 13. KPI grids: stack to 2-col max on mobile */
 html[data-view="mobile"] .grid.grid-cols-3:not(table .grid),
