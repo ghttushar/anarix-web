@@ -248,7 +248,7 @@ export function FloatingActionIsland() {
                 </Button>
                 );
               })}
-              {!isWebsite && (
+              {!isWebsite && !isTabletView && (
                 <Button
                   variant="ghost"
                   size="sm"
