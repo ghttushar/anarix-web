@@ -1,75 +1,68 @@
-## Scope
 
-Five targeted fixes across the desktop app. UI/presentation only — no business logic changes.
+## 1. Trends Scatter Chart — Figma-aligned rebuild
 
----
+Target: `src/components/profitability/ScatterPlotChart.tsx` (replace scatter renderer; keep bar/line views).
 
-### 1. Calendar / Date Range Picker design fix
+**Visual spec (from PDF pages 1, 4, 5):**
+- Clean white plot area, no quadrant fill tints, light dashed grid.
+- Axes drawn with arrow heads. X = `Profit Margin (%)` from −30 → 100, Y = `Ad Spend ($)` from 0 → 90 (driven by data extents but rendered with axis arrows + neutral muted ticks).
+- A single dashed vertical reference at x=0 (profitability break-even). No quadrant background tints.
+- Dots are color-tiered by margin (NOT by sales quadrant):
+  - red (`hsl(0 75% 60%)`) for margin < 0
+  - amber (`hsl(38 92% 55%)`) for 0 ≤ margin < 30
+  - green (`hsl(142 70% 42%)`) for margin ≥ 30
+- Right-rail vertical button stack (Expand, Zoom In, Zoom Out, Reset) — replaces current top toolbar zoom row to match Figma placement.
 
-File: `src/components/layout/AppTaskbar.tsx` (date range picker block) + reuse `src/components/ui/calendar.tsx`.
+**Clustering behavior (the key change):**
+- New helper `clusterPoints(points, viewport, cellPx)` that buckets points into a grid in *pixel space* given the current zoom viewBox. Cell size ~28px.
+- Buckets with `count >= 2` render as a single larger bubble at the cluster centroid with the count badge centered (`5`, `10`, etc. as shown). Cluster color = dominant tier of its members.
+- Buckets with `count === 1` render as the normal small dot.
+- On zoom-in the viewBox shrinks → cells map to smaller data ranges → clusters naturally split apart. On zoom-out they re-merge. Implemented by recomputing clusters from `zoomLevel` + chart width each render.
+- Bubble radius: 6px (single) → up to 22px (count ≥ 25), interpolated.
 
-Issues in screenshot:
-- Selected range "blob" overflows day cells creating a broken pill shape.
-- Range end cell (11) sits on a misaligned darker square.
-- Cancel/Apply footer feels detached.
+**Interaction:**
+- Hover (desktop) / tap (tablet) on a single point or cluster opens a floating tooltip card matching Figma p2/p6:
+  - Thumbnail placeholder, `Product Name`, `ID: … | SKU: …`
+  - Highlighted chips: `Profit Margin: 113%` and `Ad Sale: $8.43`
+  - `✨ Ask Aan` chip → calls `useAan().openCopilot({ prompt: "Why is <Product Name> performing this way?", context: { id, sku } })`
+  - For clusters: header shows `N products` and a mini list (first 5 names, then "+ N more").
+- Click on dot/cluster:
+  - Single point → opens Aan right-panel pre-filled with the product context (matches Figma p4/p5 Aan workflow). Existing `onPointToggle` still fires for table linkage.
+  - Cluster → zooms in to that cluster's bbox (×1.6).
 
-Changes:
-- Replace bespoke range styling with clean DayPicker range tokens: continuous `bg-primary/10` fill on middle days, solid `bg-primary text-primary-foreground` rounded squares for `day_range_start` / `day_range_end`, removing the oversized overlay rectangle.
-- Normalize `cell` / `day` to equal 36px squares, remove `aria-selected:bg-accent` leak that caused the offset block under day 11.
-- Tighten footer: single bordered bar, left-aligned range label in `text-muted-foreground`, right-aligned `Cancel` (secondary) + `Apply` (primary) with consistent 8px gap.
-- Keep two-month layout, but add 16px gap between months and a faint divider.
+**Zoom controls:**
+- `zoomLevel` + `panOffset {x,y}` state. Buttons: Expand (existing Dialog), Zoom In (×1.3), Zoom Out (÷1.3), Reset.
+- Wheel + pinch zoom on the SVG: scale around cursor / pinch midpoint. Pan via mouse drag when not in area-select mode.
 
-### 2. Right-side panels must stay fixed to viewport
+**Implementation note:** Replace Recharts ScatterChart for the scatter view with a hand-rolled SVG (`<svg viewBox=…>`) because Recharts can't cleanly do per-render pixel-space clustering, custom arrow axes, or smooth wheel/pinch zoom. Bar/line views keep Recharts.
 
-Affected: Profitability right rail (Sales Breakdown / Costs panel on Dashboard, Trends, P&L), Insights panel, Aan Copilot panel, Notifications panel, any workflow panel that currently lives in normal flow.
+## 2. Tablet parity — port last round's fixes
 
-Change pattern (presentation only):
-- Wrap each right panel root in `fixed top-[var(--taskbar-h)] right-0 h-[calc(100vh-var(--taskbar-h))] w-[var(--right-panel-w)]` with internal `<ScrollArea className="flex-1 min-h-0">`.
-- Add `pr-[var(--right-panel-w)]` to the page main container when the panel is visible so content doesn't slide under it.
-- Result: scrolling the main area never moves the panel; the panel scrolls independently only when the user scrolls inside it.
+Apply the calendar / sticky panel / opaque table / sidebar-cleanup work to tablet shell:
 
-Files to touch: `src/pages/profitability/Dashboard.tsx`, `Trends.tsx`, `ProfitLoss.tsx`, `Geographical.tsx`, `UnifiedPnL.tsx`, plus the panel components under `src/components/profitability/` and `src/components/insights/InsightsPanel.tsx`, `src/components/aan/AanCopilotPanel.tsx`, `src/components/notifications/NotificationsPanel.tsx`.
+- **Calendar:** tablet uses the same `src/components/ui/calendar.tsx` already, so it inherits the fix. Verify `src/views/tablet/components/TabletDateRangePicker.tsx` (if present) wraps the same primitive; if it uses its own calendar, swap to the shared one.
+- **Sticky right-side panels in tablet:** apply the same `sticky top-0 self-start h-screen z-10` wrapper inside tablet Trends / Dashboard / ProfitLoss / Geographical / UnifiedPnL screens under `src/views/tablet/pages/profitability/*`. Parent flex container becomes `flex flex-1 h-full min-h-0`.
+- **Opaque table backgrounds:** add the same `bg-card` / `bg-muted` sticky-column fix to tablet table primitive (`src/views/tablet/components/TabletDataTable.tsx`) and any tablet Profitability tables.
+- **Sidebar theme switcher:** confirm tablet sidebar (`src/views/tablet/components/TabletSidebar.tsx` or equivalent) does not render the theme toggle; remove if present. Theme stays only in the Floating Action Island.
 
-### 3. Remove theme switcher from left nav
+## 3. Floating Action Island — hide Screenshot on tablet
 
-File: `src/components/layout/AppSidebar.tsx` (and `MiniSidebar.tsx` if mirrored).
-- Delete the light/dark toggle row at the bottom of the sidebar.
-- Keep the existing toggle in the Floating Action Island (already functional). No new code.
+`src/features/creative/FloatingActionIsland.tsx`:
+- Gate the Screenshot `<Button>` block with `{!isWebsite && !isTabletView && (...)}`. Native OS screenshot on tablet/mobile covers it.
 
-### 4. Opaque table backgrounds (fix horizontal-scroll bleed-through)
+## 4. Memory updates
 
-Files: `src/components/profitability/*Table*.tsx`, `src/components/tables/*.tsx` (Campaign, AdGroups, KeywordTargeting, ProductAds, etc.), plus `src/index.css` rules for sticky columns.
+- Add `mem://features/profitability-module/scatter-chart-v2` — clustering + tier coloring + Aan tooltip + zoom rules.
+- Append to `mem://features/viewport-variants/phase-5-tablet-profitability` — recent calendar / sticky panel / opaque table fixes also apply to tablet.
+- Append to `mem://architecture/navigation-and-layout-system/floating-action-island-v6` — Screenshot button hidden in tablet view.
 
-Changes:
-- Replace any `bg-background/60`, `bg-card/80`, or implicit transparent on `<thead>`, sticky cells, expanded sub-rows, and Total rows with solid `bg-card` (light) / `bg-card` dark token.
-- Sticky first column: `bg-card` on default rows, `bg-muted` on hover, `bg-primary/5` on selected — never `*/opacity` variants.
-- Expanded detail row (screenshot shows "Premium Wireless Earbuds Pro Max" text overlapping the price column) → wrap in `bg-card` container with its own horizontal scroll synced to the parent; ensure expanded row's inner grid uses the same column widths so values don't overlap.
-- Update the sticky-column opacity memory to: "Sticky cells must be 100% opaque using `bg-card`; never use `/opacity` modifiers."
+## Files touched
 
-### 5. Trends — convert performance graph to clustered scatter (zoomable)
+- rewrite: `src/components/profitability/ScatterPlotChart.tsx`
+- new: `src/components/profitability/scatterCluster.ts` (pure clustering util + tier helper)
+- new: `src/components/profitability/ScatterTooltipCard.tsx`
+- edit: `src/features/creative/FloatingActionIsland.tsx`
+- edit (tablet parity): files under `src/views/tablet/...` for date picker, panels, tables, sidebar (exact paths confirmed during build by reading the tablet tree)
+- memory: 3 files under `mem://`
 
-File: `src/pages/profitability/Trends.tsx` + new `src/components/profitability/ClusteredScatterChart.tsx`.
-
-Design (matches attached reference):
-- Recharts `ScatterChart` with x = Profit Margin %, y = Ad Spend, bubble size = unit volume.
-- Color bins by performance tier using reserved data-viz tokens: red (loss), amber (warning), green (healthy). No brand colors on dots.
-- Cluster overlapping points: pre-process with a simple grid-bucket clustering at current zoom level; clusters render as larger circles with a count label ("5", "10"). On zoom-in, clusters split into individual points.
-- Zoom controls (right edge, vertical stack): Fit, Zoom-in, Zoom-out, Reset — implemented via custom `viewBox` state on x/y domains.
-- Hover tooltip card: product thumbnail, name, ID, SKU, "Ask Aan" chip, Profit Margin (green/red), Ad Sale value. Tooltip uses solid `bg-card` with `border-border`.
-- Quadrant guides: dashed lines at x=0 and y=median spend.
-- Animations limited to ≤200ms opacity/scale per project motion rules.
-
-Existing line/bar/area toggle in Trends header stays; scatter becomes a new option in the chart-type selector.
-
----
-
-## Out of scope
-- No backend, no data shape changes, no new routes.
-- Mobile/tablet variants untouched.
-
-## Verification
-- Calendar: open AppTaskbar date picker → range renders as clean filled band, Apply/Cancel aligned.
-- Right panel: scroll main page on `/profitability/dashboard` → panel stays pinned; scroll inside panel works.
-- Sidebar: theme toggle no longer present; Island toggle still flips theme.
-- Tables: horizontal scroll on Products table → sticky Product column fully opaque, no text bleed.
-- Trends: scatter renders clustered, zoom buttons split clusters, tooltip shows product card.
+No backend, no schema, no routing changes.
