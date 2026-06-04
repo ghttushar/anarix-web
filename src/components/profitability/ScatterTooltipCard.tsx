@@ -9,15 +9,19 @@ interface Props {
   y: number;
   onAskAan: (p: ScatterDataPoint) => void;
   onViewDetails?: (p: ScatterDataPoint) => void;
+  onHoverIn?: () => void;
+  onHoverOut?: () => void;
 }
 
-export function ScatterTooltipCard({ points, tier, x, y, onAskAan, onViewDetails }: Props) {
+export function ScatterTooltipCard({ points, tier, x, y, onAskAan, onViewDetails, onHoverIn, onHoverOut }: Props) {
   const isCluster = points.length > 1;
   const head = points[0];
   return (
     <div
       className="pointer-events-auto absolute z-30 w-[300px] rounded-lg border border-border bg-popover p-3 shadow-xl"
       style={{ left: x + 14, top: y - 8, transform: y > 220 ? "translateY(-100%)" : undefined }}
+      onMouseEnter={onHoverIn}
+      onMouseLeave={onHoverOut}
     >
       {isCluster ? (
         <>
