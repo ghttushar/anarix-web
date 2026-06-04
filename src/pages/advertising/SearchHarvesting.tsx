@@ -118,7 +118,7 @@ export default function SearchHarvesting() {
 
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-xs text-muted-foreground">From: {c.sourceCampaign}</span>
-                  <div className="flex gap-2">
+                  <div data-write-action className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => dismiss(c.id)}><X className="mr-1 h-3 w-3" />Dismiss</Button>
                     <Button size="sm" onClick={() => addAsKeyword(c.id)}><Plus className="mr-1 h-3 w-3" />Add Keyword</Button>
                   </div>
