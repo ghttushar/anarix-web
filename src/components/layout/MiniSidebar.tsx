@@ -1,10 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useAan } from "@/components/aan";
 import { SidebarHoverPopup } from "./SidebarHoverPopup";
@@ -15,7 +13,7 @@ export function MiniSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  const { resolvedTheme, setTheme } = useTheme();
+  
   const { newFeaturesVisible } = useFeatureToggle();
   const { closeAan } = useAan();
   
@@ -88,17 +86,6 @@ export function MiniSidebar() {
 
       {/* Footer */}
       <div className="shrink-0 border-t border-border/30 py-2 flex flex-col items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
-            >
-              {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">{resolvedTheme === "dark" ? "Light mode" : "Dark mode"}</TooltipContent>
-        </Tooltip>
         <Avatar className="h-7 w-7">
           <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">JD</AvatarFallback>
         </Avatar>

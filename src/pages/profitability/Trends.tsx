@@ -88,7 +88,8 @@ export default function ProfitabilityTrends() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="flex flex-1 h-full min-h-0 min-w-0">
+        <div className="flex-1 min-w-0 space-y-6">
         <PageHeader title="Profitability Trends" subtitle="Analyze product performance quadrants" />
 
         <AppTaskbar
@@ -248,7 +249,7 @@ export default function ProfitabilityTrends() {
                     );
                     return (
                       <TableRow key={product.id} className="hover:bg-muted/30 group">
-                        <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted transition-colors">
+                        <TableCell className="sticky left-0 z-10 bg-card group-hover:bg-muted transition-colors">
                           <div className="flex items-start gap-3">
                             <img
                               src={product.image}
@@ -319,17 +320,21 @@ export default function ProfitabilityTrends() {
             </div>
           </div>
         </div>
+        </div>
+
+        {detailProduct && (
+          <ProductDetailPanel
+            product={detailProduct}
+            isOpen={!!detailProduct}
+            onClose={() => setDetailProduct(null)}
+          />
+        )}
       </div>
 
       <ProductTrendsModal
         product={trendsProduct}
         isOpen={!!trendsProduct}
         onClose={() => setTrendsProduct(null)}
-      />
-      <ProductDetailPanel
-        product={detailProduct}
-        isOpen={!!detailProduct}
-        onClose={() => setDetailProduct(null)}
       />
     </AppLayout>
   );

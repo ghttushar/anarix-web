@@ -83,7 +83,7 @@ export function ProductDetailPanel({ product, isOpen, onClose }: ProductDetailPa
   return (
     <div
       data-app-panel="productDetail"
-      className="flex h-full w-[360px] shrink-0 flex-col border-l border-border bg-background"
+      className="sticky top-0 self-start h-screen max-h-screen flex w-[360px] shrink-0 flex-col border-l border-border bg-background z-10"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
