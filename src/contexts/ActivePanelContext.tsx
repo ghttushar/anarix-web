@@ -39,13 +39,21 @@ export function ActivePanelProvider({ children }: { children: ReactNode }) {
   const [dataPanel, setDataPanelState] = useState<DataPanelType>("none");
   const [aiPanel, setAiPanelState] = useState<AiPanelType>("none");
 
+  // Mobile rule: only one panel (data OR ai) may be open at a time.
+  const isMobile = () =>
+    typeof document !== "undefined" &&
+    document.documentElement.getAttribute("data-view") === "mobile";
+
   const setDataPanel = useCallback((panel: DataPanelType) => {
+    if (isMobile() && panel !== "none") setAiPanelState("none");
     setDataPanelState(panel);
   }, []);
 
   const setAiPanel = useCallback((panel: AiPanelType) => {
+    if (isMobile() && panel !== "none") setDataPanelState("none");
     setAiPanelState(panel);
   }, []);
+
 
   const closeDataPanel = useCallback(() => {
     setDataPanelState("none");
