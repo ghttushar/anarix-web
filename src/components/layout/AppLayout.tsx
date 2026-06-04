@@ -54,12 +54,22 @@ function LayoutInner({ children }: { children: ReactNode }) {
     prevHasPanelRef.current = hasAnyPanel;
   }, [hasAnyPanel, open, setOpen]);
 
-  // Tablet portrait: auto-collapse sidebar to icon rail for usable width.
+  // Tablet portrait: auto-collapse sidebar to icon rail once on first entry
+  // into portrait. After that, user toggles win — we don't clobber them.
+  const portraitAppliedRef = useRef(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (document.documentElement.getAttribute("data-view") !== "tablet") return;
     const mq = window.matchMedia("(orientation: portrait)");
-    const apply = () => setOpen(!mq.matches);
+    const apply = () => {
+      if (mq.matches && !portraitAppliedRef.current) {
+        portraitAppliedRef.current = true;
+        setOpen(false);
+      } else if (!mq.matches) {
+        // Reset so re-entering portrait collapses again.
+        portraitAppliedRef.current = false;
+      }
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);

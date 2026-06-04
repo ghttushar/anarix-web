@@ -1,171 +1,74 @@
-# Power UX: Shortcuts, Gestures, Tutorial — Two-Phase Delivery
+# Tablet Portrait — Sidebar Fix, Toolbar Responsiveness, UX Pass & 20 Ideas
 
-Goal: turn keyboard shortcuts editable from inside the app, restore the Floating Action Island toggle, add system-wide swipe + multi-finger gestures with user-configurable mappings, and ship a full onboarding tutorial that fires after login.
+## 1. Sidebar collapse/expand not working (Portrait)
 
----
+**Root cause:** `useIsMobile` in `src/hooks/use-mobile.tsx` flips at `<768px`. Tablet portrait widths (≤820 incl. the 777-px preview) fall in or near that band, so shadcn's `Sidebar` switches into **Sheet (offcanvas)** mode. Our `AppSidebar` still tries to render its custom icon-rail + `PanelLeft` toggle, but the toggle calls `toggleSidebar`, which in mobile mode mutates `openMobile` (Sheet) — not `open` (rail). Net effect: rail stays frozen, expand button does nothing.
 
-## Phase 1 — Shortcuts editor, Island toggle, Gestures
+Additionally, `LayoutInner` auto-forces `setOpen(false)` on every `(orientation: portrait)` match, so even a successful expand can be re-collapsed by the orientation effect when it re-runs.
 
-### 1.1 Keyboard shortcut icon → functional editor
+**Fix:**
+- Force the shadcn `Sidebar` out of mobile/Sheet behavior on tablet portrait by switching the `useIsMobile` consumer used by `SidebarProvider` to respect `data-view="tablet"` (treat tablet as desktop-rail, never Sheet). Cleanest: add an internal `useIsMobileForSidebar` that returns `false` when `document.documentElement.dataset.view === "tablet"`.
+- Make `LayoutInner`'s portrait auto-collapse fire **once on first portrait entry only** (guard with a ref), so user toggles aren't clobbered.
+- Ensure `AppSidebar`'s collapsed-rail expand button is reachable in portrait: keep `AnarixLogo` symbol button as the expand trigger (already wired) and add a small floating `PanelLeft` chip pinned to the rail's top-right edge so the affordance is obvious on touch.
+- When expanding in portrait, the sidebar should overlay the content (absolute-positioned) with a backdrop, not push, to preserve table width. Use `data-view=tablet][data-orientation=portrait]` CSS to switch `Sidebar` from `relative` → `absolute inset-y-0 left-0 z-40` while expanded; tap backdrop or nav-link to collapse.
 
-- The `⌘K` chip in `FloatingActionIsland.tsx` becomes a real button.
-- Click opens a new component `KeyboardShortcutsDialog` (Dialog from shadcn) that:
-  - Lists every shortcut grouped by category (reads the same source as Preferences).
-  - Inline rebind: click row → "Press keys…" → captures next keystroke → saves to `localStorage` under `anarix-custom-shortcuts` (same key Preferences already uses, so the two views stay in sync).
-  - Reset per-category and reset-all buttons.
-  - Footer link: "Open in Preferences" → navigates to `/settings/appearance#shortcuts`.
-- Refactor: extract the shortcut list + capture logic from `Preferences.tsx` into `src/features/shortcuts/shortcutRegistry.ts` + `src/features/shortcuts/ShortcutEditor.tsx` so both Preferences and the new dialog render the same editor.
-- `KeyboardNavigationProvider` already loads handlers; add a `useEffect` that re-reads `anarix-custom-shortcuts` on `storage` event and rebinds.
+## 2. Table toolbar not responsive (Portrait)
 
-### 1.2 Floating Action Island toggle restored in Preferences
+The toolbar row (`Products | Orders | Search | Upload Cogs | Delta | Group By | Filter | Columns | Export`) overflows horizontally because every control is `shrink-0` in a single flex row.
 
-- New section "Interface" → "Floating Action Island" with a `Switch` bound to `useVisualEffects().effects.floatingIsland`.
-- Description explains the fallback: "When off, all island actions (Insights, Notifications, Aan, Screenshot, Refresh, Theme, Scroll-to-top) move into the right side of the App Taskbar."
-- AppTaskbar already has an `islandOff` branch that renders these actions; audit and ensure parity:
-  - Add missing actions (Screenshot, Refresh, Scroll-to-top, Theme toggle, Calendar/CalendarPlus, Ask Aan FAB).
-  - Group into a single overflow `⋯` dropdown when row width is constrained.
+**Fix (in the shared Products/Orders table toolbar component used by Profitability Dashboard):**
+- Wrap the toolbar in a responsive 2-zone layout: **Primary zone** (mode toggle + search, always visible, search becomes `flex-1`) and **Secondary zone** (Upload, Delta, Group By, Filter, Columns, Export).
+- In portrait (`html[data-view=tablet][data-orientation=portrait]`), collapse the Secondary zone into a single **"Tools" overflow `DropdownMenu`** with a `SlidersHorizontal` icon. Each action becomes a menu item; toggle states (Delta active, filters count) show as trailing badges.
+- Search input gets `min-w-0 flex-1` and an icon-only collapse at `<360px` toolbar width (button expands to a Popover with the input).
+- Mode toggle (Products/Orders) stays as a segmented control but switches to icon-only labels in portrait.
 
-### 1.3 Hard swipe = back/forward navigation
+## 3. Tablet Portrait UX Optimization Pass
 
-- New context: `src/contexts/GestureContext.tsx` mounting a single window-level pointer/touch listener.
-- Hard swipe rules (touch + trackpad):
-  - Two-finger horizontal swipe gesture on touchpad → uses `wheel` event with `deltaX` accumulation; if `|deltaX| > threshold` (default 120px) over <250ms → fire `history.back()` (right→left swipe) / `history.forward()` (left→right).
-  - On touchscreen: track single-finger pointer events with `pointerType==="touch"`; trigger only when swipe starts within 24px of left/right viewport edge (iOS-style edge swipe) and `velocity > 0.5 px/ms`.
-  - Cooldown 600ms to prevent double-firing.
-- Visual feedback: tiny edge ribbon ("← Back" / "Forward →") animated in via framer-motion `slide-in-right` on trigger; auto-hides 400ms.
-- Respect input fields: ignore when `event.target` is inside `input|textarea|[contenteditable]`.
+Scoped, deterministic improvements (no creative reinterpretation):
 
-### 1.4 Two/three-finger gestures
+1. **KPI cards** — current 2-col period grid in portrait is fine; tighten internal padding from `p-4` → `p-3`, reduce label size to 11px, keep numbers 14px bold black. Show only 4 of 6 metrics by default; "View More" expands inline.
+2. **Forecast card** — already full width; add horizontal scroll-snap for the metric chip row to handle overflow cleanly.
+3. **Performance Trend chart** — reduce y-axis label density (4 ticks max), drop the legend-row metric chips below into a horizontally scrollable strip with snap.
+4. **Date picker + Run button** — stack vertically in portrait: date pill full-width row 1, Run button full-width row 2. Marketplace badge moves into AppTaskbar overflow.
+5. **Breadcrumb** — truncate middle segments with ellipsis; only show last 2 levels in portrait.
+6. **Right-side panels** (Insights/Notifications/Aan/ProductDetail/PeriodBreakdown) — already drawer-style in portrait per existing memory; verify backdrop tap-to-close works and width = `min(420px, 92vw)`.
+7. **Floating Action Island** — shrink to icon-only pill in portrait, hide "Ask Aan" text label; ensure it doesn't overlap the table pagination row (bottom inset += 16px in portrait).
+8. **Table body** — enable horizontal scroll with sticky first column (already designed); add an "edge-hint" gradient on the right edge to signal scrollable content.
+9. **Pagination** — collapse "1-5 of 5" + page-size + arrows into a single compact group, page-size becomes `25` chip with popover.
 
-- Detection via `pointercancel/pointermove` tracking concurrent active pointers, OR for touchpads: `wheel` with `e.ctrlKey===false` and known multi-touch heuristics (browsers expose these only on touchscreens; on trackpads we fall back to keyboard chord equivalents shown in the mapper).
-- Default mappings (all rebindable):
-  - 2-finger swipe up → Scroll to top
-  - 2-finger swipe down → Open Notifications panel
-  - 2-finger swipe left → History back
-  - 2-finger swipe right → History forward
-  - 3-finger swipe up → Toggle Aan Copilot
-  - 3-finger swipe down → Toggle Insights panel
-  - 3-finger swipe left → Previous tab (e.g. Profitability → Trends)
-  - 3-finger swipe right → Next tab
-- Stored under `anarix-gesture-bindings` in localStorage.
+All changes gated behind `html[data-view="tablet"][data-orientation="portrait"]` — desktop and landscape untouched.
 
-### 1.5 Preferences → new "Gestures" section
+## 4. 20 Tablet-View Ideas (for future selection)
 
-- Visual help card: 8 illustrated tiles (2F↑↓←→, 3F↑↓←→) using SVG hand glyphs + arrows.
-- Each tile shows: gesture diagram, current binding (dropdown of available actions), reset link.
-- Live "Test gesture" panel at bottom that detects gestures and shows the name/binding it matched (read-only feedback).
-- "Enable gestures" master switch (default ON).
+1. **Split-view multitasking** — pin a secondary page (e.g. Campaign Manager) to a right rail while browsing Dashboard.
+2. **Pull-to-refresh** on tables to re-run the current query.
+3. **Long-press row → contextual radial menu** (Edit, Compare, Add to Watchlist, Ask Aan).
+4. **Two-finger pinch on charts** to zoom date range; ties into existing GestureContext.
+5. **Stylus annotations** layer over charts/screenshots that auto-save to the Aan thread.
+6. **Picture-in-picture KPI** — drag a KPI card to detach as a floating, always-on-top mini widget.
+7. **Edge-swipe drawer** for filters (left edge) and Aan (right edge) — discoverable, dismissable.
+8. **Bottom action bar** in portrait that mirrors the Floating Island for thumb-reach.
+9. **Tabbed workspaces** — keep multiple table states (filters/dates) as tabs at the bottom.
+10. **Snap-to-grid dashboard re-layout** specifically tuned for 1024×768 / 820×1180.
+11. **Live comparison mode** — drag one period card onto another to spawn a diff panel.
+12. **Pen-mode for Aan** — handwritten prompts converted to text with stylus.
+13. **Offline read-only cache** of last-viewed reports for travel.
+14. **Voice query bar** — push-to-talk on the Aan FAB.
+15. **Tablet-native onboarding** — guided cards using device tilt/gesture detection.
+16. **Magnifier loupe** on dense table cells via long-press.
+17. **Apple Pencil hover preview** for KPI deltas and chart points.
+18. **Quick-glance lockscreen widget** spec (PWA) for ROAS/TACoS today.
+19. **Drag-to-export** — drag a chart/table to the dock to generate a snapshot in `/mnt/documents`.
+20. **Adaptive density auto-switch** — detect portrait → Compact density automatically with a one-tap revert toast.
 
-### 1.6 Files added/edited (Phase 1)
+## Files to touch (Phase 1 implementation)
 
-```
-ADD: src/contexts/GestureContext.tsx
-ADD: src/features/shortcuts/shortcutRegistry.ts
-ADD: src/features/shortcuts/ShortcutEditor.tsx
-ADD: src/components/shortcuts/KeyboardShortcutsDialog.tsx
-ADD: src/components/gestures/GestureMapper.tsx
-ADD: src/components/gestures/GestureFeedbackToast.tsx
-EDIT: src/App.tsx (mount GestureProvider inside Router)
-EDIT: src/features/creative/FloatingActionIsland.tsx (clickable kbd chip)
-EDIT: src/features/creative/KeyboardNavigation.tsx (re-read storage on change)
-EDIT: src/components/layout/AppTaskbar.tsx (island-off action parity + overflow menu)
-EDIT: src/pages/settings/Preferences.tsx (Island toggle + Gestures section + refactor shortcut UI to ShortcutEditor)
-```
+- `src/hooks/use-mobile.tsx` — add tablet-aware variant
+- `src/components/ui/sidebar.tsx` — consume tablet-aware mobile hook
+- `src/components/layout/AppLayout.tsx` — guard portrait auto-collapse with first-run ref; add overlay mode CSS in portrait
+- `src/components/layout/AppSidebar.tsx` — touch-friendly expand affordance
+- `src/components/profitability/*Toolbar*` (the Products/Orders toolbar component) — primary/secondary zone refactor + overflow menu
+- `src/index.css` — portrait-scoped overrides for KPI padding, chart, FAB, pagination
+- `src/features/creative/FloatingActionIsland.tsx` — portrait icon-only mode
 
----
-
-## Phase 2 — Onboarding Tutorial
-
-### 2.1 Tutorial toggle in Preferences
-
-- New section "Tutorial" with:
-  - `Switch`: "Show product tutorial after sign-in"
-  - Button: "Replay tutorial now" (forces it to start on next route load)
-  - Status line: "Last completed: <date>" or "Not completed yet"
-- State stored in `localStorage` key `anarix-tutorial`: `{ enabled: bool, completed: bool, lastSeen: ISO, currentStep: number }`.
-
-### 2.2 Trigger after sign-in
-
-- In `Login.tsx` success handler (or auth state listener), if `anarix-tutorial.enabled && !completed` → on next route after `/login`, mount `<OnboardingTutorial />`.
-- `OnboardingTutorial` is a portal-mounted overlay rendered from `AppLayout` (so it sits above all panels).
-
-### 2.3 Tutorial UX
-
-- 12-step guided tour with these targets (each step has a stable `data-tour-id` attribute we add to existing elements — no DOM moves):
-  1. Anarix sidebar logo (intro card, no spotlight)
-  2. Marketplace selector
-  3. Sidebar nav groups (Profitability, Advertising, etc.)
-  4. Ask Aan button
-  5. Main content / KPI cards
-  6. AppTaskbar date range
-  7. AppTaskbar marketplace + sync chip
-  8. Table toolbar (filter + columns)
-  9. Insights panel button
-  10. Notifications bell
-  11. Floating Action Island
-  12. Keyboard shortcuts chip → opens shortcut editor as the finale
-- Each step renders:
-  - A fixed full-viewport `<svg>` mask with a transparent hole cut around the target's bounding rect (compute via `getBoundingClientRect` + `ResizeObserver`).
-  - A tooltip card anchored to the target's nearest edge, framer-motion `fade-in + scale-in`, contains:
-    - Step counter "3 / 12"
-    - Title (Satoshi Variable, 18px)
-    - One-paragraph description (Noto Sans, 14px)
-    - Buttons: "Back" (ghost), "Skip tour" (link), "Next" (primary) → "Finish" on last step.
-  - Soft spotlight halo: 24px radius blur ring around the hole using `box-shadow: 0 0 0 9999px hsl(var(--foreground)/0.55), 0 0 64px hsl(var(--primary)/0.4)`.
-  - Auto-scrolls target into view on step change.
-  - Auto-opens dependent panels for steps 9, 10, 11 (e.g. clicks the Insights button programmatically so the spotlight has something to point at).
-- Keyboard: `→`/`Enter` next, `←` back, `Esc` skip.
-- Motion: respects `prefers-reduced-motion` — switches to instant transitions.
-
-### 2.4 Tutorial state machine
-
-- Implemented in `src/features/tutorial/TutorialContext.tsx`:
-  - `start()`, `next()`, `prev()`, `skip()`, `complete()`, `restart()`.
-  - Persists on every step change so a refresh resumes mid-tour.
-- Anti-collision rules:
-  - Suppress tutorial during `trial==="syncing"` or `trial==="expired"`.
-  - Hide Floating Action Island bell animations and notification toasts while active.
-  - Lock background scroll on `<body>` (`overflow: hidden`).
-
-### 2.5 Visual polish
-
-- Tooltip card uses `bg-card` with 1px primary-tinted border, 16px padding, 12px radius, subtle drop shadow (no backdrop blur per the design memory).
-- Progress bar: thin 2px line under the card filling to current/total, periwinkle gradient.
-- Step transitions: 220ms `cubic-bezier(0.2,0,0,1)` (matches design system motion spec).
-- "Finish" step shows a celebratory mini-confetti burst (CSS only, 1s pass) + brand sentence.
-
-### 2.6 Files added/edited (Phase 2)
-
-```
-ADD: src/features/tutorial/TutorialContext.tsx
-ADD: src/features/tutorial/OnboardingTutorial.tsx
-ADD: src/features/tutorial/TutorialStep.tsx
-ADD: src/features/tutorial/TutorialMask.tsx
-ADD: src/features/tutorial/steps.ts (step definitions: id, target selector, title, body, side, panelToOpen)
-EDIT: src/components/layout/AppLayout.tsx (mount <OnboardingTutorial /> portal)
-EDIT: src/components/layout/AppSidebar.tsx, AppTaskbar.tsx, FloatingActionIsland.tsx, MarketplaceSelector.tsx, ProfitabilityDashboard hero, InsightsPanel trigger, Notifications trigger (add data-tour-id="..." attributes)
-EDIT: src/pages/auth/Login.tsx (trigger tutorial on successful sign-in)
-EDIT: src/pages/settings/Preferences.tsx (Tutorial section)
-EDIT: src/App.tsx (wrap with TutorialProvider)
-```
-
----
-
-## 3. Verification
-
-- Phase 1:
-  - Click `⌘K` chip on island → editor opens; rebind "Open command palette" to `⌘ ⇧ K` → reload → new binding works.
-  - Toggle Floating Action Island off in Preferences → island disappears → bell/insights/Aan all reachable from taskbar.
-  - Two-finger swipe-left on a trackpad (or simulated wheel deltaX=400 within 200ms) → previous page in history; ribbon shows.
-  - Open Gestures section → change "2F↑" to "Refresh"; perform gesture; toast confirms binding fired.
-- Phase 2:
-  - Sign out / sign in with tutorial enabled → tour starts on first analytics page.
-  - Skip → state marked complete; sign-in again won't relaunch unless "Replay tutorial now" pressed.
-  - Reduced-motion OS setting → animations instant, content identical.
-
-## 4. Out of scope
-
-- Backend persistence (everything stays in `localStorage` for this build).
-- Translating shortcut sets per OS beyond `⌘`/`Ctrl` swap already done.
-- Mobile-view variants of the tutorial (tour is shipped for desktop + tablet; mobile placeholder unchanged).
-- New analytics features — this work is shell + onboarding only.
+Out of scope: new business logic, desktop changes, ideas 1-20 (catalogued for later selection).

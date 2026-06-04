@@ -188,45 +188,45 @@ export function DataTableToolbar({
   );
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-table-toolbar>
       {/* Main Toolbar Row */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Left Side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Edit Mode Toggle — first position */}
           {showViewToggle && onViewModeChange && (
             <Button
               variant="ghost"
               size="sm"
-              className={cn("h-8 gap-1 text-xs cursor-pointer", viewMode === "edit" && "bg-destructive/10 text-destructive")}
+              className={cn("h-8 gap-1 text-xs cursor-pointer shrink-0", viewMode === "edit" && "bg-destructive/10 text-destructive")}
               onClick={handleEditToggle}
               title={viewMode === "edit" ? "Save & exit edit mode" : "Switch to Edit mode"}
             >
               <Pencil className="h-3.5 w-3.5" />
-              Edit
+              <span data-tb-label>Edit</span>
             </Button>
           )}
           {leftContent}
-          <div className="relative">
+          <div className="relative min-w-0 flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 w-56 pl-8 text-sm"
+              className="h-8 w-full pl-8 text-sm"
             />
           </div>
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap" data-tb-actions>
           {rightContent}
 
           {/* Upload Button */}
           {(showUpload || onUpload || onUploadClick) && (
             <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={() => (onUploadClick ? onUploadClick() : setUploadOpen(true))} title={uploadTitle || "Upload files"}>
               <Upload className="h-3.5 w-3.5" />
-              {uploadLabel || "Upload"}
+              <span data-tb-label>{uploadLabel || "Upload"}</span>
             </Button>
           )}
 
@@ -240,7 +240,7 @@ export function DataTableToolbar({
               title={showDeltas ? "Hide deltas" : "Show deltas"}
             >
               <TrendingUp className="h-3.5 w-3.5" />
-              Delta
+              <span data-tb-label>Delta</span>
             </Button>
           )}
 
@@ -261,7 +261,7 @@ export function DataTableToolbar({
                   ) : (
                     <ArrowDown className="h-3.5 w-3.5" />
                   )}
-                  Group By
+                  <span data-tb-label>Group By</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-[220px] p-2 space-y-0.5">
@@ -296,7 +296,7 @@ export function DataTableToolbar({
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={handleOpenFilter} title="Add or manage filters">
                   <Filter className="h-3.5 w-3.5" />
-                  Filter
+                  <span data-tb-label>Filter</span>
                   {activeFilters.length > 0 && (
                     <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
                       {activeFilters.length}
@@ -304,7 +304,7 @@ export function DataTableToolbar({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-[520px] p-3 space-y-2">
+              <PopoverContent align="end" className="w-[520px] max-w-[92vw] p-3 space-y-2">
                 <p className="text-xs font-medium text-foreground">Filters</p>
                 <div className="space-y-1.5">
                   {draftFilters.map((rule, idx) => (
@@ -353,7 +353,7 @@ export function DataTableToolbar({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" title="Toggle column visibility">
                   <Columns className="h-3.5 w-3.5" />
-                  Columns
+                  <span data-tb-label>Columns</span>
                   {pinnedColumns.length > 0 && (
                     <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[10px] text-primary">
                       {pinnedColumns.length}
@@ -419,7 +419,7 @@ export function DataTableToolbar({
           {onDownload && (
             <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={onDownload} title="Export data">
               <Download className="h-3.5 w-3.5" />
-              Export
+              <span data-tb-label>Export</span>
             </Button>
           )}
 

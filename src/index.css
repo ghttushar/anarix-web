@@ -552,3 +552,22 @@ html[data-view="tablet"][data-orientation="portrait"] [data-table-pagination] {
   flex-wrap: wrap;
   row-gap: 0.5rem;
 }
+
+/* --- 11. Portrait table toolbar: hide button labels, keep icons only --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-tb-actions] [data-tb-label] {
+  display: none;
+}
+html[data-view="tablet"][data-orientation="portrait"] [data-tb-actions] button {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* --- 12. Portrait sidebar: when expanded, overlay content instead of
+       pushing it (so tables don't reflow), with a soft backdrop --- */
+html[data-view="tablet"][data-orientation="portrait"] [data-sidebar="sidebar"][data-state="expanded"] {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 50;
+  box-shadow: 0 0 0 9999px hsl(var(--foreground) / 0.25);
+}
