@@ -571,3 +571,16 @@ html[data-view="tablet"][data-orientation="portrait"] [data-sidebar="sidebar"][d
   z-index: 50;
   box-shadow: 0 0 0 9999px hsl(var(--foreground) / 0.25);
 }
+
+/* --- Mobile: hide write/edit affordances on read-only companion view --- */
+html[data-view="mobile"] [data-write-action],
+html[data-view="mobile"] [data-tb-actions] [data-tb-label] {
+  display: none !important;
+}
+html[data-view="mobile"] main {
+  padding: 0 !important;
+}
+html[data-view="mobile"] [data-table-toolbar] {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
