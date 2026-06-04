@@ -228,16 +228,20 @@ function ScatterCanvas({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full" style={{ height }}>
+    <div
+      ref={containerRef}
+      className="relative w-full"
+      style={{ height, overscrollBehavior: "contain", touchAction: "none" }}
+    >
       <svg
+        ref={svgRef}
         width={width}
         height={height}
-        onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={() => { setHover(null); }}
-        style={{ cursor: dragRef.current ? "grabbing" : "grab", touchAction: "none" }}
+        style={{ cursor: isDragging ? "grabbing" : "crosshair", touchAction: "none", display: "block" }}
       >
         <defs>
           <marker id="arrow-x" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
