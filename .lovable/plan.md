@@ -1,139 +1,88 @@
 
-# Mobile View — Read-Only Companion App
+# Mobile Redesign — 3 Phases
 
-Goal: ship a `/mobile/*` variant that lets users *view* their accounts on a phone. Same features, same data, same modules as desktop — no editing, uploading, connecting accounts, rule creation, or destructive actions. Layouts may shuffle (drawer nav, full-screen detail panels), but no module is dropped or invented.
-
-This plan has two parts:
-1. **Flow map** — every existing module, what it does, what it links to, and what its read-only mobile equivalent looks like.
-2. **Implementation phases** — how the mobile variant gets built, layered on top of the existing `data-view="mobile"` plumbing already in `ViewportContext`.
+Rebuild the mobile experience as a purpose-built mobile app (not a squeezed desktop). All work scoped to `view === "mobile"` and the mobile shell. No desktop changes.
 
 ---
 
-## Part 1 — Module Flow Map (Current App → Mobile Read-Only)
+## Phase 1 — Shell, Navigation & Aan
 
-### A. Shell / Global Navigation
-Current desktop: persistent left `AppSidebar` (groups of NavLinks), `AppTaskbar` (breadcrumb, date range, marketplace, filters), `FloatingActionIsland` (theme/insights/notifications/Aan), three right-side panels (`InsightsPanel`, `NotificationsPanel`, `AanCopilotPanel`), and several config right-panels (`CreateCampaignPanel`, `CreateSchedulePanel`, `CreateReportPanel`, product detail, period breakdown).
+**Goal:** fix global chrome, drawer, Aan, theme placement, marketplace.
 
-Mobile mapping:
-- Top app bar (56px): hamburger (left), Anarix logo, marketplace chip, bell + Aan icon (right).
-- Hamburger opens **Drawer Nav** — same `navigationGroups` from `AppSidebar.tsx`, collapsible groups, marketplace selector, profile menu (view-only items).
-- `FloatingActionIsland` collapses into the top bar + a bottom mini-bar (Insights, Notifications, Aan, Theme).
-- All right-side panels become **full-screen sheets** that slide over the main content. **One panel at a time** (enforced by extending `ActivePanelContext` — when a panel opens, any other panel closes).
-- Config panels (`CreateCampaign`, `CreateSchedule`, `CreateReport`, `CampaignSettings`, `AdGroupSettings`, `AddProductAd`) are **hidden on mobile** (read-only app).
-- Date range + filter controls move into a "Filters" sheet triggered from the top bar.
+1. **Bottom bar redesign**
+   - Remove Insights, Alerts, and Theme toggle from `MobileBottomBar`.
+   - New bottom bar: `Home · Aan · Notifications` (3 slots, 56px, no blur, flat bg).
+2. **Top bar redesign**
+   - Left: hamburger. Center: Anarix logo. Right: Marketplace pill (currently missing) + bell.
+   - Marketplace pill opens a bottom sheet listing marketplaces (Amazon/Walmart/Shopify/TikTok) with the current connector active state.
+3. **Hamburger drawer (`MobileDrawerNav`)**
+   - Add theme switcher (Light/Dark/System segmented control) and currency selector under the profile chip footer — matches earlier behavior referenced in screenshot.
+   - Keep nav tree as-is; tighten spacing, 44px touch targets.
+4. **Aan on mobile = full-screen only**
+   - Remove `AanCopilotPanel` from `MobileShell` overlay branch.
+   - Tapping Aan (bottom bar / top bar / FAB) always navigates to `/aan`.
+   - Redesign `/aan` mobile layout inspired by ChatGPT mobile: sticky top bar (back, model selector, new chat), full-height conversation, sticky input dock with attach + send, slide-in left drawer for chat history/Reports/Audit/Creative/Agent (replaces current overlapping sidebar shown in screenshot 2).
+5. **Horizontal scroll lockdown**
+   - Add `overflow-x: hidden` on `html[data-view="mobile"] body, main`.
+   - Audit `MobileShell` + page wrappers for `min-w-0` on every flex child.
 
-### B. Profitability (5 screens)
-- **Dashboard** (`/profitability/dashboard`) — KPI cards row + summary. Mobile: vertical stack of KPI cards (1-col), swipeable period tabs.
-- **Trends** (`/profitability/trends`) — Scatter cluster chart + product table. Mobile: stacked — scatter chart fills width (pinch-zoom only inside chart, tap a dot opens product detail sheet), product table becomes vertical card list with pagination.
-- **Profit & Loss** (`/profitability/pnl`) — Weekly P&L matrix. Mobile: sticky parameter column, horizontal scroll for weeks, expand/collapse rows.
-- **Geographical** (`/profitability/geo`) — Region tree + table. Mobile: tap region to drill in (push navigation).
-- **Unified P&L** (`/profitability/unified-pnl`) — Same horizontal-scroll matrix pattern as P&L.
-
-### C. Advertising (12 screens)
-- Campaign Manager → Campaign Detail → Ad Group Detail → Product Ad Detail (4-level drill). Mobile: each level is a stacked route with back arrow; tables become card lists; edit/inline-edit affordances stripped.
-- Impact Analysis → Impact Campaign → Impact Ad Group (same pattern).
-- Targeting Actions, Budget Pacing, Search Harvesting, Anomaly Alerts, Creative Analyzer — list/table screens → mobile card lists.
-- Rule Agents, Applied Rules — view-only list. Rule **Creation/Edit routes are removed** on mobile.
-
-### D. Catalog
-- Products, Inventory & Ads — table → mobile card list with thumbnail, ASIN, KPI strip.
-
-### E. Business Intelligence
-- Brand SOV (chart + table), Keyword Tracker, Keyword SOV, Product SOV, Competitor Pricing — chart on top (responsive), table → card list.
-
-### F. AMC (6 screens)
-- Queries, Executed Queries, Schedules, Audiences, Created Audiences, Instances — all become read-only lists. "Run query" / "Create schedule" hidden.
-
-### G. Day Parting
-- Hourly heatmap + history table. Mobile: heatmap fits width (horizontal scroll for hours), legend below, history table → card list.
-
-### H. Reports
-- Automated Reports (`/reports/client-portal`) — list + preview. Mobile: list view → tap to open preview sheet. "Create report" hidden.
-
-### I. Aan (AI workspace)
-- `/aan` full-screen workspace + side panel. Mobile: full-screen chat with conversation, attachment bar hidden (read-only), `AskAanTooltip` text-selection trigger disabled.
-
-### J. Settings
-- Preferences, Accounts, Integrations, Team, System, Design System, Component Library, Billing.
-- Mobile shows **Preferences (theme/density/visibility toggles only)** and a read-only **Profile**. Accounts/Integrations/Billing/Team/Connect flows are hidden (writes).
-
-### K. Workspace / Health Score
-- Dashboard Builder (`/workspace`) — grid drag-and-drop. **Hidden on mobile** (authoring tool).
-- Health Score — read-only score view. Kept, vertically stacked.
-
-### L. Onboarding / Auth / Billing flows
-- Login kept (auth is read access). `/onboarding/connect`, `DataSyncingState`, `TrialExpiredState`, `AddCardModal`, billing flow — **hidden on mobile**. If a logged-in user hits mobile without accounts, show a "Open desktop to connect an account" empty state.
-
-### M. Shared components inventory (kept, mobile-skinned)
-- `KPICard`, `KPICardsRow`, `ChartContainer`, `PerformanceChart`, `ImpactLineChart`, `MetricSelector` — responsive widths.
-- `TablePagination`, `SortableTableHead`, all `tables/*` — wrapped by a new `MobileCardList` adapter that consumes the same row data and renders cards.
-- `InsightCard`, `InsightsPanel`, `NotificationsPanel`, `AanCopilotPanel` — re-rendered as full-screen sheets.
-- `MarketplaceSelector`, `AppLevelSelector`, `PageBreadcrumb` — moved into top bar / drawer.
-- `StatusBadge`, `ProgressRing`, `MorphingNumber`, `MetricPulse` — reused as-is.
-- Edit-only components hidden on mobile: `CampaignSettings*`, `AdGroupSettings*`, `AddProductAd*`, `AddKeywordModal`, `RuleCreation`, `ShortcutEditor`, `WidgetCanvas`, `AddWidgetModal`, integration flows, `AddCardModal`.
+**Acceptance:** No page scrolls horizontally except inside table containers. Marketplace switcher present. Aan opens full-screen. Theme lives in drawer.
 
 ---
 
-## Part 2 — Implementation Phases
+## Phase 2 — App Taskbar, Panels & Insights/Alerts Integration
 
-### Phase M0 — Foundations (no visual change yet)
-- Replace `MobilePlaceholder` with a real `MobileShell` mounted at `/mobile/*`.
-- Extend `ActivePanelContext` with a `view`-aware rule: on mobile, opening any data or AI panel closes all others (single-panel constraint).
-- Add a `useIsReadOnly()` hook driven by `view === "mobile"`. Every edit/create/upload control checks this and hides itself.
-- Create `src/views/mobile/` folder structure: `MobileShell.tsx`, `MobileTopBar.tsx`, `MobileDrawerNav.tsx`, `MobileBottomBar.tsx`, `MobileSheet.tsx`, `MobilePageHeader.tsx`, `MobileCardList.tsx`, `MobileFiltersSheet.tsx`.
+**Goal:** rebuild the per-page metric/taskbar strip and consolidate Insights/Alerts there.
 
-### Phase M1 — Shell + Navigation
-- Build top bar, hamburger drawer (reusing `navigationGroups`), bottom mini-bar, full-screen sheet primitive.
-- Wire drawer NavLinks to existing routes prefixed with `/mobile`.
-- Add `/mobile` route tree mirroring desktop routes; each route renders the desktop page wrapped in `MobileShell` with `data-view="mobile"`.
+1. **New `MobileTaskbar` component** (replaces current cramped breadcrumb+date+Run block):
+   - Row 1: Breadcrumb (truncated, single line, marketplace dot).
+   - Row 2: Date range chip (full width minus actions) + icon buttons: `Insights` (lightbulb w/ red dot if critical), `Alerts` (bell w/ count), `Run` (primary, icon-only when space is tight).
+   - Fonts: H1 24px Satoshi, subtitle 13px Noto. Numeric chips reserve 8-char width (`min-w-[9ch] tabular-nums`).
+2. **Insights & Alerts entry points**
+   - Remove from bottom bar. Open from the new taskbar icons.
+   - Both open as right-side sheets that slide in from the right edge (same pattern as hamburger from left), full-height, 92vw width, with a backdrop. Reuses `ActivePanelContext` single-panel rule.
+3. **Right-side panel system**
+   - Centralize a `MobileRightSheet` primitive used by Insights, Alerts, P&L breakdown, filter builder, column visibility, edit forms.
+   - Slide-in from right, drag-to-close handle, sticky header w/ title + close.
+4. **Marketplace context wiring**
+   - The marketplace pill from Phase 1 hooks into existing `MarketplaceContext`; selection persists and re-runs queries.
 
-### Phase M2 — Read-only enforcement
-- Audit every page for buttons/forms/inputs and hide them when `useIsReadOnly()` is true:
-  - Hide: Create/Edit/Delete buttons, "Run", "Apply", "Connect", upload zones, inline-edit toggles, rule creation routes, dashboard builder, AddWidget, AddKeyword, AddProductAd, integration flows, billing actions, account connect flows.
-- Redirect blocked routes (`/workspace`, `/onboarding/*`, `/settings/accounts/connect/*`, `/advertising/rules/create*`, `/advertising/rules/edit/*`) to a `MobileBlockedRoute` showing "Open on desktop".
-
-### Phase M3 — Profitability (5 screens) + table→card pattern
-- Build `MobileCardList` adapter and apply to Trends, P&L (horizontal scroll), Geo, Unified P&L.
-- Adapt scatter chart for touch (pinch-zoom inside chart only, tap = open product sheet).
-
-### Phase M4 — Advertising (12 screens)
-- Apply card-list pattern to all advertising tables.
-- Convert 4-level drill (Campaign → Ad Group → Product Ad) to push-navigation with back arrow.
-- Hide all edit/create entry points.
-
-### Phase M5 — Catalog, BI, AMC, Day Parting, Reports
-- Card-list adapter + responsive charts. Hide all write actions.
-
-### Phase M6 — Panels (Insights, Notifications, Aan) as full-screen sheets
-- Re-render each panel inside `MobileSheet`. Enforce single-panel rule.
-- Aan workspace becomes full-screen chat (no attachments, no draft creation).
-
-### Phase M7 — Settings + Profile
-- Mobile Preferences page (theme, density, visibility toggles). Profile read-only. Other settings hidden.
-
-### Phase M8 — Polish
-- Per-page empty states, loading skeletons sized for mobile, safe-area padding (`pb-[env(safe-area-inset-bottom)]`), 44px tap targets, swipe-back gesture compatibility.
-- Update `mem://` with a `viewport-variants/phase-X-mobile` memory entry per phase.
+**Acceptance:** Taskbar fits in one viewport width on 360px. Insights/Alerts reachable from taskbar, slide from right. No bottom bar clutter.
 
 ---
 
-## Constraints respected
-- No new features. No feature removed (only writes hidden, which the user explicitly asked for).
-- One panel at a time on mobile.
-- Right-side panels → full-screen overlays.
-- Left nav → hamburger drawer.
-- No layout changes to desktop; mobile lives entirely in `src/views/mobile/` and `/mobile/*` routes.
+## Phase 3 — Tables, Data Viz & Toolbar
 
-## Files affected (new)
-- `src/views/mobile/MobileShell.tsx`, `MobileTopBar.tsx`, `MobileDrawerNav.tsx`, `MobileBottomBar.tsx`, `MobileSheet.tsx`, `MobilePageHeader.tsx`, `MobileCardList.tsx`, `MobileFiltersSheet.tsx`, `MobileBlockedRoute.tsx`
-- `src/hooks/useIsReadOnly.ts`
-- Per-page mobile wrappers under `src/views/mobile/pages/...` (thin adapters that import the existing pages and pass mobile-aware props).
+**Goal:** real mobile tables (not cards-only), working filters/sort/pin/group/delta, viz that fits the screen.
 
-## Files affected (edited)
-- `src/App.tsx` — `/mobile/*` route tree
-- `src/contexts/ActivePanelContext.tsx` — single-panel rule on mobile
-- Each page file — read minor tweaks to call `useIsReadOnly()` for hiding write controls (no logic changes)
+1. **`MobileDataTable` primitive** (new)
+   - Sticky first column (product/name), horizontal scroll only inside the table container (max-h, overscroll-contain).
+   - Compact row height 40px, `tabular-nums`, numeric cells reserve 9ch.
+   - Column header: tap = sort cycle; long-press = column menu (Pin, Hide, Group by, Sort asc/desc).
+   - Delta badge inline under primary metric cells using existing `DeltaBadge`.
+2. **`MobileTableToolbar`** (replaces stacked Columns/Export bar shown in screenshot 4):
+   - Single horizontal scroll-free row: `Search` (collapses to icon), `Filter` (chip w/ active count, opens right sheet filter builder), `Group by` (chip), `Columns` (chip → right sheet w/ searchable visibility + pin toggle), `Sort` (chip), overflow menu (Export, Upload, Edit).
+   - All chips 32px height, 13px Noto, active state uses `brand.primary` outline.
+3. **Card mode toggle**
+   - Toolbar exposes a `Cards ↔ Table` segmented switch. Default = Table on data-dense pages (Catalog Products, Campaigns, P&L, Geographical, Trends). `MobileCardList` remains for drill-down lists.
+4. **Page swaps to new primitives**
+   - Catalog Products, Campaign Manager (all tabs), Profitability Trends + Geographical + Unified P&L, BI Keyword Tracker, AMC Queries, Reports Client Portal, Day Parting Hourly, Advertising (Campaign/AdGroup/ProductAd details).
+   - Restore all columns; rely on horizontal scroll within table only.
+5. **Data visualization fit-to-screen**
+   - Wrap every chart in `MobileChartFrame` that sets `width: 100%`, `aspect-ratio: 16/10`, removes inner min-widths, condenses axis ticks, hides legend into a tap-to-expand row.
+   - Pages touched: Profitability Dashboard hero scroller (convert horizontal card scroller into vertical stack of period cards as in screenshot 5), Trends chart, P&L matrix (keep horizontal scroll inside container), Geographical map/bars, Advertising performance chart, Day Parting heatmap, BI SOV chart.
+   - Profitability Dashboard hero: replace the cramped horizontal "J… / J… / J… / M…" scroller with the stacked period-card layout from screenshot 5 (one card per period, KPI grid 3x2 inside).
+
+**Acceptance:** No horizontal page scroll. All charts fit width. Tables show all columns, scroll horizontally only inside the table. Sort, pin, group-by, filter, delta all functional on mobile.
 
 ---
 
-**Approve this plan and I'll start with Phase M0 + M1 (shell + drawer nav).** I'll pause after M1 so you can sanity-check the shell before I roll out every screen.
+## Technical Notes
+
+- New files: `src/views/mobile/MobileTaskbar.tsx`, `MobileRightSheet.tsx`, `MobileMarketplacePill.tsx`, `MobileDataTable.tsx`, `MobileTableToolbar.tsx`, `MobileChartFrame.tsx`, `MobileAanLayout.tsx`.
+- Edits: `MobileShell`, `MobileTopBar`, `MobileBottomBar`, `MobileDrawerNav`, `App.tsx` (Aan route mobile branch), all listed pages.
+- Tokens only — no hardcoded colors. Numeric cells use `tabular-nums` and `min-w-[9ch]`.
+- `overflow-x:hidden` enforced on `html[data-view="mobile"] body` + `main`; tables opt-in to `overflow-x:auto` via `MobileDataTable`.
+- Memory updates after each phase: `mem://features/viewport-variants/phase-mobile-redesign-{1,2,3}`.
+
+Phases ship in order; nothing is skipped, no sub-parts.
