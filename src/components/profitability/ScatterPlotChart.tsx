@@ -197,6 +197,7 @@ function ScatterCanvas({
       try { (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
     }
     dragRef.current = null;
+    setIsDragging(false);
   };
 
   const handleBubble = (c: ClusterItem) => {
