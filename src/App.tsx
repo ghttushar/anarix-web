@@ -27,7 +27,7 @@ import { GestureFeedback } from "@/components/gestures/GestureFeedback";
 import { TutorialProvider } from "@/features/tutorial/TutorialContext";
 import { OnboardingTutorial } from "@/features/tutorial/OnboardingTutorial";
 import TabletRedirect from "@/views/tablet/TabletRedirect";
-import MobilePlaceholder from "@/views/mobile/MobilePlaceholder";
+import MobileRedirect from "@/views/mobile/MobileRedirect";
 import { toast } from "sonner";
 import NotFound from "./pages/NotFound";
 
@@ -174,8 +174,9 @@ function AppRoutes() {
       <Route path="/desktop/*" element={<Navigate to="/profitability/dashboard" replace />} />
       <Route path="/tablet" element={<TabletRedirect />} />
       <Route path="/tablet/*" element={<TabletRedirect />} />
-      <Route path="/mobile" element={<MobilePlaceholder />} />
-      <Route path="/mobile/*" element={<MobilePlaceholder />} />
+      <Route path="/mobile" element={<MobileRedirect />} />
+      <Route path="/mobile/*" element={<MobileRedirect />} />
+
 
       {/* Hidden dev utility: pin a trial state and render any nav-bar page underneath */}
       <Route path="/_state/:state/*" element={<TrialStateRoute />} />
