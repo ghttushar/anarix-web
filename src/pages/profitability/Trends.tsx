@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
@@ -6,6 +6,7 @@ import { ScatterPlotChart } from "@/components/profitability/ScatterPlotChart";
 import { ProductTrendsModal } from "@/components/profitability/ProductTrendsModal";
 import { ProductDetailPanel } from "@/components/profitability/ProductDetailPanel";
 import { DataTableToolbar } from "@/components/advertising/DataTableToolbar";
+import { TablePagination } from "@/components/tables/TablePagination";
 import { scatterData, profitabilityProducts, profitabilityMetrics } from "@/data/mockProfitability";
 import { ProfitabilityProduct } from "@/types/profitability";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Info, TrendingUp, ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 const breadcrumbItems = [
   { label: "Profitability", href: "/profitability/trends" },
@@ -43,6 +45,9 @@ export default function ProfitabilityTrends() {
   const [productSearch, setProductSearch] = useState("");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
 
   const columns = frequencyColumns[frequency];
 
@@ -70,6 +75,14 @@ export default function ProfitabilityTrends() {
       }),
     [searchValue, selectedIds]
   );
+
+  const paginatedProducts = useMemo(
+    () => filteredProducts.slice((page - 1) * pageSize, page * pageSize),
+    [filteredProducts, page, pageSize]
+  );
+
+  useEffect(() => { setPage(1); }, [searchValue, selectedIds, frequency]);
+
 
   const pickerProducts = useMemo(
     () =>
@@ -205,7 +218,12 @@ export default function ProfitabilityTrends() {
           data={scatterData}
           selectedIds={selectedIds}
           onPointToggle={(id) => toggleProduct(id)}
+          onPointDetail={(id) => {
+            const p = profitabilityProducts.find((x) => x.id === id);
+            if (p) setDetailProduct(p);
+          }}
         />
+
 
         <div className="space-y-3">
           <DataTableToolbar
@@ -242,7 +260,7 @@ export default function ProfitabilityTrends() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => {
+                  {paginatedProducts.map((product) => {
                     const total = columns.reduce(
                       (sum, c, idx) => sum + valueForColumn(product, c, idx),
                       0
@@ -318,7 +336,15 @@ export default function ProfitabilityTrends() {
                 </TableBody>
               </Table>
             </div>
+            <TablePagination
+              page={page}
+              pageSize={pageSize}
+              totalItems={filteredProducts.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
+
         </div>
         </div>
 

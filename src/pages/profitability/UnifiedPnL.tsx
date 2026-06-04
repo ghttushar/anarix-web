@@ -1,9 +1,11 @@
+import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/tables/TablePagination";
 import { Download } from "lucide-react";
 import { mockUnifiedPnL } from "@/data/mockUnifiedPnL";
 import { toast } from "sonner";
@@ -11,6 +13,7 @@ import { cn } from "@/lib/utils";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 import { useCurrency } from "@/contexts/CurrencyContext";
+
 const isMarginRow = (label: string) => label.toLowerCase().includes("margin");
 
 
@@ -20,10 +23,17 @@ const breadcrumbItems = [
 ];
 export default function UnifiedPnL() {
   const { formatCurrency } = useCurrency();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
   const netProfit = mockUnifiedPnL.find((r) => r.label === "Net Profit");
   const grossRevenue = mockUnifiedPnL.find((r) => r.label === "Gross Revenue");
   const grossProfit = mockUnifiedPnL.find((r) => r.label === "Gross Profit");
   const adSpend = mockUnifiedPnL.find((r) => r.label === "Advertising Spend");
+  const paginatedRows = useMemo(
+    () => mockUnifiedPnL.slice((page - 1) * pageSize, page * pageSize),
+    [page, pageSize]
+  );
+
 
   return (
     <AppLayout>
@@ -70,7 +80,7 @@ export default function UnifiedPnL() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockUnifiedPnL.map((row, i) => (
+              {paginatedRows.map((row, i) => (
                 <TableRow key={i} className={cn(row.isTotal && "bg-muted/20 font-semibold border-t-2 border-border", row.isHeader && "bg-muted/10 font-medium")}>
                   <TableCell className={cn(row.indent && `pl-${4 + row.indent * 4}`)}>
                     <span className={cn(row.isTotal && "font-semibold text-foreground", row.isHeader && "font-medium text-foreground", !row.isTotal && !row.isHeader && "text-muted-foreground", row.indent && "text-sm")}>
@@ -90,7 +100,15 @@ export default function UnifiedPnL() {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            totalItems={mockUnifiedPnL.length}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
+
       </div>
 </AppLayout>
   );

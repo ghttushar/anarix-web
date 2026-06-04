@@ -53,10 +53,14 @@ function ScatterCanvas({
   height: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const [width, setWidth] = useState(800);
   const [view, setView] = useState({ xMin: -35, xMax: 100, yMin: 0, yMax: 90 });
   const [hover, setHover] = useState<Hover | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ sx: number; sy: number; view: typeof view } | null>(null);
+  const viewRef = useRef(view);
+  useEffect(() => { viewRef.current = view; }, [view]);
   const aan = useAan();
 
   // baseline matches PDF exactly: X -30→100, Y 0→90 (Ad Spend $)
@@ -135,19 +139,45 @@ function ScatterCanvas({
     void xSpan; void ySpan;
   };
 
-  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    e.preventDefault();
-    const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
-    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-    zoom(factor, cx, cy);
-  };
+  // Native non-passive wheel listener to actually preventDefault (React onWheel is passive)
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = svg.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const v = viewRef.current;
+      const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      const ax = v.xMin + ((cx - PAD.l) / plotW) * (v.xMax - v.xMin);
+      const ay = v.yMin + ((PAD.t + plotH - cy) / plotH) * (v.yMax - v.yMin);
+      setView({
+        xMin: ax - (ax - v.xMin) / factor,
+        xMax: ax + (v.xMax - ax) / factor,
+        yMin: Math.max(0, ay - (ay - v.yMin) / factor),
+        yMax: ay + (v.yMax - ay) / factor,
+      });
+    };
+    const prevent = (e: Event) => e.preventDefault();
+    svg.addEventListener("wheel", handleWheel, { passive: false });
+    svg.addEventListener("gesturestart", prevent as EventListener);
+    svg.addEventListener("gesturechange", prevent as EventListener);
+    svg.addEventListener("gestureend", prevent as EventListener);
+    return () => {
+      svg.removeEventListener("wheel", handleWheel);
+      svg.removeEventListener("gesturestart", prevent as EventListener);
+      svg.removeEventListener("gesturechange", prevent as EventListener);
+      svg.removeEventListener("gestureend", prevent as EventListener);
+    };
+  }, [plotW, plotH]);
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as Element).closest("[data-bubble]")) return;
     (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
     dragRef.current = { sx: e.clientX, sy: e.clientY, view };
+    setIsDragging(true);
   };
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!dragRef.current) return;
@@ -167,6 +197,7 @@ function ScatterCanvas({
       try { (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
     }
     dragRef.current = null;
+    setIsDragging(false);
   };
 
   const handleBubble = (c: ClusterItem) => {
@@ -197,16 +228,20 @@ function ScatterCanvas({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full" style={{ height }}>
+    <div
+      ref={containerRef}
+      className="relative w-full"
+      style={{ height, overscrollBehavior: "contain", touchAction: "none" }}
+    >
       <svg
+        ref={svgRef}
         width={width}
         height={height}
-        onWheel={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={() => { setHover(null); }}
-        style={{ cursor: dragRef.current ? "grabbing" : "grab", touchAction: "none" }}
+        style={{ cursor: isDragging ? "grabbing" : "crosshair", touchAction: "none", display: "block" }}
       >
         <defs>
           <marker id="arrow-x" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
@@ -351,6 +386,7 @@ function ScatterCanvas({
           x={hover.x}
           y={hover.y}
           onAskAan={askAan}
+          onViewDetails={onPointDetail ? (p) => onPointDetail(p.id) : undefined}
         />
       )}
     </div>
