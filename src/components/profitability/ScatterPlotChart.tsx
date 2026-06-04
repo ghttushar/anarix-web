@@ -272,7 +272,7 @@ function ScatterCanvas({
             key={`ty-${t}`} x={PAD.l - 8} y={yToPx(t) + 4}
             textAnchor="end" fontSize={11} fill="hsl(var(--muted-foreground))"
           >
-            ${(t / 1000).toFixed(t >= 1000 ? 0 : 1)}k
+            {t}
           </text>
         ))}
 
@@ -288,7 +288,7 @@ function ScatterCanvas({
           transform="rotate(-90)" textAnchor="middle"
           fontSize={12} fill="hsl(var(--foreground))" fontWeight={500}
         >
-          Total Sales ($)
+          Ad Spend ($)
         </text>
 
         {/* bubbles */}
