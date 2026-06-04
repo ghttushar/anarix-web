@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { geographicalData } from "@/data/mockProfitability";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useViewport } from "@/contexts/ViewportContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { MobileCard, MobileCardList } from "@/views/mobile/MobileCardList";
+
 const regionLookup: Record<string, typeof geographicalData[0]> = {
   US: geographicalData[0],
   CA: geographicalData[0].children?.[0] || geographicalData[0],
@@ -45,7 +49,11 @@ const breadcrumbItems = [
   { label: "Geographical Data" },
 ];
 export default function Geographical() {
+  const { view } = useViewport();
+  const { formatCurrency } = useCurrency();
+  const isMobile = view === "mobile";
   const [selectedRegionCode, setSelectedRegionCode] = useState<string>("US");
+  const [drillRegionId, setDrillRegionId] = useState<string | null>(null);
   const [viewLevel, setViewLevel] = useState<"state" | "product">("state");
   const [searchValue, setSearchValue] = useState("");
   const [columns, setColumns] = useState(COLUMN_DEFS);
@@ -55,6 +63,13 @@ export default function Geographical() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const selectedRegion = regionLookup[selectedRegionCode] || geographicalData[0];
+
+  const mobileRegions = useMemo(() => {
+    if (!drillRegionId) return geographicalData;
+    const parent = geographicalData.find((r) => r.id === drillRegionId);
+    return parent?.children || [];
+  }, [drillRegionId]);
+
 
   const handleColumnToggle = (id: string) => {
     setColumns((prev) => prev.map((c) => c.id === id ? { ...c, visible: !c.visible } : c));
@@ -110,6 +125,38 @@ export default function Geographical() {
             onSortChange={(f, d) => { setSortField(f); setSortDirection(d); }}
           />
 
+          {isMobile ? (
+            <>
+              {drillRegionId && (
+                <button
+                  type="button"
+                  className="text-xs text-primary mb-1"
+                  onClick={() => setDrillRegionId(null)}
+                >
+                  ← Back to all regions
+                </button>
+              )}
+              <MobileCardList>
+                {mobileRegions
+                  .filter((r) => !searchValue || r.region.toLowerCase().includes(searchValue.toLowerCase()))
+                  .map((r) => {
+                    const hasChildren = !!(r as any).children?.length;
+                    return (
+                      <MobileCard
+                        key={r.id}
+                        title={`${r.flag ? r.flag + " " : ""}${r.region}`}
+                        kpis={[
+                          { label: "Sales", value: formatCurrency(r.sales) },
+                          { label: "Orders", value: r.orders.toLocaleString() },
+                          { label: "Units", value: r.unitsSold.toLocaleString() },
+                        ]}
+                        onTap={hasChildren ? () => setDrillRegionId(r.id) : undefined}
+                      />
+                    );
+                  })}
+              </MobileCardList>
+            </>
+          ) : (
           <div className="rounded-lg border border-border bg-card">
             {viewLevel === "state" ? (
               <RegionalTable data={geographicalData} searchValue={searchValue} />
@@ -117,8 +164,10 @@ export default function Geographical() {
               <RegionalProductTable searchValue={searchValue} />
             )}
           </div>
+          )}
         </div>
       </div>
 </AppLayout>
+
   );
 }
