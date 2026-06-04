@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { useFilter } from "@/contexts/FilterContext";
 import { toast } from "sonner";
+import { MobileDrillHeader } from "@/views/mobile/MobileDrillHeader";
 type TabValue = "ad-groups" | "product-ads" | "keywords" | "search-terms";
 
 const tabs = [
@@ -67,6 +68,7 @@ export default function CampaignDetail() {
     <AppLayout>
       <div className="flex flex-1 min-h-0 min-w-0">
         <div className="flex-1 min-w-0 space-y-4">
+          <MobileDrillHeader title={campaignName} subtitle={adTypeLabel} to="/advertising/campaigns" />
           <PageHeader title="Advertising" />
 
           <AppTaskbar showFrequency showDateRange breadcrumbItems={[
