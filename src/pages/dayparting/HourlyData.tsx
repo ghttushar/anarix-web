@@ -294,25 +294,7 @@ export default function HourlyData() {
                     </Button>
                   }
                 />
-                {isMobile ? (
-                  <MobileCardList>
-                    {paginatedRows.map((row) => (
-                      <MobileCard
-                        key={row.id}
-                        title={row.name}
-                        meta={`${row.action}${row.scheduleId ? ` • ${row.scheduleStatus}` : ""}`}
-                        kpis={[
-                          { label: "Spend", value: formatCurrency(row.spend) },
-                          { label: "Revenue", value: formatCurrency(row.revenue) },
-                          { label: "ROAS", value: `${row.roas.toFixed(2)}x` },
-                        ]}
-                      />
-                    ))}
-                    {paginatedRows.length === 0 && (
-                      <div className="text-center py-10 text-sm text-muted-foreground">No campaigns found</div>
-                    )}
-                  </MobileCardList>
-                ) : (
+                {(
                 <div className="rounded-lg border border-border bg-card overflow-auto">
                   <Table>
                     <TableHeader>

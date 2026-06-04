@@ -259,31 +259,9 @@ function CampaignManagerInner() {
   };
 
   const renderTable = () => {
-    if (isMobile && activeTab === "campaigns") {
-      const filtered = campaigns.filter((c) =>
-        c.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      return (
-        <MobileCardList>
-          {filtered.map((c) => (
-            <MobileCard
-              key={c.id}
-              title={c.name}
-              meta={`${c.type} • ${c.biddingStrategy}`}
-              onTap={() => navigate(`/advertising/campaigns/${c.id}`)}
-              kpis={[
-                { label: "Spend", value: formatCurrency(c.spend) },
-                { label: "ROAS", value: `${c.roas.toFixed(2)}x` },
-                { label: "ACOS", value: `${c.acos.toFixed(1)}%` },
-              ]}
-            />
-          ))}
-          {filtered.length === 0 && (
-            <div className="text-center py-10 text-sm text-muted-foreground">No campaigns found</div>
-          )}
-        </MobileCardList>
-      );
-    }
+    // Mobile uses the same desktop tables — CSS handles the horizontal
+    // scroll + sticky first column. Drill-down detail screens keep their
+    // own stacked layouts via MobileDrillHeader.
     switch (activeTab) {
       case "campaigns": return <CampaignTable campaigns={campaigns} onActiveToggle={handleActiveToggle} onCampaignUpdate={handleCampaignUpdate} showTotalBudget={isWalmart} searchQuery={searchQuery} viewMode={viewMode} onRowClick={(id) => navigate(`/advertising/campaigns/${id}`)} hiddenColumns={hiddenColumns} showDeltas={showDeltas} selectedIds={selectedIds} onSelectionChange={setSelectedIds} />;
       case "ad-groups": return <AdGroupsTable searchQuery={searchQuery} showDeltas={showDeltas} />;
