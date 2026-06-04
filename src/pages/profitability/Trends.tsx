@@ -249,39 +249,8 @@ export default function ProfitabilityTrends() {
             }}
           />
 
-          {isMobile ? (
-            <>
-              <MobileCardList>
-                {paginatedProducts.map((product) => {
-                  const total = columns.reduce(
-                    (sum, c, idx) => sum + valueForColumn(product, c, idx),
-                    0
-                  );
-                  return (
-                    <MobileCard
-                      key={product.id}
-                      thumbnail={product.image}
-                      title={product.name}
-                      meta={`${product.itemId} · ${product.sku} · ${formatCurrency(product.price)}`}
-                      kpis={[
-                        { label: "GMV", value: formatCurrency(product.gmv) },
-                        { label: "Net Profit", value: formatCurrency(product.netProfit) },
-                        { label: "Total", value: formatCurrency(total) },
-                      ]}
-                      onTap={() => setDetailProduct(product)}
-                    />
-                  );
-                })}
-              </MobileCardList>
-              <TablePagination
-                page={page}
-                pageSize={pageSize}
-                totalItems={filteredProducts.length}
-                onPageChange={setPage}
-                onPageSizeChange={setPageSize}
-              />
-            </>
-          ) : (
+          {(
+
           <div className="rounded-lg border border-border bg-card">
             <div className="overflow-x-auto">
               <Table>

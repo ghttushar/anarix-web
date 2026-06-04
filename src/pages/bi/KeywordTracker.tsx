@@ -76,23 +76,7 @@ export default function KeywordTracker() {
           </TabsList>
           {(["active", "inactive"] as const).map((tab) => (
             <TabsContent key={tab} value={tab} className="mt-4">
-              {isMobile ? (
-                <MobileCardList>
-                  {filteredKeywords.map((k) => (
-                    <MobileCard
-                      key={k.id}
-                      title={<span className="flex items-center gap-2"><span>{k.regionFlag}</span>{k.keyword}</span>}
-                      meta={`${k.region} • ${k.channels.join(", ")}`}
-                      kpis={[
-                        { label: "Status", value: <Badge variant="outline" className="capitalize">{k.status}</Badge> },
-                        { label: "Updated", value: new Date(k.updatedAt).toLocaleDateString() },
-                      ]}
-                    />
-                  ))}
-                </MobileCardList>
-              ) : (
-                <KeywordTrackerTable keywords={filteredKeywords} onStatusChange={handleStatusChange} onDelete={handleDelete} />
-              )}
+              <KeywordTrackerTable keywords={filteredKeywords} onStatusChange={handleStatusChange} onDelete={handleDelete} />
             </TabsContent>
           ))}
         </Tabs>

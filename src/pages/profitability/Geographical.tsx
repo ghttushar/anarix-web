@@ -125,38 +125,6 @@ export default function Geographical() {
             onSortChange={(f, d) => { setSortField(f); setSortDirection(d); }}
           />
 
-          {isMobile ? (
-            <>
-              {drillRegionId && (
-                <button
-                  type="button"
-                  className="text-xs text-primary mb-1"
-                  onClick={() => setDrillRegionId(null)}
-                >
-                  ← Back to all regions
-                </button>
-              )}
-              <MobileCardList>
-                {mobileRegions
-                  .filter((r) => !searchValue || r.region.toLowerCase().includes(searchValue.toLowerCase()))
-                  .map((r) => {
-                    const hasChildren = !!(r as any).children?.length;
-                    return (
-                      <MobileCard
-                        key={r.id}
-                        title={`${r.flag ? r.flag + " " : ""}${r.region}`}
-                        kpis={[
-                          { label: "Sales", value: formatCurrency(r.sales) },
-                          { label: "Orders", value: r.orders.toLocaleString() },
-                          { label: "Units", value: r.unitsSold.toLocaleString() },
-                        ]}
-                        onTap={hasChildren ? () => setDrillRegionId(r.id) : undefined}
-                      />
-                    );
-                  })}
-              </MobileCardList>
-            </>
-          ) : (
           <div className="rounded-lg border border-border bg-card">
             {viewLevel === "state" ? (
               <RegionalTable data={geographicalData} searchValue={searchValue} />
@@ -164,7 +132,6 @@ export default function Geographical() {
               <RegionalProductTable searchValue={searchValue} />
             )}
           </div>
-          )}
         </div>
       </div>
 </AppLayout>
