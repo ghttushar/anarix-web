@@ -211,7 +211,7 @@ function ScatterCanvas({
       svg.removeEventListener("gesturechange", prevent as EventListener);
       svg.removeEventListener("gestureend", prevent as EventListener);
     };
-  }, [plotW, plotH]);
+  }, [plotW, plotH, MAX_X_SPAN, MAX_Y_SPAN]);
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as Element).closest("[data-bubble]")) return;
