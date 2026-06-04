@@ -23,6 +23,8 @@ import { useFilter } from "@/contexts/FilterContext";
 import { SortableTableHead, usePinning, sortData, getSortHandler } from "@/components/tables/SortableTableHead";
 import { TablePagination } from "@/components/tables/TablePagination";
 import { format } from "date-fns";
+import { useViewport } from "@/contexts/ViewportContext";
+import { MobileCard, MobileCardList } from "@/views/mobile/MobileCardList";
 
 const AVAILABLE_METRICS = [
   { key: "spend", label: "Spend", format: (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
@@ -146,6 +148,8 @@ export default function HourlyData() {
   const sorted = sortData(filteredRows, sortField, sortDirection);
   const paginatedRows = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const sp = { sortField, sortDirection, onSort: handleSort, pinnedColumns, onPinToggle: handlePinToggle };
+  const { view } = useViewport();
+  const isMobile = view === "mobile";
 
   const handlePauseResume = (scheduleId: string) => {
     setSchedules((prev) =>
@@ -290,6 +294,25 @@ export default function HourlyData() {
                     </Button>
                   }
                 />
+                {isMobile ? (
+                  <MobileCardList>
+                    {paginatedRows.map((row) => (
+                      <MobileCard
+                        key={row.id}
+                        title={row.name}
+                        meta={`${row.action}${row.scheduleId ? ` • ${row.scheduleStatus}` : ""}`}
+                        kpis={[
+                          { label: "Spend", value: formatCurrency(row.spend) },
+                          { label: "Revenue", value: formatCurrency(row.revenue) },
+                          { label: "ROAS", value: `${row.roas.toFixed(2)}x` },
+                        ]}
+                      />
+                    ))}
+                    {paginatedRows.length === 0 && (
+                      <div className="text-center py-10 text-sm text-muted-foreground">No campaigns found</div>
+                    )}
+                  </MobileCardList>
+                ) : (
                 <div className="rounded-lg border border-border bg-card overflow-auto">
                   <Table>
                     <TableHeader>
@@ -373,6 +396,7 @@ export default function HourlyData() {
                     onPageSizeChange={setPageSize}
                   />
                 </div>
+                )}
               </div>
             </TabsContent>
 
