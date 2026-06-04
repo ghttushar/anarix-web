@@ -627,3 +627,13 @@ html[data-view="mobile"] main > div {
   padding-left: var(--mobile-pad);
   padding-right: var(--mobile-pad);
 }
+/* Full-screen sheet panels: override fixed widths from desktop panels */
+html[data-view="mobile"] [data-app-panel] {
+  width: 100% !important;
+  border-left: 0 !important;
+}
+/* Touch target minimum on bottom bar buttons */
+html[data-view="mobile"] nav button {
+  min-height: 44px;
+}
+
