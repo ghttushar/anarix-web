@@ -228,6 +228,7 @@ export default function TargetingActions() {
                 </PopoverContent>
               </Popover>
               <Button
+                data-write-action
                 size="sm"
                 className="h-8 gap-1.5 text-xs"
                 onClick={() => setAddKeywordsOpen(true)}
