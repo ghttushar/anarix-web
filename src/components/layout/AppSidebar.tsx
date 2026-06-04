@@ -327,14 +327,6 @@ export function AppSidebar() {
         <div className="shrink-0 border-t border-border/30 px-2 py-2">
           {!collapsed ? (
             <div className="flex items-center gap-2">
-              {/* Theme toggle */}
-              <button
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                className="flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors shrink-0"
-              >
-                {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </button>
-
               {/* Profile dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -387,17 +379,6 @@ export function AppSidebar() {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                    className="flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
-                  >
-                    {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">{resolvedTheme === "dark" ? "Light mode" : "Dark mode"}</TooltipContent>
-              </Tooltip>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center justify-center rounded-md p-1.5 hover:bg-sidebar-accent transition-colors">
