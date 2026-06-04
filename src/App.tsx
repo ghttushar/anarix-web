@@ -91,6 +91,7 @@ import TrialStateRoute from "./pages/_dev/TrialStateRoute";
 
 // Settings
 import Preferences from "./pages/settings/Preferences";
+import MobileProfile from "./views/mobile/MobileProfile";
 import Accounts from "./pages/settings/Accounts";
 import ConnectAmazon from "./pages/settings/ConnectAmazon";
 import ConnectWalmart from "./pages/settings/ConnectWalmart";
@@ -250,6 +251,7 @@ function AppRoutes() {
 
       {/* Settings */}
       <Route path="/settings/appearance" element={<Preferences />} />
+      <Route path="/profile" element={<MobileProfile />} />
       <Route path="/settings/accounts" element={<MobileGate title="Manage accounts on desktop"><Accounts /></MobileGate>} />
       <Route path="/settings/integrations" element={<MobileGate title="Integrations are desktop-only"><Integrations /></MobileGate>} />
       <Route path="/settings/accounts/connect/amazon" element={<MobileGate title="Connect on desktop"><ConnectAmazon /></MobileGate>} />

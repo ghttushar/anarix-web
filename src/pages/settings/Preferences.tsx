@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { ShortcutEditor } from "@/features/shortcuts/ShortcutEditor";
 import { GestureMapper } from "@/components/gestures/GestureMapper";
 import { useTutorial } from "@/features/tutorial/TutorialContext";
+import { MobilePreferences } from "@/views/mobile/MobilePreferences";
 
 const CUSTOM_SHORTCUTS_KEY = "anarix-custom-shortcuts";
 
@@ -191,6 +192,14 @@ export default function Preferences() {
     saveCustomShortcuts(next);
     toast.success(`${category} shortcuts reset to defaults`);
   };
+
+  if (view === "mobile") {
+    return (
+      <AppLayout>
+        <MobilePreferences />
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
