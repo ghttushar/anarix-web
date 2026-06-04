@@ -1,5 +1,17 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronRight, X, LogOut, Settings, Globe, Sun, Moon, Monitor } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Sun,
+  Moon,
+  User,
+  CreditCard,
+  Settings,
+  SlidersHorizontal,
+  Users,
+  Globe,
+} from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -9,7 +21,6 @@ import { navigationGroups } from "@/components/layout/AppSidebar";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useViewport } from "@/contexts/ViewportContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Routes write-only on desktop, hidden on mobile drawer.
 const MOBILE_BLOCKED = new Set<string>([
@@ -18,6 +29,21 @@ const MOBILE_BLOCKED = new Set<string>([
   "/advertising/rules/agents",
   "/advertising/rules/applied",
 ]);
+
+// Super-section regrouping for a more navigable mobile drawer.
+const SUPER_SECTIONS: { label: string; groupLabels: string[] }[] = [
+  { label: "Analyze", groupLabels: ["Profitability"] },
+  { label: "Operate", groupLabels: ["Advertising", "Day Parting", "AMC"] },
+  { label: "Discover", groupLabels: ["Business Intelligence", "Catalog", "Reports"] },
+];
+
+const PROFILE_ITEMS = [
+  { label: "Profile", icon: User, url: "/profile" },
+  { label: "Billing", icon: CreditCard, url: "/settings/billing" },
+  { label: "Settings", icon: Settings, url: "/settings" },
+  { label: "Preferences", icon: SlidersHorizontal, url: "/settings/appearance" },
+  { label: "Team", icon: Users, url: "/settings/team" },
+];
 
 interface Props {
   open: boolean;
@@ -30,7 +56,6 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
   const { setView } = useViewport();
   const { newFeaturesVisible } = useFeatureToggle();
   const { theme, setTheme } = useTheme();
-  const { displayCurrency, setDisplayCurrency, currencies } = useCurrency();
 
   const filteredGroups = navigationGroups
     .map((g) => ({
@@ -41,7 +66,7 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
     }))
     .filter((g) => g.items.length > 0);
 
-  const [openSections, setOpenSections] = useState<Set<string>>(
+  const [openGroups, setOpenGroups] = useState<Set<string>>(
     () =>
       new Set(
         filteredGroups
@@ -49,9 +74,10 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
           .map((g) => g.label)
       )
   );
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  const toggleSection = (label: string) =>
-    setOpenSections((prev) => {
+  const toggleGroup = (label: string) =>
+    setOpenGroups((prev) => {
       const n = new Set(prev);
       n.has(label) ? n.delete(label) : n.add(label);
       return n;
@@ -62,170 +88,222 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
     navigate(url);
   };
 
-  const themeOptions: { value: "light" | "dark" | "system"; icon: any; label: string }[] = [
-    { value: "light", icon: Sun, label: "Light" },
-    { value: "dark", icon: Moon, label: "Dark" },
-    { value: "system", icon: Monitor, label: "Auto" },
-  ];
+  const isDark = theme === "dark";
+  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="w-[86vw] max-w-[340px] p-0 flex flex-col gap-0"
+        className="w-[88vw] max-w-[360px] p-0 flex flex-col gap-0 bg-background"
       >
-        <div className="flex items-center justify-between h-14 px-4 border-b border-border shrink-0">
-          <AnarixLogo variant="full" className="h-6 w-auto" />
-          <button
-            onClick={() => onOpenChange(false)}
-            className="h-9 w-9 rounded-md flex items-center justify-center hover:bg-muted"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        {/* Header band — 96px, brand mark + org + plan */}
+        <div className="h-24 shrink-0 px-4 flex items-center gap-3 border-b border-border bg-card">
+          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <AnarixLogo variant="icon" className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[15px] font-semibold text-foreground truncate font-display">
+              Anarix
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[12px] text-muted-foreground truncate">
+                Acme Brands
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-px rounded bg-primary/10 text-primary">
+                Pro
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-auto py-2">
-          {filteredGroups.map((group) => {
-            const isOpen = openSections.has(group.label);
+        {/* Body — sectioned navigation */}
+        <div className="flex-1 overflow-auto py-3 px-2">
+          {SUPER_SECTIONS.map((section) => {
+            const sectionGroups = filteredGroups.filter((g) =>
+              section.groupLabels.includes(g.label)
+            );
+            if (sectionGroups.length === 0) return null;
             return (
-              <div key={group.label} className="py-0.5">
-                <button
-                  onClick={() => toggleSection(group.label)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground"
-                >
-                  <span className="flex items-center gap-2">
-                    <group.icon className="h-4 w-4" />
-                    {group.label}
-                  </span>
-                  {isOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                  ) : (
-                    <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                  )}
-                </button>
-                {isOpen && (
-                  <div className="pb-1">
-                    {group.items.map((item) => {
-                      const active = pathname.startsWith(item.url);
-                      return (
-                        <NavLink
-                          key={item.url}
-                          to={item.url}
-                          onClick={() => handleNav(item.url)}
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors min-h-[44px]",
-                            active
-                              ? "bg-primary/8 text-primary border-l-2 border-primary"
-                              : "text-foreground hover:bg-muted"
-                          )}
-                        >
-                          <item.icon className="h-4 w-4 shrink-0 opacity-80" />
-                          <span className="truncate">{item.title}</span>
-                        </NavLink>
-                      );
-                    })}
-                  </div>
-                )}
+              <div key={section.label} className="mb-4">
+                <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {section.label}
+                </div>
+                {sectionGroups.map((group) => {
+                  const isOpen = openGroups.has(group.label);
+                  const groupActive = group.items.some((i) =>
+                    pathname.startsWith(i.url)
+                  );
+                  // Flatten single-item groups directly as nav rows.
+                  if (group.items.length === 1) {
+                    const item = group.items[0];
+                    const active = pathname.startsWith(item.url);
+                    return (
+                      <NavRow
+                        key={item.url}
+                        icon={item.icon}
+                        label={item.title}
+                        active={active}
+                        onClick={() => handleNav(item.url)}
+                      />
+                    );
+                  }
+                  return (
+                    <div key={group.label} className="mb-1">
+                      <button
+                        onClick={() => toggleGroup(group.label)}
+                        className={cn(
+                          "w-full h-11 px-3 flex items-center gap-3 rounded-md text-[13px] font-medium",
+                          groupActive
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        )}
+                      >
+                        <group.icon className="h-4 w-4 opacity-80" />
+                        <span className="flex-1 text-left">{group.label}</span>
+                        {isOpen ? (
+                          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                        )}
+                      </button>
+                      {isOpen && (
+                        <div className="pl-2 pt-0.5 space-y-0.5">
+                          {group.items.map((item) => {
+                            const active = pathname.startsWith(item.url);
+                            return (
+                              <NavRow
+                                key={item.url}
+                                icon={item.icon}
+                                label={item.title}
+                                active={active}
+                                onClick={() => handleNav(item.url)}
+                                indent
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
         </div>
 
-        <div className="shrink-0 border-t border-border px-3 py-3 space-y-2">
-          {/* Theme switcher */}
-          <div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">
-              Theme
-            </div>
-            <div className="grid grid-cols-3 gap-1 rounded-md bg-muted/40 p-1">
-              {themeOptions.map((t) => {
-                const Icon = t.icon;
-                const selected = theme === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setTheme(t.value)}
-                    className={cn(
-                      "h-9 rounded flex items-center justify-center gap-1.5 text-[12px] font-medium",
-                      selected
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Currency */}
-          <div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">
-              Currency
-            </div>
-            <div className="grid grid-cols-3 gap-1 rounded-md bg-muted/40 p-1">
-              {(["USD", "INR", "EUR"] as const).map((c) => {
-                const selected = displayCurrency === c;
-                return (
-                  <button
-                    key={c}
-                    onClick={() => setDisplayCurrency(c)}
-                    className={cn(
-                      "h-9 rounded text-[12px] font-medium",
-                      selected
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {currencies[c]?.symbol} {c}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
+        {/* Footer — profile tile + actions */}
+        <div className="shrink-0 border-t border-border bg-card px-2 py-2">
           <button
-            onClick={() => handleNav("/settings/appearance")}
-            className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm hover:bg-muted text-foreground"
+            onClick={() => setProfileOpen((v) => !v)}
+            className="w-full h-16 px-2 flex items-center gap-3 rounded-lg hover:bg-muted/60 text-left"
           >
-            <Settings className="h-4 w-4 opacity-80" /> Preferences
-          </button>
-          <button
-            onClick={() => {
-              setView("desktop");
-              onOpenChange(false);
-              navigate("/profitability/dashboard");
-            }}
-            className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm hover:bg-muted text-foreground"
-          >
-            <Globe className="h-4 w-4 opacity-80" /> Switch to Desktop
-          </button>
-
-          <button
-            onClick={() => handleNav("/profile")}
-            className="w-full flex items-center gap-2 px-2 pt-2 pb-1 rounded-md hover:bg-muted text-left"
-          >
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-semibold">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary/10 text-primary text-[12px] font-semibold">
                 JD
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-foreground truncate">
+              <div className="text-[14px] font-semibold text-foreground truncate">
                 John Doe
               </div>
-              <div className="text-[11px] text-muted-foreground truncate">
+              <div className="text-[12px] text-muted-foreground truncate">
                 john@anarix.com
               </div>
             </div>
-            <span className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground">
-              <LogOut className="h-4 w-4" />
-            </span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform",
+                profileOpen && "rotate-180"
+              )}
+            />
           </button>
+
+          {profileOpen && (
+            <div className="mt-1 mb-1 grid grid-cols-1 gap-0.5">
+              {PROFILE_ITEMS.map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => handleNav(p.url)}
+                  className="h-10 px-3 flex items-center gap-3 rounded-md text-[13px] text-foreground hover:bg-muted/60"
+                >
+                  <p.icon className="h-4 w-4 opacity-80" />
+                  {p.label}
+                </button>
+              ))}
+              <button
+                onClick={() => handleNav("/auth/login")}
+                className="h-10 px-3 flex items-center gap-3 rounded-md text-[13px] text-foreground hover:bg-muted/60"
+              >
+                <LogOut className="h-4 w-4 opacity-80" />
+                Sign out
+              </button>
+            </div>
+          )}
+
+          <div className="mt-1 flex items-center gap-1">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="h-9 flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-border text-[12px] font-medium text-foreground hover:bg-muted/60"
+            >
+              {isDark ? (
+                <>
+                  <Sun className="h-3.5 w-3.5" /> Light
+                </>
+              ) : (
+                <>
+                  <Moon className="h-3.5 w-3.5" /> Dark
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setView("desktop");
+                onOpenChange(false);
+                navigate("/profitability/dashboard");
+              }}
+              aria-label="Switch to desktop"
+              className="h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-border text-[12px] font-medium text-foreground hover:bg-muted/60"
+            >
+              <Globe className="h-3.5 w-3.5" /> Desktop
+            </button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function NavRow({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+  indent,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  indent?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full h-11 flex items-center gap-3 rounded-md text-[14px] transition-colors min-h-[44px] relative",
+        indent ? "pl-6 pr-3" : "px-3",
+        active
+          ? "bg-primary/10 text-primary font-semibold"
+          : "text-foreground hover:bg-muted/60"
+      )}
+    >
+      {active && (
+        <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-r bg-primary" />
+      )}
+      <Icon className="h-4 w-4 shrink-0 opacity-90" />
+      <span className="truncate">{label}</span>
+    </button>
   );
 }
