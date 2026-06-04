@@ -27,6 +27,8 @@ export default function KeywordTracker() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("active");
   const [showDeltas, setShowDeltas] = useState(false);
+  const { view } = useViewport();
+  const isMobile = view === "mobile";
 
   const activeKeywords = keywords.filter((k) => k.status === "active");
   const inactiveKeywords = keywords.filter((k) => k.status === "inactive");
