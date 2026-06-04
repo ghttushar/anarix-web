@@ -1,4 +1,4 @@
-import { ReactNode, useState, lazy, Suspense } from "react";
+import { ReactNode, useState } from "react";
 import { X } from "lucide-react";
 import { MobileTopBar } from "./MobileTopBar";
 import { MobileDrawerNav } from "./MobileDrawerNav";
@@ -7,64 +7,62 @@ import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { InsightsPanel } from "@/components/insights/InsightsPanel";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { Button } from "@/components/ui/button";
-
-const AanCopilotPanel = lazy(() =>
-  import("@/components/aan/AanCopilotPanel").then(m => ({ default: m.AanCopilotPanel }))
-);
+import { cn } from "@/lib/utils";
 
 /**
- * Mobile read-only shell.
- * - Top bar with hamburger + brand + bell + Aan
- * - Hamburger opens left drawer with full navigation
- * - Bottom mini-bar for Insights / Alerts / Aan / Theme
- * - Right-side panels render as full-screen overlays (single-panel rule
- *   enforced by ActivePanelContext on mobile).
+ * Mobile shell. Aan is full-screen via the /aan route — never shown
+ * as a side panel on mobile. Insights/Alerts slide in from the RIGHT
+ * (mirror of the hamburger drawer) and never as full-screen replacements.
  */
 export function MobileShell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { dataPanel, aiPanel, closeDataPanel, closeAiPanel } = useActivePanel();
+  const { dataPanel, closeDataPanel } = useActivePanel();
 
   const showInsights = dataPanel === "insights";
   const showNotifications = dataPanel === "notifications";
-  const showCopilot = aiPanel === "copilot";
-  const anyPanel = showInsights || showNotifications || showCopilot;
-
-  const closeAll = () => {
-    closeDataPanel();
-    closeAiPanel();
-  };
-
-  const panelTitle = showCopilot ? "Aan" : showNotifications ? "Notifications" : showInsights ? "Insights" : "";
+  const anySheet = showInsights || showNotifications;
+  const sheetTitle = showInsights ? "Insights" : showNotifications ? "Notifications" : "";
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-background">
+    <div className="flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden">
       <MobileTopBar onOpenDrawer={() => setDrawerOpen(true)} />
       <MobileDrawerNav open={drawerOpen} onOpenChange={setDrawerOpen} />
 
-      <main className="flex-1 min-h-0 overflow-auto pb-16">
-        {children}
-      </main>
+      <main className="flex-1 min-h-0 overflow-x-hidden pb-20">{children}</main>
 
       <MobileBottomBar />
 
-      {anyPanel && (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <div className="flex items-center justify-between border-b border-border px-3 h-12 shrink-0">
-            <span className="text-sm font-semibold text-foreground">{panelTitle}</span>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closeAll} aria-label="Close">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex-1 min-h-0 overflow-auto">
-            {showInsights && <InsightsPanel />}
-            {showNotifications && <NotificationsPanel />}
-            {showCopilot && (
-              <Suspense fallback={null}>
-                <AanCopilotPanel />
-              </Suspense>
+      {/* Right-side slide-in sheet (mirror of hamburger). */}
+      {anySheet && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-foreground/30"
+            onClick={closeDataPanel}
+            aria-hidden
+          />
+          <aside
+            className={cn(
+              "fixed top-0 right-0 bottom-0 z-50 w-[92vw] max-w-[420px] bg-background border-l border-border flex flex-col animate-in slide-in-from-right duration-200"
             )}
-          </div>
-        </div>
+          >
+            <div className="flex items-center justify-between border-b border-border px-3 h-12 shrink-0">
+              <span className="text-sm font-semibold text-foreground">{sheetTitle}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={closeDataPanel}
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto">
+              {showInsights && <InsightsPanel />}
+              {showNotifications && <NotificationsPanel />}
+            </div>
+          </aside>
+        </>
       )}
     </div>
   );
