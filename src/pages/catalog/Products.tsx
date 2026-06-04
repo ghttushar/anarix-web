@@ -6,6 +6,9 @@ import { DataTableToolbar } from "@/components/advertising/DataTableToolbar";
 import { CatalogProductsTable } from "@/components/catalog/CatalogProductsTable";
 import { catalogProducts } from "@/data/mockCatalog";
 import { toast } from "sonner";
+import { useViewport } from "@/contexts/ViewportContext";
+import { MobileCard, MobileCardList } from "@/views/mobile/MobileCardList";
+import { useCurrency } from "@/contexts/CurrencyContext";
 const COLUMN_DEFS = [
   { id: "status", label: "Status", visible: true },
   { id: "reviews", label: "Reviews", visible: true },
@@ -48,6 +51,15 @@ export default function CatalogProducts() {
   const [showDeltas, setShowDeltas] = useState(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const { view } = useViewport();
+  const { formatCurrency } = useCurrency();
+  const isMobile = view === "mobile";
+  const filteredProducts = catalogProducts.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.itemId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
 
   return (
     <AppLayout>
@@ -81,13 +93,34 @@ export default function CatalogProducts() {
           onSortChange={(field, dir) => { setSortField(field); setSortDirection(dir); }}
         />
 
-        <CatalogProductsTable
-          products={catalogProducts}
-          searchQuery={searchQuery}
-          showDeltas={showDeltas}
-          sortField={sortField}
-          sortDirection={sortDirection}
-        />
+        {isMobile ? (
+          <MobileCardList>
+            {filteredProducts.map((p) => (
+              <MobileCard
+                key={p.id}
+                thumbnail={p.image}
+                title={p.name}
+                meta={`${p.sku} • ${p.itemId}`}
+                kpis={[
+                  { label: "GMV", value: formatCurrency(p.gmv) },
+                  { label: "Units", value: p.totalUnits.toLocaleString() },
+                  { label: "Inv", value: p.inventoryCount.toLocaleString() },
+                ]}
+              />
+            ))}
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-10 text-sm text-muted-foreground">No products found</div>
+            )}
+          </MobileCardList>
+        ) : (
+          <CatalogProductsTable
+            products={catalogProducts}
+            searchQuery={searchQuery}
+            showDeltas={showDeltas}
+            sortField={sortField}
+            sortDirection={sortDirection}
+          />
+        )}
       </div>
 </AppLayout>
   );

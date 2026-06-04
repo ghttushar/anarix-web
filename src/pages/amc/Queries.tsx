@@ -15,6 +15,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
+import { useViewport } from "@/contexts/ViewportContext";
+import { MobileCard, MobileCardList } from "@/views/mobile/MobileCardList";
 
 const statusColors: Record<string, string> = {
   active: "bg-success/10 text-success",
@@ -38,6 +40,8 @@ export default function AMCQueries() {
   const [selectedTime, setSelectedTime] = useState(format(new Date(), "HH:mm"));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState<string | null>(null);
+  const { view } = useViewport();
+  const isMobile = view === "mobile";
 
   const filteredQueries = mockQueries.filter((q) =>
     q.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -139,6 +143,25 @@ export default function AMCQueries() {
                 onDownload={() => toast.success("Exporting queries...")}
               />
             </div>
+            {isMobile ? (
+              <div className="p-3">
+                <MobileCardList>
+                  {filteredQueries.map((q) => (
+                    <MobileCard
+                      key={q.id}
+                      title={q.name}
+                      meta={`${q.createdBy} • ${q.lastRun}`}
+                      kpis={[
+                        { label: "Status", value: <Badge className={statusColors[q.status]}>{q.status}</Badge> },
+                      ]}
+                    />
+                  ))}
+                  {filteredQueries.length === 0 && (
+                    <div className="text-center py-10 text-sm text-muted-foreground">No queries found</div>
+                  )}
+                </MobileCardList>
+              </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -178,6 +201,7 @@ export default function AMCQueries() {
                 )}
               </TableBody>
             </Table>
+            )}
           </div>
         ) : (
           <div className="rounded-lg border border-border bg-card">
