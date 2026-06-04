@@ -122,6 +122,20 @@ interface AppTaskbarProps {
 }
 
 export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems }: AppTaskbarProps) {
+  // Mobile delegates to a purpose-built taskbar (Phase 2 redesign).
+  if (typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "mobile") {
+    const { MobileTaskbar } = require("@/views/mobile/MobileTaskbar");
+    return (
+      <MobileTaskbar
+        breadcrumbItems={breadcrumbItems}
+        showDateRange={showDateRange}
+        showRunButton={showRunButton}
+        onRun={onRun}
+      >
+        {children}
+      </MobileTaskbar>
+    );
+  }
   const { adType, setAdType, frequency, setFrequency, dateRange, setDateRange } = useFilter();
   const { effects } = useVisualEffects();
   const { setDataPanel, hasAnyPanel } = useActivePanel();
