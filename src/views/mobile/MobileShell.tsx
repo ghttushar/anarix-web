@@ -2,7 +2,6 @@ import { ReactNode, useState } from "react";
 import { X } from "lucide-react";
 import { MobileTopBar } from "./MobileTopBar";
 import { MobileDrawerNav } from "./MobileDrawerNav";
-import { MobileBottomBar } from "./MobileBottomBar";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { InsightsPanel } from "@/components/insights/InsightsPanel";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
@@ -10,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Mobile shell. Aan is full-screen via the /aan route — never shown
- * as a side panel on mobile. Insights/Alerts slide in from the RIGHT
- * (mirror of the hamburger drawer) and never as full-screen replacements.
+ * Mobile shell — two tiers only: TopBar (hamburger + logo) and the page's
+ * AppLevelBar (rendered by each page via MobileTaskbar). No bottom bar:
+ * Home/Aan/Bell live in the AppLevelBar. Aan stays full-screen via /aan.
  */
 export function MobileShell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -28,11 +27,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
       <MobileTopBar onOpenDrawer={() => setDrawerOpen(true)} />
       <MobileDrawerNav open={drawerOpen} onOpenChange={setDrawerOpen} />
 
-      <main className="flex-1 min-h-0 overflow-x-hidden pb-20">{children}</main>
+      <main className="flex-1 min-h-0 overflow-x-hidden pb-3">{children}</main>
 
-      <MobileBottomBar />
-
-      {/* Right-side slide-in sheet (mirror of hamburger). */}
       {anySheet && (
         <>
           <div
