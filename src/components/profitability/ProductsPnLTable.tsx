@@ -341,7 +341,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                       toggleOrderExpand(order.id);
                     }}
                   >
-                    <TableCell className="sticky left-0 z-10 bg-background group-hover:bg-muted transition-colors border-r border-border/20">
+                    <TableCell className="sticky left-0 z-10 bg-card group-hover:bg-muted transition-colors border-r border-border/20">
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
@@ -385,8 +385,8 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                   </TableRow>
 
                   {isExpanded && order.products.map((product, idx) => (
-                    <TableRow key={`${order.id}-${product.id}-${idx}`} className="bg-muted/20 hover:bg-muted/40">
-                      <TableCell className="sticky left-0 z-10 bg-muted/20 pl-14 border-r border-border/20">
+                    <TableRow key={`${order.id}-${product.id}-${idx}`} className="bg-card hover:bg-muted">
+                      <TableCell className="sticky left-0 z-10 bg-card pl-14 border-r border-border/20">
                         <div className="flex items-center gap-3">
                           <img src={product.image} alt={product.name} className="h-7 w-7 rounded border border-border object-cover flex-shrink-0" />
                           <div className="flex flex-col min-w-0">
