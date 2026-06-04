@@ -13,61 +13,43 @@ export function MobileBottomBar() {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const items = [
-    {
-      key: "insights",
-      label: "Insights",
-      icon: Lightbulb,
-      active: dataPanel === "insights",
-      badge: criticalCount,
-      onClick: () => (dataPanel === "insights" ? setDataPanel("none") : openInsights()),
-    },
-    {
-      key: "notifications",
-      label: "Alerts",
-      icon: Bell,
-      active: dataPanel === "notifications",
-      onClick: () => setDataPanel(dataPanel === "notifications" ? "none" : "notifications"),
-    },
-    {
-      key: "aan",
-      label: "Aan",
-      icon: AanGlyph,
-      iconClass: "aan-gradient-text",
-      onClick: () => navigate("/aan"),
-    },
-    {
-      key: "theme",
-      label: isDark ? "Light" : "Dark",
-      icon: isDark ? Sun : Moon,
-      onClick: () => setTheme(isDark ? "light" : "dark"),
-    },
-  ] as const;
+  const baseBtn = "relative flex flex-col items-center justify-center gap-0.5 h-full text-[11px]";
+  const muted = "text-muted-foreground hover:text-foreground";
+  const active = "text-primary";
 
   return (
     <nav
       className="h-14 shrink-0 sticky bottom-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border/40 grid grid-cols-4"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {items.map(it => {
-        const Icon = it.icon as any;
-        return (
-          <button
-            key={it.key}
-            onClick={it.onClick}
-            className={cn(
-              "relative flex flex-col items-center justify-center gap-0.5 h-full text-[11px]",
-              (it as any).active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Icon className={cn("h-5 w-5", (it as any).iconClass)} {...((it as any).iconClass ? { staticEyes: true } : {})} />
-            <span>{it.label}</span>
-            {"badge" in it && (it as any).badge ? (
-              <span className="absolute top-1.5 right-[28%] h-1.5 w-1.5 rounded-full bg-destructive" />
-            ) : null}
-          </button>
-        );
-      })}
+      <button
+        onClick={() => (dataPanel === "insights" ? setDataPanel("none") : openInsights())}
+        className={cn(baseBtn, dataPanel === "insights" ? active : muted)}
+      >
+        <Lightbulb className="h-5 w-5" />
+        <span>Insights</span>
+        {criticalCount > 0 && (
+          <span className="absolute top-1.5 right-[28%] h-1.5 w-1.5 rounded-full bg-destructive" />
+        )}
+      </button>
+
+      <button
+        onClick={() => setDataPanel(dataPanel === "notifications" ? "none" : "notifications")}
+        className={cn(baseBtn, dataPanel === "notifications" ? active : muted)}
+      >
+        <Bell className="h-5 w-5" />
+        <span>Alerts</span>
+      </button>
+
+      <button onClick={() => navigate("/aan")} className={cn(baseBtn, muted)}>
+        <AanGlyph className="h-5 w-5 aan-gradient-text" staticEyes />
+        <span>Aan</span>
+      </button>
+
+      <button onClick={() => setTheme(isDark ? "light" : "dark")} className={cn(baseBtn, muted)}>
+        {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        <span>{isDark ? "Light" : "Dark"}</span>
+      </button>
     </nav>
   );
 }
