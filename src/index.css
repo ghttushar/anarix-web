@@ -636,4 +636,10 @@ html[data-view="mobile"] [data-app-panel] {
 html[data-view="mobile"] nav button {
   min-height: 44px;
 }
+/* InlineKPIStrip: keep cards at usable min width and scroll horizontally */
+html[data-view="mobile"] [data-inline-kpi-strip] > * {
+  flex: 0 0 140px !important;
+  min-width: 140px;
+}
+
 
