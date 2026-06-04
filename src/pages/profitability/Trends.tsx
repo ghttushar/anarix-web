@@ -38,6 +38,8 @@ const frequencyColumns: Record<Frequency, string[]> = {
 
 export default function ProfitabilityTrends() {
   const { formatCurrency } = useCurrency();
+  const { view } = useViewport();
+  const isMobile = view === "mobile";
   const [selectedMetric, setSelectedMetric] = useState("Total Sales");
   const [frequency, setFrequency] = useState<Frequency>("Weekly");
   const [searchValue, setSearchValue] = useState("");
