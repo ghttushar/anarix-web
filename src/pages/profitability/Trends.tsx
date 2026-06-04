@@ -205,7 +205,12 @@ export default function ProfitabilityTrends() {
           data={scatterData}
           selectedIds={selectedIds}
           onPointToggle={(id) => toggleProduct(id)}
+          onPointDetail={(id) => {
+            const p = profitabilityProducts.find((x) => x.id === id);
+            if (p) setDetailProduct(p);
+          }}
         />
+
 
         <div className="space-y-3">
           <DataTableToolbar
