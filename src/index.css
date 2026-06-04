@@ -767,5 +767,10 @@ html[data-view="mobile"] [data-island] {
   display: none !important;
 }
 
+/* 16. Hide scrollbar utility (used by mobile AppLevelBar + chip rows) */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+
 
 
