@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { UploadDialog } from "@/components/advertising/UploadDialog";
 import { cn } from "@/lib/utils";
+import { useViewport } from "@/contexts/ViewportContext";
 
 interface FilterRule {
   id: string;
