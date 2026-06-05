@@ -25,6 +25,7 @@ import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 import { ViewBadge } from "@/components/layout/ViewBadge";
 import { MobileTaskbar } from "@/views/mobile/MobileTaskbar";
+import { useViewport } from "@/contexts/ViewportContext";
 
 interface BreadcrumbItem {
   label: string;
@@ -123,8 +124,9 @@ interface AppTaskbarProps {
 }
 
 export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems }: AppTaskbarProps) {
-  // Mobile delegates to a purpose-built taskbar (Phase 2 redesign).
-  if (typeof document !== "undefined" && document.documentElement.getAttribute("data-view") === "mobile") {
+  const { view } = useViewport();
+  // Mobile delegates to a purpose-built taskbar.
+  if (view === "mobile") {
     return (
       <MobileTaskbar
         breadcrumbItems={breadcrumbItems}
