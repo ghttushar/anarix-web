@@ -2,25 +2,19 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   ChevronRight,
-  LogOut,
-  Sun,
-  Moon,
-  User,
-  CreditCard,
-  Settings,
-  SlidersHorizontal,
-  Users,
-  Globe,
+  Store,
+  Check,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AnarixLogo } from "@/components/branding/AnarixLogo";
 import { navigationGroups } from "@/components/layout/AppSidebar";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
-import { useViewport } from "@/contexts/ViewportContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useMarketplace, Marketplace } from "@/contexts/MarketplaceContext";
+import { useAccounts } from "@/contexts/AccountContext";
+import amazonLogo from "@/assets/amazon-logo.png";
+import walmartLogo from "@/assets/walmart-logo.png";
 
 // Routes write-only on desktop, hidden on mobile drawer.
 const MOBILE_BLOCKED = new Set<string>([
@@ -30,19 +24,17 @@ const MOBILE_BLOCKED = new Set<string>([
   "/advertising/rules/applied",
 ]);
 
-// Super-section regrouping for a more navigable mobile drawer.
 const SUPER_SECTIONS: { label: string; groupLabels: string[] }[] = [
   { label: "Analyze", groupLabels: ["Profitability"] },
   { label: "Operate", groupLabels: ["Advertising", "Day Parting", "AMC"] },
   { label: "Discover", groupLabels: ["Business Intelligence", "Catalog", "Reports"] },
 ];
 
-const PROFILE_ITEMS = [
-  { label: "Profile", icon: User, url: "/profile" },
-  { label: "Billing", icon: CreditCard, url: "/settings/billing" },
-  { label: "Settings", icon: Settings, url: "/settings" },
-  { label: "Preferences", icon: SlidersHorizontal, url: "/settings/appearance" },
-  { label: "Team", icon: Users, url: "/settings/team" },
+const MARKETPLACES: { id: Marketplace; label: string; color: string }[] = [
+  { id: "amazon", label: "Amazon", color: "#FF9900" },
+  { id: "walmart", label: "Walmart", color: "#0071CE" },
+  { id: "shopify", label: "Shopify", color: "#96BF48" },
+  { id: "tiktok", label: "TikTok", color: "#000000" },
 ];
 
 interface Props {
@@ -53,9 +45,9 @@ interface Props {
 export function MobileDrawerNav({ open, onOpenChange }: Props) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { setView } = useViewport();
   const { newFeaturesVisible } = useFeatureToggle();
-  const { theme, setTheme } = useTheme();
+  const { marketplace, setMarketplace } = useMarketplace();
+  const { accounts, currentAccount, setCurrentAccount } = useAccounts();
 
   const filteredGroups = navigationGroups
     .map((g) => ({
@@ -74,7 +66,8 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
           .map((g) => g.label)
       )
   );
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [mpOpen, setMpOpen] = useState(false);
+  const [acctOpen, setAcctOpen] = useState(false);
 
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => {
@@ -88,8 +81,8 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
     navigate(url);
   };
 
-  const isDark = theme === "dark";
-  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
+  const accountsForMp = accounts.filter((a) => a.marketplace === marketplace);
+  const activeMp = MARKETPLACES.find((m) => m.id === marketplace);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -97,182 +90,186 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
         side="left"
         className="w-[88vw] max-w-[360px] p-0 flex flex-col gap-0 bg-background"
       >
-        {/* Header band — 96px, brand mark + org + plan */}
-        <div className="h-24 shrink-0 px-4 flex items-center gap-3 border-b border-border bg-card">
-          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <AnarixLogo variant="symbol" className="h-6 w-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-semibold text-foreground truncate font-display">
-              Anarix
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[12px] text-muted-foreground truncate">
-                Acme Brands
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-px rounded bg-primary/10 text-primary">
-                Pro
-              </span>
-            </div>
-          </div>
+        {/* Header — single close affordance via SheetContent's built-in X */}
+        <div className="h-14 shrink-0 px-4 flex items-center border-b border-border bg-card">
+          <AnarixLogo variant="full" className="h-5 w-auto" />
         </div>
 
-        {/* Body — sectioned navigation */}
-        <div className="flex-1 overflow-auto py-3 px-2">
-          {SUPER_SECTIONS.map((section) => {
-            const sectionGroups = filteredGroups.filter((g) =>
-              section.groupLabels.includes(g.label)
-            );
-            if (sectionGroups.length === 0) return null;
-            return (
-              <div key={section.label} className="mb-4">
-                <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                  {section.label}
-                </div>
-                {sectionGroups.map((group) => {
-                  const isOpen = openGroups.has(group.label);
-                  const groupActive = group.items.some((i) =>
-                    pathname.startsWith(i.url)
-                  );
-                  // Flatten single-item groups directly as nav rows.
-                  if (group.items.length === 1) {
-                    const item = group.items[0];
-                    const active = pathname.startsWith(item.url);
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-auto py-2 px-2">
+          {/* Marketplace + Account stacked selectors */}
+          <div className="px-1 py-2 space-y-1.5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground px-2">
+              Marketplace
+            </div>
+            <div className="border border-border rounded-md overflow-hidden">
+              <button
+                onClick={() => setMpOpen((v) => !v)}
+                className="w-full h-10 px-3 flex items-center gap-2 hover:bg-muted/60 text-left"
+              >
+                <MpLogo id={marketplace} className="h-4 w-4" />
+                <span className="flex-1 text-[13px] font-medium text-foreground">
+                  {activeMp?.label}
+                </span>
+                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", mpOpen && "rotate-180")} />
+              </button>
+              {mpOpen && (
+                <div className="border-t border-border bg-muted/20">
+                  {MARKETPLACES.map((mp) => {
+                    const active = mp.id === marketplace;
                     return (
-                      <NavRow
-                        key={item.url}
-                        icon={item.icon}
-                        label={item.title}
-                        active={active}
-                        onClick={() => handleNav(item.url)}
-                      />
-                    );
-                  }
-                  return (
-                    <div key={group.label} className="mb-1">
                       <button
-                        onClick={() => toggleGroup(group.label)}
+                        key={mp.id}
+                        onClick={() => {
+                          setMarketplace(mp.id);
+                          setMpOpen(false);
+                        }}
                         className={cn(
-                          "w-full h-11 px-3 flex items-center gap-3 rounded-md text-[13px] font-medium",
-                          groupActive
-                            ? "text-foreground"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                          "w-full h-10 px-3 flex items-center gap-2 text-[13px] hover:bg-muted/60",
+                          active && "bg-primary/5 text-primary font-semibold"
                         )}
                       >
-                        <group.icon className="h-4 w-4 opacity-80" />
-                        <span className="flex-1 text-left">{group.label}</span>
-                        {isOpen ? (
-                          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                        )}
+                        <MpLogo id={mp.id} className="h-4 w-4" />
+                        <span className="flex-1 text-left">{mp.label}</span>
+                        {active && <Check className="h-3.5 w-3.5" />}
                       </button>
-                      {isOpen && (
-                        <div className="pl-2 pt-0.5 space-y-0.5">
-                          {group.items.map((item) => {
-                            const active = pathname.startsWith(item.url);
-                            return (
-                              <NavRow
-                                key={item.url}
-                                icon={item.icon}
-                                label={item.title}
-                                active={active}
-                                onClick={() => handleNav(item.url)}
-                                indent
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer — profile tile + actions */}
-        <div className="shrink-0 border-t border-border bg-card px-2 py-2">
-          <button
-            onClick={() => setProfileOpen((v) => !v)}
-            className="w-full h-16 px-2 flex items-center gap-3 rounded-lg hover:bg-muted/60 text-left"
-          >
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary/10 text-primary text-[12px] font-semibold">
-                JD
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="text-[14px] font-semibold text-foreground truncate">
-                John Doe
-              </div>
-              <div className="text-[12px] text-muted-foreground truncate">
-                john@anarix.com
-              </div>
-            </div>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 text-muted-foreground transition-transform",
-                profileOpen && "rotate-180"
+                    );
+                  })}
+                </div>
               )}
-            />
-          </button>
+            </div>
 
-          {profileOpen && (
-            <div className="mt-1 mb-1 grid grid-cols-1 gap-0.5">
-              {PROFILE_ITEMS.map((p) => (
-                <button
-                  key={p.label}
-                  onClick={() => handleNav(p.url)}
-                  className="h-10 px-3 flex items-center gap-3 rounded-md text-[13px] text-foreground hover:bg-muted/60"
-                >
-                  <p.icon className="h-4 w-4 opacity-80" />
-                  {p.label}
-                </button>
-              ))}
+            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground px-2 pt-1">
+              Account
+            </div>
+            <div className="border border-border rounded-md overflow-hidden">
               <button
-                onClick={() => handleNav("/auth/login")}
-                className="h-10 px-3 flex items-center gap-3 rounded-md text-[13px] text-foreground hover:bg-muted/60"
+                onClick={() => setAcctOpen((v) => !v)}
+                disabled={accountsForMp.length === 0}
+                className="w-full h-10 px-3 flex items-center gap-2 hover:bg-muted/60 text-left disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <LogOut className="h-4 w-4 opacity-80" />
-                Sign out
+                <Store className="h-4 w-4 text-muted-foreground" />
+                <span className="flex-1 text-[13px] font-medium text-foreground truncate">
+                  {currentAccount?.merchantName ?? (accountsForMp.length === 0 ? "No accounts" : "Select account")}
+                </span>
+                {accountsForMp.length > 0 && (
+                  <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", acctOpen && "rotate-180")} />
+                )}
               </button>
-            </div>
-          )}
-
-          <div className="mt-1 flex items-center gap-1">
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="h-9 flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-border text-[12px] font-medium text-foreground hover:bg-muted/60"
-            >
-              {isDark ? (
-                <>
-                  <Sun className="h-3.5 w-3.5" /> Light
-                </>
-              ) : (
-                <>
-                  <Moon className="h-3.5 w-3.5" /> Dark
-                </>
+              {acctOpen && accountsForMp.length > 0 && (
+                <div className="border-t border-border bg-muted/20 max-h-[200px] overflow-auto">
+                  {accountsForMp.map((a) => {
+                    const active = currentAccount?.id === a.id;
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => {
+                          setCurrentAccount(a.id);
+                          setAcctOpen(false);
+                        }}
+                        className={cn(
+                          "w-full px-3 py-2 flex items-start gap-2 text-left hover:bg-muted/60",
+                          active && "bg-primary/5"
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className={cn("text-[13px] truncate", active ? "text-primary font-semibold" : "text-foreground")}>
+                            {a.merchantName}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {a.region} · {a.accountType}
+                          </div>
+                        </div>
+                        {active && <Check className="h-3.5 w-3.5 text-primary mt-0.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            </button>
-            <button
-              onClick={() => {
-                setView("desktop");
-                onOpenChange(false);
-                navigate("/profitability/dashboard");
-              }}
-              aria-label="Switch to desktop"
-              className="h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-md border border-border text-[12px] font-medium text-foreground hover:bg-muted/60"
-            >
-              <Globe className="h-3.5 w-3.5" /> Desktop
-            </button>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="pt-2">
+            {SUPER_SECTIONS.map((section) => {
+              const sectionGroups = filteredGroups.filter((g) =>
+                section.groupLabels.includes(g.label)
+              );
+              if (sectionGroups.length === 0) return null;
+              return (
+                <div key={section.label} className="mb-3">
+                  <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {section.label}
+                  </div>
+                  {sectionGroups.map((group) => {
+                    const isOpen = openGroups.has(group.label);
+                    const groupActive = group.items.some((i) => pathname.startsWith(i.url));
+                    if (group.items.length === 1) {
+                      const item = group.items[0];
+                      const active = pathname.startsWith(item.url);
+                      return (
+                        <NavRow
+                          key={item.url}
+                          icon={item.icon}
+                          label={item.title}
+                          active={active}
+                          onClick={() => handleNav(item.url)}
+                        />
+                      );
+                    }
+                    return (
+                      <div key={group.label} className="mb-0.5">
+                        <button
+                          onClick={() => toggleGroup(group.label)}
+                          className={cn(
+                            "w-full h-11 px-3 flex items-center gap-3 rounded-md text-[13px] font-medium",
+                            groupActive
+                              ? "text-foreground"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                          )}
+                        >
+                          <group.icon className="h-4 w-4 opacity-80" />
+                          <span className="flex-1 text-left">{group.label}</span>
+                          {isOpen ? (
+                            <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                          ) : (
+                            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                          )}
+                        </button>
+                        {isOpen && (
+                          <div className="pl-2 pt-0.5 space-y-0.5">
+                            {group.items.map((item) => {
+                              const active = pathname.startsWith(item.url);
+                              return (
+                                <NavRow
+                                  key={item.url}
+                                  icon={item.icon}
+                                  label={item.title}
+                                  active={active}
+                                  onClick={() => handleNav(item.url)}
+                                  indent
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </SheetContent>
     </Sheet>
   );
+}
+
+function MpLogo({ id, className }: { id: Marketplace; className?: string }) {
+  if (id === "amazon") return <img src={amazonLogo} alt="Amazon" className={cn(className, "object-contain")} />;
+  if (id === "walmart") return <img src={walmartLogo} alt="Walmart" className={cn(className, "object-contain")} />;
+  return <Store className={cn(className, "text-muted-foreground")} />;
 }
 
 function NavRow({

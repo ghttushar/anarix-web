@@ -152,7 +152,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                 {cols.map((col) => (
                   <SortableTableHead key={col.id} field={col.id} {...sp} className={cn("text-right", pc(col.id, true))} style={ps(col.id)} align="right">{col.label}</SortableTableHead>
                 ))}
-                <TableHead className="text-center w-[80px]">Info</TableHead>
+                <TableHead data-info-col className="text-center w-[80px]">Info</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -205,7 +205,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                           </TableCell>
                         );
                       })}
-                      <TableCell className="text-center">
+                      <TableCell data-info-col className="text-center">
                         <span className="text-[10px] text-muted-foreground">{isExpanded ? "Open" : "Tap to expand"}</span>
                       </TableCell>
                     </TableRow>
@@ -250,7 +250,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                             </div>
                           </TableCell>
                         ))}
-                        <TableCell className="text-center">
+                        <TableCell data-info-col className="text-center">
                           {onMoreClick ? (
                             <button onClick={(e) => { e.stopPropagation(); onMoreClick(product); }} className="text-xs text-primary hover:underline cursor-pointer">More</button>
                           ) : (
@@ -273,7 +273,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                     </TableCell>
                   );
                 })}
-                <TableCell />
+                <TableCell data-info-col />
               </TableRow>
             </TableBody>
           </Table>
@@ -322,7 +322,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
               {cols.map((col) => (
                 <SortableTableHead key={col.id} field={col.id} {...sp} className={cn("text-right", pc(col.id, true))} style={ps(col.id)} align="right">{col.label}</SortableTableHead>
               ))}
-              <TableHead className="text-center w-[80px]">Info</TableHead>
+              <TableHead data-info-col className="text-center w-[80px]">Info</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -379,7 +379,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                         </div>
                       </TableCell>
                     ))}
-                    <TableCell className="text-center">
+                    <TableCell data-info-col className="text-center">
                       <span className="text-xs text-muted-foreground">-</span>
                     </TableCell>
                   </TableRow>
@@ -407,7 +407,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                           </TableCell>
                         );
                       })}
-                      <TableCell />
+                      <TableCell data-info-col />
                     </TableRow>
                   ))}
                 </>
@@ -425,7 +425,7 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
                   </TableCell>
                 );
               })}
-              <TableCell />
+              <TableCell data-info-col />
             </TableRow>
           </TableBody>
         </Table>

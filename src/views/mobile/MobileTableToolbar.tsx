@@ -1,20 +1,11 @@
 import { ReactNode } from "react";
-import { Search, Filter, Layers, Columns3, ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Filter, Layers, Columns3, ArrowUpDown, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Chip {
-  id: string;
-  label: string;
-  icon?: ReactNode;
-  activeCount?: number;
-  onClick?: () => void;
-  active?: boolean;
-}
-
 /**
- * Mobile table toolbar — single horizontal row of compact chips.
- * Pair with MobileRightSheet for filter/columns/sort surfaces.
+ * Mobile table toolbar — two fixed rows, never wraps and never scrolls
+ * horizontally. Row 1 is the primary action cluster (Search/Delta/Filter/
+ * Columns), Row 2 is secondary chips (Group/Sort/Export).
  */
 export function MobileTableToolbar({
   onSearchClick,
@@ -25,9 +16,10 @@ export function MobileTableToolbar({
   onColumnsClick,
   onSortClick,
   sortActive,
-  onMoreClick,
+  onExportClick,
+  showDeltas,
+  onShowDeltasChange,
   extra,
-  viewToggle,
 }: {
   onSearchClick?: () => void;
   onFilterClick?: () => void;
@@ -37,42 +29,100 @@ export function MobileTableToolbar({
   onColumnsClick?: () => void;
   onSortClick?: () => void;
   sortActive?: boolean;
-  onMoreClick?: () => void;
+  onExportClick?: () => void;
+  showDeltas?: boolean;
+  onShowDeltasChange?: (v: boolean) => void;
   extra?: ReactNode;
-  viewToggle?: ReactNode;
 }) {
-  const chips: Chip[] = [];
-  if (onSearchClick) chips.push({ id: "search", label: "Search", icon: <Search className="h-3.5 w-3.5" />, onClick: onSearchClick });
-  if (onFilterClick) chips.push({ id: "filter", label: "Filter", icon: <Filter className="h-3.5 w-3.5" />, onClick: onFilterClick, activeCount: filterCount });
-  if (onGroupClick) chips.push({ id: "group", label: "Group", icon: <Layers className="h-3.5 w-3.5" />, onClick: onGroupClick, active: groupActive });
-  if (onColumnsClick) chips.push({ id: "columns", label: "Columns", icon: <Columns3 className="h-3.5 w-3.5" />, onClick: onColumnsClick });
-  if (onSortClick) chips.push({ id: "sort", label: "Sort", icon: <ArrowUpDown className="h-3.5 w-3.5" />, onClick: onSortClick, active: sortActive });
-
   return (
-    <div className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto no-scrollbar">
-      {viewToggle}
-      {chips.map((c) => (
-        <button
-          key={c.id}
-          onClick={c.onClick}
-          className={cn(
-            "h-8 inline-flex items-center gap-1 px-2.5 rounded-md border text-[12px] font-medium shrink-0 tabular-nums",
-            c.active || (c.activeCount && c.activeCount > 0)
-              ? "border-primary text-primary bg-primary/5"
-              : "border-border text-foreground hover:bg-muted/60"
+    <div className="flex flex-col gap-1.5 px-3 py-2">
+      <div className="flex items-center gap-1.5">
+        {onSearchClick && (
+          <Chip label="Search" onClick={onSearchClick} icon={<Search className="h-3.5 w-3.5" />} className="flex-1 justify-start" />
+        )}
+        {typeof showDeltas === "boolean" && onShowDeltasChange && (
+          <Chip
+            label="Delta"
+            onClick={() => onShowDeltasChange(!showDeltas)}
+            active={showDeltas}
+            icon={<ArrowUpDown className="h-3.5 w-3.5" />}
+          />
+        )}
+        {onFilterClick && (
+          <Chip
+            label="Filter"
+            onClick={onFilterClick}
+            badge={filterCount}
+            icon={<Filter className="h-3.5 w-3.5" />}
+          />
+        )}
+        {onColumnsClick && (
+          <Chip label="Columns" onClick={onColumnsClick} icon={<Columns3 className="h-3.5 w-3.5" />} />
+        )}
+      </div>
+      {(onGroupClick || onSortClick || onExportClick || extra) && (
+        <div className="flex items-center gap-1.5">
+          {onGroupClick && (
+            <Chip
+              label="Group"
+              onClick={onGroupClick}
+              active={groupActive}
+              icon={<Layers className="h-3.5 w-3.5" />}
+            />
           )}
-        >
-          {c.icon}
-          <span>{c.label}</span>
-          {c.activeCount ? <span className="text-[10px] rounded-full bg-primary/15 px-1">{c.activeCount}</span> : null}
-        </button>
-      ))}
-      {extra}
-      {onMoreClick && (
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 ml-auto" onClick={onMoreClick} aria-label="More">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+          {onSortClick && (
+            <Chip
+              label="Sort"
+              onClick={onSortClick}
+              active={sortActive}
+              icon={<ArrowUpDown className="h-3.5 w-3.5" />}
+            />
+          )}
+          {onExportClick && (
+            <Chip
+              label="Export"
+              onClick={onExportClick}
+              icon={<Download className="h-3.5 w-3.5" />}
+            />
+          )}
+          {extra && <div className="ml-auto flex items-center gap-1.5">{extra}</div>}
+        </div>
       )}
     </div>
+  );
+}
+
+function Chip({
+  label,
+  icon,
+  onClick,
+  active,
+  badge,
+  className,
+}: {
+  label: string;
+  icon: ReactNode;
+  onClick?: () => void;
+  active?: boolean;
+  badge?: number;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "h-8 inline-flex items-center gap-1 px-2.5 rounded-md border text-[12px] font-medium shrink-0 tabular-nums",
+        active || (badge && badge > 0)
+          ? "border-primary text-primary bg-primary/5"
+          : "border-border text-foreground hover:bg-muted/60",
+        className
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+      {badge ? (
+        <span className="text-[10px] rounded-full bg-primary/15 px-1">{badge}</span>
+      ) : null}
+    </button>
   );
 }
