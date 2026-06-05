@@ -188,10 +188,16 @@ export function DataTableToolbar({
     c.label.toLowerCase().includes(columnSearch.toLowerCase())
   );
 
+  const { view } = useViewport();
+  const isMobile = view === "mobile";
+
   return (
-    <div className="space-y-1.5" data-table-toolbar>
+    <div className={cn("space-y-1.5", isMobile && "mobile-toolbar")} data-table-toolbar>
       {/* Main Toolbar Row */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className={cn(
+        "flex items-center justify-between gap-2",
+        isMobile ? "flex-col items-stretch" : "flex-wrap"
+      )}>
         {/* Left Side */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Edit Mode Toggle — first position */}
