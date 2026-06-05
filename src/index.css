@@ -660,16 +660,24 @@ html[data-view="mobile"] [data-table-toolbar] [data-tb-actions] {
   gap: 4px !important;
 }
 
-/* 5c. Kill all hover background/color/border changes on mobile — touch
-   devices have no hover, and persistent hover states after tap look broken. */
-html[data-view="mobile"] *:hover {
-  background-color: revert;
-}
-html[data-view="mobile"] [class*="hover:bg-"]:hover,
-html[data-view="mobile"] [class*="hover:text-"]:hover,
-html[data-view="mobile"] [class*="hover:border-"]:hover,
-html[data-view="mobile"] [class*="hover:opacity-"]:hover {
+/* 5c. Kill hover background/color changes on mobile — touch devices have
+   no hover, and persistent hover states after tap look broken. Scoped to
+   interactive elements only so cards/panels keep their bg-card backgrounds. */
+html[data-view="mobile"] button:hover,
+html[data-view="mobile"] a:hover,
+html[data-view="mobile"] [role="button"]:hover,
+html[data-view="mobile"] [role="menuitem"]:hover,
+html[data-view="mobile"] [role="option"]:hover,
+html[data-view="mobile"] [role="tab"]:hover,
+html[data-view="mobile"] tr:hover {
   background-color: inherit !important;
+}
+/* Preserve explicit selected / active states even on mobile */
+html[data-view="mobile"] [data-state="active"],
+html[data-view="mobile"] [aria-pressed="true"],
+html[data-view="mobile"] [aria-selected="true"],
+html[data-view="mobile"] [data-active="true"] {
+  background-color: revert !important;
 }
 
 
