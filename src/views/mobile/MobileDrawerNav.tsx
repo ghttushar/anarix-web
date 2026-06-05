@@ -285,44 +285,65 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
           </div>
         </div>
 
-        {/* Footer — Profile identity + Theme + Profile actions (parity with desktop) */}
-        <div className="shrink-0 border-t border-border bg-card p-3 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <Avatar className="h-8 w-8 shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-semibold">
-                  JD
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[13px] font-semibold text-foreground truncate">
-                  John Doe
-                </span>
-                <span className="text-[11px] text-muted-foreground truncate">
-                  john@anarix.com
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground active:bg-muted"
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5">
-            <FooterAction icon={User} label="Profile" onClick={() => handleNav("/profile")} />
-            <FooterAction icon={CreditCard} label="Billing" onClick={() => handleNav("/settings/billing")} />
-            <FooterAction icon={Settings} label="Settings" onClick={() => handleNav("/settings/system")} />
-            <FooterAction icon={SlidersHorizontal} label="Preferences" onClick={() => handleNav("/settings/appearance")} />
-            <FooterAction icon={Users} label="Team" onClick={() => handleNav("/settings/team")} />
-            <FooterAction icon={LogOut} label="Sign out" onClick={() => handleNav("/login")} />
-          </div>
-        </div>
+        {/* Footer — Collapsible profile + Theme toggle (single source) */}
+        <ProfileFooter onNav={handleNav} isDark={isDark} setTheme={setTheme} />
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ProfileFooter({
+  onNav,
+  isDark,
+  setTheme,
+}: {
+  onNav: (url: string) => void;
+  isDark: boolean;
+  setTheme: (t: "light" | "dark" | "system") => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="shrink-0 border-t border-border bg-card">
+      <div className="flex items-stretch">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="flex-1 flex items-center gap-2.5 px-3 py-2.5 min-w-0 active:bg-muted/60"
+        >
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-semibold">
+              JD
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0 text-left">
+            <span className="text-[13px] font-semibold text-foreground truncate">John Doe</span>
+            <span className="text-[11px] text-muted-foreground truncate">john@anarix.com</span>
+          </div>
+          {expanded ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
+          ) : (
+            <ChevronUp className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
+          )}
+        </button>
+        <button
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className="w-12 flex items-center justify-center text-muted-foreground active:bg-muted border-l border-border"
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+      </div>
+      {expanded && (
+        <div className="grid grid-cols-2 gap-1 p-2 border-t border-border/60">
+          <FooterAction icon={User} label="Profile" onClick={() => onNav("/profile")} />
+          <FooterAction icon={CreditCard} label="Billing" onClick={() => onNav("/settings/billing")} />
+          <FooterAction icon={Settings} label="Settings" onClick={() => onNav("/settings/system")} />
+          <FooterAction icon={SlidersHorizontal} label="Preferences" onClick={() => onNav("/settings/appearance")} />
+          <FooterAction icon={Users} label="Team" onClick={() => onNav("/settings/team")} />
+          <FooterAction icon={LogOut} label="Sign out" onClick={() => onNav("/login")} />
+        </div>
+      )}
+    </div>
   );
 }
 
