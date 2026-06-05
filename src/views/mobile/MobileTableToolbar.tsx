@@ -110,18 +110,22 @@ function Chip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active || undefined}
+      data-active={active || undefined}
       className={cn(
-        "h-8 inline-flex items-center gap-1 px-2.5 rounded-md border text-[12px] font-medium shrink-0 tabular-nums",
-        active || (badge && badge > 0)
-          ? "border-primary text-primary bg-primary/5"
-          : "border-border text-foreground hover:bg-muted/60",
+        "h-8 inline-flex items-center gap-1 px-2.5 rounded-md border text-[12px] font-medium shrink-0 tabular-nums transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : (badge && badge > 0)
+            ? "border-primary text-primary bg-primary/5"
+            : "border-border text-foreground",
         className
       )}
     >
       {icon}
       <span>{label}</span>
       {badge ? (
-        <span className="text-[10px] rounded-full bg-primary/15 px-1">{badge}</span>
+        <span className={cn("text-[10px] rounded-full px-1", active ? "bg-primary-foreground/20" : "bg-primary/15")}>{badge}</span>
       ) : null}
     </button>
   );
