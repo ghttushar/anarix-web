@@ -28,18 +28,13 @@ import { Separator } from "@/components/ui/separator";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 
+// Mobile is read-only — only block writable/agent rule pages.
+// Applied Rules stays visible (read-only listing of active rules).
 const MOBILE_BLOCKED = new Set<string>([
   "/workspace",
   "/workspace/health-score",
   "/advertising/rules/agents",
-  "/advertising/rules/applied",
 ]);
-
-const SUPER_SECTIONS: { label: string; groupLabels: string[] }[] = [
-  { label: "Analyze", groupLabels: ["Profitability"] },
-  { label: "Operate", groupLabels: ["Advertising", "Day Parting", "AMC"] },
-  { label: "Discover", groupLabels: ["Business Intelligence", "Catalog", "Reports"] },
-];
 
 const MARKETPLACES: { id: Marketplace; label: string }[] = [
   { id: "amazon", label: "Amazon" },
@@ -212,73 +207,60 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
 
           <Separator className="mx-2 mb-2 bg-border/40" />
 
-          {/* Navigation */}
+          {/* Navigation — flat hierarchy matching desktop sidebar */}
           <div className="flex-1">
-            {SUPER_SECTIONS.map((section) => {
-              const sectionGroups = filteredGroups.filter((g) =>
-                section.groupLabels.includes(g.label)
-              );
-              if (sectionGroups.length === 0) return null;
+            {filteredGroups.map((group) => {
+              const isOpen = openGroups.has(group.label);
+              const groupActive = group.items.some((i) => pathname.startsWith(i.url));
+              if (group.items.length === 1) {
+                const item = group.items[0];
+                const active = pathname.startsWith(item.url);
+                return (
+                  <NavRow
+                    key={item.url}
+                    icon={item.icon}
+                    label={item.title}
+                    active={active}
+                    onClick={() => handleNav(item.url)}
+                  />
+                );
+              }
               return (
-                <div key={section.label} className="mb-4">
-                  <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {section.label}
-                  </div>
-                  {sectionGroups.map((group) => {
-                    const isOpen = openGroups.has(group.label);
-                    const groupActive = group.items.some((i) => pathname.startsWith(i.url));
-                    if (group.items.length === 1) {
-                      const item = group.items[0];
-                      const active = pathname.startsWith(item.url);
-                      return (
-                        <NavRow
-                          key={item.url}
-                          icon={item.icon}
-                          label={item.title}
-                          active={active}
-                          onClick={() => handleNav(item.url)}
-                        />
-                      );
-                    }
-                    return (
-                      <div key={group.label} className="mb-0.5">
-                        <button
-                          onClick={() => toggleGroup(group.label)}
-                          className={cn(
-                            "w-full h-11 px-3 flex items-center gap-3 rounded-md text-[13px] font-medium",
-                            groupActive
-                              ? "text-foreground"
-                              : "text-muted-foreground active:bg-muted/60"
-                          )}
-                        >
-                          <group.icon className="h-4 w-4 opacity-80" />
-                          <span className="flex-1 text-left">{group.label}</span>
-                          {isOpen ? (
-                            <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                          ) : (
-                            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
-                          )}
-                        </button>
-                        {isOpen && (
-                          <div className="pl-2 pt-0.5 space-y-0.5">
-                            {group.items.map((item) => {
-                              const active = pathname.startsWith(item.url);
-                              return (
-                                <NavRow
-                                  key={item.url}
-                                  icon={item.icon}
-                                  label={item.title}
-                                  active={active}
-                                  onClick={() => handleNav(item.url)}
-                                  indent
-                                />
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div key={group.label} className="mb-0.5">
+                  <button
+                    onClick={() => toggleGroup(group.label)}
+                    className={cn(
+                      "w-full h-11 px-3 flex items-center gap-3 rounded-md text-[13px] font-medium",
+                      groupActive
+                        ? "text-foreground"
+                        : "text-muted-foreground active:bg-muted/60"
+                    )}
+                  >
+                    <group.icon className="h-4 w-4 opacity-80" />
+                    <span className="flex-1 text-left">{group.label}</span>
+                    {isOpen ? (
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="pl-2 pt-0.5 space-y-0.5">
+                      {group.items.map((item) => {
+                        const active = pathname.startsWith(item.url);
+                        return (
+                          <NavRow
+                            key={item.url}
+                            icon={item.icon}
+                            label={item.title}
+                            active={active}
+                            onClick={() => handleNav(item.url)}
+                            indent
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
