@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, PanelLeft, Plus, FileText, Search, Palette, Bot } from "lucide-react";
 import { AanGlyph } from "@/components/aan/AanGlyph";
+import { AanMascot } from "@/components/aan/AanMascot";
 import { AanConversation } from "@/components/aan/AanConversation";
 import { AanInput } from "@/components/aan/AanInput";
 import { AanArtifactViewer } from "@/components/aan/AanArtifactViewer";
@@ -55,30 +56,33 @@ export function MobileAanLayout() {
   return (
     <AanPresenceProvider>
       <div className="fixed inset-0 z-[60] flex flex-col bg-background">
-        {/* Top bar */}
+        {/* Top bar — explicit, tap-safe (44px) controls */}
         <header className="h-14 shrink-0 sticky top-0 z-30 bg-background border-b border-border flex items-center px-2 gap-1">
           <button
+            type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
-            className="h-10 w-10 rounded-md flex items-center justify-center hover:bg-muted"
+            className="h-11 w-11 rounded-md flex items-center justify-center active:bg-muted text-foreground"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <button
+            type="button"
             onClick={() => setDrawerOpen(true)}
-            aria-label="History"
-            className="h-10 w-10 rounded-md flex items-center justify-center hover:bg-muted"
+            aria-label="Chat history"
+            className="h-11 w-11 rounded-md flex items-center justify-center active:bg-muted text-foreground"
           >
             <PanelLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-            <AanGlyph className="h-5 w-5 aan-gradient-text" />
+            <AanMascot state="idle" size={22} interactive={false} />
             <span className="font-aan text-2xl leading-none aan-gradient-text">Aan</span>
           </div>
           <button
+            type="button"
             onClick={() => { startNewConversation(); setDrawerOpen(false); }}
             aria-label="New chat"
-            className="h-10 w-10 rounded-md flex items-center justify-center hover:bg-muted"
+            className="h-11 w-11 rounded-md flex items-center justify-center active:bg-muted text-foreground"
           >
             <Plus className="h-5 w-5" />
           </button>

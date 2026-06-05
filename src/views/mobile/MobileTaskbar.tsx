@@ -192,7 +192,7 @@ export function MobileTaskbar({
               label="Aan"
               active={onAan}
               onClick={() => navigate("/aan")}
-              icon={<AanGlyph className="h-4 w-4 aan-gradient-text" />}
+              icon={<AanGlyph state="idle" className="h-4 w-4 aan-gradient-text" />}
             />
             <ActionButton
               ariaLabel="Insight"
