@@ -12,7 +12,6 @@ import {
   SlidersHorizontal,
   Users,
   LogOut,
-  ChevronLeft,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -41,11 +40,11 @@ const SUPER_SECTIONS: { label: string; groupLabels: string[] }[] = [
   { label: "Discover", groupLabels: ["Business Intelligence", "Catalog", "Reports"] },
 ];
 
-const MARKETPLACES: { id: Marketplace; label: string; color: string }[] = [
-  { id: "amazon", label: "Amazon", color: "#FF9900" },
-  { id: "walmart", label: "Walmart", color: "#0071CE" },
-  { id: "shopify", label: "Shopify", color: "#96BF48" },
-  { id: "tiktok", label: "TikTok", color: "#000000" },
+const MARKETPLACES: { id: Marketplace; label: string }[] = [
+  { id: "amazon", label: "Amazon" },
+  { id: "walmart", label: "Walmart" },
+  { id: "shopify", label: "Shopify" },
+  { id: "tiktok", label: "TikTok" },
 ];
 
 interface Props {
@@ -81,7 +80,9 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
       )
   );
 
-  const [selectorView, setSelectorView] = useState<"summary" | "marketplaces" | "accounts">("summary");
+  // Marketplace selector: which marketplace's accounts list is expanded
+  // inline (nested, desktop-like). Defaults to the currently active mp.
+  const [expandedMp, setExpandedMp] = useState<Marketplace | null>(marketplace);
 
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => {
@@ -95,9 +96,6 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
     navigate(url);
   };
 
-  const accountsForMp = accounts.filter((a) => a.marketplace === marketplace);
-  const activeMp = MARKETPLACES.find((m) => m.id === marketplace);
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -109,111 +107,105 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
         </div>
 
         <div className="flex-1 overflow-auto py-2 px-2 flex flex-col">
-          {/* Unified Marketplace/Account Selector */}
-          <div className="px-1 py-2 mb-2">
+          {/* Merged Marketplace + Account selector — nested expand */}
+          <div className="px-1 pt-1 pb-2">
+            <div className="px-2 mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Marketplace
+            </div>
             <div className="border border-border rounded-lg bg-muted/20 overflow-hidden">
-              {selectorView === "summary" && (
-                <div className="divide-y divide-border/40">
-                  <button
-                    onClick={() => setSelectorView("marketplaces")}
-                    className="w-full h-11 px-3 flex items-center gap-2.5 hover:bg-muted/60 transition-colors text-left"
+              {MARKETPLACES.map((mp, idx) => {
+                const isActive = mp.id === marketplace;
+                const isExpanded = expandedMp === mp.id;
+                const mpAccounts = accounts.filter((a) => a.marketplace === mp.id);
+                return (
+                  <div
+                    key={mp.id}
+                    className={cn(idx > 0 && "border-t border-border/40")}
                   >
-                    <MpLogo id={marketplace} className="h-4 w-4" />
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">Marketplace</span>
-                      <span className="text-[13px] font-medium text-foreground truncate">{activeMp?.label}</span>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => setSelectorView("accounts")}
-                    disabled={accountsForMp.length === 0}
-                    className="w-full h-11 px-3 flex items-center gap-2.5 hover:bg-muted/60 transition-colors text-left disabled:opacity-50"
-                  >
-                    <Store className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">Account</span>
-                      <span className="text-[13px] font-medium text-foreground truncate">
-                        {currentAccount?.merchantName ?? (accountsForMp.length === 0 ? "No accounts" : "Select account")}
+                    <button
+                      onClick={() => {
+                        setExpandedMp(isExpanded ? null : mp.id);
+                      }}
+                      className={cn(
+                        "w-full h-11 px-3 flex items-center gap-2.5 text-left active:bg-muted/60",
+                        isActive && "bg-primary/5"
+                      )}
+                    >
+                      <MpLogo id={mp.id} className="h-4 w-4" />
+                      <span
+                        className={cn(
+                          "flex-1 text-[13px] truncate",
+                          isActive ? "text-foreground font-semibold" : "text-foreground"
+                        )}
+                      >
+                        {mp.label}
                       </span>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                </div>
-              )}
-
-              {selectorView === "marketplaces" && (
-                <div className="flex flex-col">
-                  <button 
-                    onClick={() => setSelectorView("summary")}
-                    className="h-9 px-2 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground border-b border-border/40"
-                  >
-                    <ChevronLeft className="h-3 w-3" /> Back
-                  </button>
-                  <div className="max-h-[240px] overflow-auto">
-                    {MARKETPLACES.map((mp) => {
-                      const active = mp.id === marketplace;
-                      return (
-                        <button
-                          key={mp.id}
-                          onClick={() => {
-                            setMarketplace(mp.id);
-                            setSelectorView("summary");
-                          }}
-                          className={cn(
-                            "w-full h-11 px-3 flex items-center gap-3 text-[13px] hover:bg-muted/60 transition-colors",
-                            active && "bg-primary/5 text-primary font-semibold"
-                          )}
-                        >
-                          <MpLogo id={mp.id} className="h-4 w-4" />
-                          <span className="flex-1 text-left">{mp.label}</span>
-                          {active && <Check className="h-3.5 w-3.5" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {selectorView === "accounts" && (
-                <div className="flex flex-col">
-                  <button 
-                    onClick={() => setSelectorView("summary")}
-                    className="h-9 px-2 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground border-b border-border/40"
-                  >
-                    <ChevronLeft className="h-3 w-3" /> Back
-                  </button>
-                  <div className="max-h-[240px] overflow-auto">
-                    {accountsForMp.map((a) => {
-                      const active = currentAccount?.id === a.id;
-                      return (
-                        <button
-                          key={a.id}
-                          onClick={() => {
-                            setCurrentAccount(a.id);
-                            setSelectorView("summary");
-                          }}
-                          className={cn(
-                            "w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-muted/60 transition-colors",
-                            active && "bg-primary/5"
-                          )}
-                        >
-                          <Store className={cn("h-4 w-4 mt-0.5", active ? "text-primary" : "text-muted-foreground")} />
-                          <div className="flex-1 min-w-0">
-                            <div className={cn("text-[13px] truncate", active ? "text-primary font-semibold" : "text-foreground")}>
-                              {a.merchantName}
-                            </div>
-                            <div className="text-[11px] text-muted-foreground truncate">
-                              {a.region} · {a.accountType}
-                            </div>
+                      {isActive && currentAccount?.marketplace === mp.id && (
+                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+                          {currentAccount.merchantName}
+                        </span>
+                      )}
+                      {isExpanded ? (
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </button>
+                    {isExpanded && (
+                      <div className="bg-background/50 border-t border-border/40">
+                        {mpAccounts.length === 0 ? (
+                          <div className="px-10 py-2 text-[11px] text-muted-foreground">
+                            No accounts
                           </div>
-                          {active && <Check className="h-3.5 w-3.5 text-primary mt-1" />}
-                        </button>
-                      );
-                    })}
+                        ) : (
+                          mpAccounts.map((a) => {
+                            const isCurrent = currentAccount?.id === a.id && isActive;
+                            return (
+                              <button
+                                key={a.id}
+                                onClick={() => {
+                                  if (!isActive) setMarketplace(mp.id);
+                                  setCurrentAccount(a.id);
+                                  onOpenChange(false);
+                                }}
+                                className={cn(
+                                  "w-full pl-10 pr-3 py-2 flex items-center gap-2 text-left active:bg-muted/60",
+                                  isCurrent && "bg-primary/5"
+                                )}
+                              >
+                                <Store
+                                  className={cn(
+                                    "h-3.5 w-3.5",
+                                    isCurrent ? "text-primary" : "text-muted-foreground"
+                                  )}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div
+                                    className={cn(
+                                      "text-[12px] truncate",
+                                      isCurrent
+                                        ? "text-primary font-semibold"
+                                        : "text-foreground"
+                                    )}
+                                  >
+                                    {a.merchantName}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground truncate">
+                                    {a.region} · {a.accountType}
+                                  </div>
+                                </div>
+                                {isCurrent && (
+                                  <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
 
@@ -255,7 +247,7 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
                             "w-full h-11 px-3 flex items-center gap-3 rounded-md text-[13px] font-medium",
                             groupActive
                               ? "text-foreground"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                              : "text-muted-foreground active:bg-muted/60"
                           )}
                         >
                           <group.icon className="h-4 w-4 opacity-80" />
@@ -292,7 +284,7 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
           </div>
         </div>
 
-        {/* Footer — Profile + Theme */}
+        {/* Footer — Profile identity + Theme + Profile actions (parity with desktop) */}
         <div className="shrink-0 border-t border-border bg-card p-3 space-y-3">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -302,43 +294,30 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0">
-                <span className="text-[13px] font-semibold text-foreground truncate">John Doe</span>
-                <span className="text-[11px] text-muted-foreground truncate">john@anarix.com</span>
+                <span className="text-[13px] font-semibold text-foreground truncate">
+                  John Doe
+                </span>
+                <span className="text-[11px] text-muted-foreground truncate">
+                  john@anarix.com
+                </span>
               </div>
             </div>
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground active:bg-muted"
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            <button 
-              onClick={() => handleNav("/profile")}
-              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
-            >
-              <User className="h-3.5 w-3.5 text-muted-foreground" /> Profile
-            </button>
-            <button 
-              onClick={() => handleNav("/settings/billing")}
-              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
-            >
-              <CreditCard className="h-3.5 w-3.5 text-muted-foreground" /> Billing
-            </button>
-            <button 
-              onClick={() => handleNav("/settings")}
-              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
-            >
-              <Settings className="h-3.5 w-3.5 text-muted-foreground" /> Settings
-            </button>
-            <button 
-              onClick={() => handleNav("/auth/login")}
-              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
-            >
-              <LogOut className="h-3.5 w-3.5 text-muted-foreground" /> Sign out
-            </button>
+            <FooterAction icon={User} label="Profile" onClick={() => handleNav("/profile")} />
+            <FooterAction icon={CreditCard} label="Billing" onClick={() => handleNav("/settings/billing")} />
+            <FooterAction icon={Settings} label="Settings" onClick={() => handleNav("/settings/system")} />
+            <FooterAction icon={SlidersHorizontal} label="Preferences" onClick={() => handleNav("/settings/appearance")} />
+            <FooterAction icon={Users} label="Team" onClick={() => handleNav("/settings/team")} />
+            <FooterAction icon={LogOut} label="Sign out" onClick={() => handleNav("/login")} />
           </div>
         </div>
       </SheetContent>
@@ -350,6 +329,26 @@ function MpLogo({ id, className }: { id: Marketplace; className?: string }) {
   if (id === "amazon") return <img src={amazonLogo} alt="Amazon" className={cn(className, "object-contain")} />;
   if (id === "walmart") return <img src={walmartLogo} alt="Walmart" className={cn(className, "object-contain")} />;
   return <Store className={cn(className, "text-muted-foreground")} />;
+}
+
+function FooterAction({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 h-9 px-2.5 rounded-md active:bg-muted text-[12px] font-medium text-foreground"
+    >
+      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      <span className="truncate">{label}</span>
+    </button>
+  );
 }
 
 function NavRow({
@@ -369,18 +368,15 @@ function NavRow({
     <button
       onClick={onClick}
       className={cn(
-        "w-full h-11 flex items-center gap-3 rounded-md text-[14px] transition-colors min-h-[44px] relative",
-        indent ? "pl-6 pr-3" : "px-3",
+        "w-full h-10 flex items-center gap-3 rounded-md text-[13px] font-medium px-3",
+        indent && "pl-9",
         active
-          ? "bg-primary/10 text-primary font-semibold"
-          : "text-foreground hover:bg-muted/60"
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground active:bg-muted/60"
       )}
     >
-      {active && (
-        <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-r bg-primary" />
-      )}
-      <Icon className="h-4 w-4 shrink-0 opacity-90" />
-      <span className="truncate">{label}</span>
+      <Icon className={cn("h-4 w-4", active ? "text-primary" : "opacity-80")} />
+      <span className="flex-1 text-left truncate">{label}</span>
     </button>
   );
 }

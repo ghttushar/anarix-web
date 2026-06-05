@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Mobile shell — two tiers only: TopBar (hamburger + logo) and the page's
- * AppLevelBar (rendered by each page via MobileTaskbar). No bottom bar:
- * Home/Aan/Bell live in the AppLevelBar. Aan stays full-screen via /aan.
+ * Mobile shell — sticky TopBar (hamburger + logo) and a sticky AppLevelBar
+ * rendered per page through MobileTaskbar. Insights / Alerts open as
+ * right-side sheets. No bottom bar.
  */
 export function MobileShell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -20,14 +20,17 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const showInsights = dataPanel === "insights";
   const showNotifications = dataPanel === "notifications";
   const anySheet = showInsights || showNotifications;
-  const sheetTitle = showInsights ? "Insights" : showNotifications ? "Notifications" : "";
+  const sheetTitle = showInsights ? "Insights" : showNotifications ? "Alerts" : "";
 
   return (
-    <div className="flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden">
+    <div
+      data-mobile-shell
+      className="flex flex-col min-h-[100dvh] w-full bg-background overflow-x-hidden"
+    >
       <MobileTopBar onOpenDrawer={() => setDrawerOpen(true)} />
       <MobileDrawerNav open={drawerOpen} onOpenChange={setDrawerOpen} />
 
-      <main className="flex-1 min-h-0 overflow-x-hidden pb-3">{children}</main>
+      <main className="flex-1 min-h-0 overflow-x-hidden pb-4">{children}</main>
 
       {anySheet && (
         <>

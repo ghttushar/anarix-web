@@ -24,15 +24,26 @@ function loadView(): AppView {
   return DEFAULT_VIEW;
 }
 
+function viewFromWidth(width: number): AppView {
+  if (width < 768) return "mobile";
+  if (width < 1180) return "tablet";
+  return "desktop";
+}
+
 function entryPathFor(v: AppView): string {
-  // Desktop is the legacy app at root paths; tablet/mobile have dedicated prefixes.
   if (v === "desktop") return "/profitability/dashboard";
   if (v === "tablet") return "/tablet";
   return "/mobile";
 }
 
 export function ViewportProvider({ children }: { children: ReactNode }) {
-  const [view, setViewState] = useState<AppView>(loadView);
+  const [view, setViewState] = useState<AppView>(() => {
+    if (typeof window !== "undefined") {
+      const auto = viewFromWidth(window.innerWidth);
+      if (auto === "mobile") return "mobile";
+    }
+    return loadView();
+  });
 
   const setView = useCallback((v: AppView) => {
     setViewState(v);
@@ -47,9 +58,31 @@ export function ViewportProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute("data-view", view);
   }, [view]);
 
-  // Track viewport orientation globally so CSS scoped to
-  // `html[data-view="tablet"][data-orientation="portrait"]` can adapt layout
-  // density, panels, sidebar, charts, and floating island without forking pages.
+  // Auto-track viewport width: phone widths always use mobile shell,
+  // regardless of stored preference. Above phone width we honor the
+  // user's stored choice (desktop or tablet).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const apply = () => {
+      const w = window.innerWidth;
+      if (w < 768) {
+        setViewState((prev) => (prev === "mobile" ? prev : "mobile"));
+      } else {
+        setViewState((prev) => {
+          if (prev !== "mobile") return prev;
+          // Coming out of phone width — fall back to stored preference,
+          // but default to a non-mobile view based on width.
+          const stored = loadView();
+          if (stored !== "mobile") return stored;
+          return w < 1180 ? "tablet" : "desktop";
+        });
+      }
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(orientation: portrait)");
