@@ -637,6 +637,13 @@ html[data-view="mobile"] table tbody td:first-child {
   box-shadow: 1px 0 0 0 hsl(var(--border));
   max-width: 200px;
 }
+/* Row hover/selected first-cell tints inherit so the sticky cell never
+   appears transparent over horizontally-scrolled body cells. */
+html[data-view="mobile"] table tbody tr[data-state="selected"] td:first-child,
+html[data-view="mobile"] table tbody tr.bg-muted\/30 td:first-child,
+html[data-view="mobile"] table tbody tr.bg-muted\/40 td:first-child {
+  background: hsl(var(--card));
+}
 html[data-view="mobile"] table thead th:first-child {
   z-index: 4;
   background: hsl(var(--muted));
