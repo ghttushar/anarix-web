@@ -1,85 +1,175 @@
+## Final Mobile UI Hotfix Plan
 
-# Phase 5 — Mobile parity + alignment fixes
+### Goal
+Make the mobile app feel intentionally designed, not desktop squeezed into phone width. This will be done through shared mobile shell/primitives so the fix applies across all app pages, not only the current Profitability Dashboard.
 
-Goal: bring mobile to true desktop parity (no invented controls), fix table/toolbar/metric-bar alignment, and enforce semi-rigid layout (cards/rows expand-contract but never reflow into multiple lines).
+### 1. Force the correct mobile shell at phone width
+- Update viewport handling so phone-sized previews/routes render the mobile shell reliably.
+- If the viewport is mobile width, `AppLayout` must use `MobileShell` even when the stored app view is still `desktop`.
+- Ensure `html[data-view="mobile"]` is set consistently so all mobile CSS and mobile primitives activate.
 
-## 1. Shell & navigation
+### 2. Mobile top bar cleanup
+- Remove profile avatar from the top-right.
+- Remove light/dark switcher from the top-right.
+- Keep top bar only:
 
-**AppLevelBar (`MobileTaskbar.tsx`)**
-- Remove Marketplace pill and Account pill from the bar.
-- Remove "Switch to desktop" button (drawer footer too).
-- Keep, in fixed order, single 44px row, no horizontal scroll:
-  `[← Back] [Date chip] · · · [Home] [Aan] [Insights] [Alerts]`
-- Right-side icon buttons get visible text labels next to icon: "Aan", "Insights", "Alerts" (Home stays icon-only). Min-width per button; icons 16px, label 12px Noto Sans.
-- Bar layout uses `grid-cols-[auto_1fr_auto]` so left (back), center (date), right (action cluster) are fixed zones — they expand/contract but never wrap.
-- Quick date chips: render under the bar only when date chip is tapped (sheet), not inline.
+```text
+[Hamburger] [Anarix logo]
+```
 
-**TopBar (`MobileTopBar.tsx`)**
-- Layout: `[Hamburger] [AnarixLogo] · · · [Theme icon] [Profile avatar]`
-- Theme = small 32px icon button (Sun/Moon), adjacent to profile avatar. No "Dark" text button anywhere else.
-- Profile avatar opens the same Profile dropdown as desktop (Profile / Billing / Settings / Preferences / Team / Sign out) via Radix DropdownMenu.
+- Remove mobile hover styles from top-bar buttons.
+- Keep only active/pressed state styling.
 
-**Drawer (`MobileDrawerNav.tsx`)**
-- Remove top "Anarix / Acme Brands / PRO" profile header band entirely (desktop drawer has no such header — parity).
-- Header becomes: `[AnarixLogo (full)]                [X]` — one close icon only.
-- Add Marketplace + Account selector at the top of the drawer body (same component used in desktop sidebar — `MarketplaceSelector` / `AccountSelector`). Two stacked dropdowns: Marketplace → then Accounts under it (no "Connect new" affordance).
-- Remove bottom profile tile, theme toggle, and Desktop button from drawer footer (now lives in TopBar).
-- Keep Super-sections (Analyze / Operate / Discover) and nav rows — these match desktop sidebar grouping.
+### 3. Hamburger drawer bottom controls
+- Move profile and theme controls to the drawer footer.
+- Footer will contain:
+  - Profile/account identity row.
+  - Theme toggle button.
+  - Profile actions: Profile, Billing, Settings, Preferences, Team, Sign out.
+- Remove any duplicate/non-desktop profile blocks.
+- No extra “desktop switch” or currency control.
 
-**Delete files:** `MobileMarketplacePill.tsx`, `MobileAccountPill.tsx` (moved into drawer).
+### 4. Merge marketplace + account selector into one drawer selector
+Replace the current two-row selector with one desktop-like nested selector:
 
-## 2. Metric selector bar (Profitability hero strip)
+```text
+Marketplace / Account
+Walmart · No Account                         >
 
-Current: 4 KPI cards in horizontal scroll → text clipped ("$4,…", "$1,…").
-Fix in `MobileProfitabilityHero.tsx` (replaces forced CSS grid override):
-- Layout: **2×2 CSS grid** (`grid-cols-2 gap-2`), no scroll.
-- Each tile: 12px label / 18px value / 11px delta, `tabular-nums`, `truncate` only on label, value uses smaller font on <360px via `clamp(14px, 4.2vw, 18px)`.
-- Currency abbreviation helper: `$1.2M`, `₹3.7Cr` so values never clip.
-- Remove `.grid-cols-5` override from `src/index.css`.
-- Wire into `Profitability/Dashboard.tsx` via `useViewport() === 'mobile'`.
+Submenu:
+Amazon                                      >
+  Brand / account A
+  Brand / account B
+Walmart                                     >
+  Brand / account A
+  Brand / account B
+Shopify                                     >
+TikTok                                      >
+```
 
-## 3. Table toolbar (`MobileTableToolbar.tsx`)
+- Marketplace and account/brand selection live in one component.
+- No connect-new-account action.
+- Selecting a marketplace shows its accounts directly under it.
+- Selecting an account updates both marketplace and current account.
+- Empty marketplaces show “No accounts” only.
+- Use existing marketplace/account contexts.
 
-- Two fixed rows, never wraps:
-  - Row 1: `[Search (flex-1)] [Delta toggle] [Filter] [Columns]`
-  - Row 2 (chip strip): `[Group By] [Date] [Saved view] [Export]`
-- All buttons 32px height, icon+label, `shrink-0`, `gap-1.5`.
-- "Delta" becomes an actual toggle (same component contract as desktop `DeltaToggle`) — not a separate icon. On = brand bg, Off = outline. Removes the broken icon+label overlap shown in screenshots.
+### 5. App-level bar hard fix
+- Remove Home button everywhere in the mobile app-level bar.
+- Use dynamic `AanGlyph`, not static square/icon fallback.
+- Keep labeled action buttons only:
 
-## 4. Data tables (mobile)
+```text
+[Back / Current crumb] [Date] [Aan] [Insights] [Alerts]
+```
 
-Fix overlapping headers + "Tap to expand" sprawl in `MobileDataTable.tsx`:
-- Render the **real desktop table** (current approach) but enforce:
-  - All header cells `h-11`, `px-3`, `whitespace-nowrap`, `text-[12px] font-semibold`, single line.
-  - First column sticky-left `bg-card` with right shadow, min-width 160px, max-width 200px, truncate product name to 2 lines max.
-  - Numeric columns right-aligned, `tabular-nums`, min-width 72px each, no truncation of numbers.
-  - Remove all "Tap to expand" placeholder cells. Every column always visible — user pans horizontally inside the table container (only tables may scroll-x, per memory).
-  - Row expand chevron stays in column 0; expanded sub-rows render inline with same column grid (no separate "More / Open" links).
-- Header row gets `sticky top-0 z-10 bg-muted/40` so it never overlaps content while scrolling.
+- Make the app-level bar sticky below the mobile top bar:
 
-## 5. Delta feature parity
+```text
+top: 56px
+z-index: stable above page content
+```
 
-- Use the same `useDeltaMode()` context the desktop tables use.
-- When Delta ON: numeric cells render value + delta pill below (same component as desktop), green/red per design tokens.
-- Remove the standalone "Delta" pseudo-button visual; bind to the shared toggle in step 3.
+- Prevent breadcrumb overlap with fixed-width zones and truncation:
+  - Left crumb max width.
+  - Date pill centered but allowed to shrink.
+  - Action buttons fixed width.
+- No horizontal scroll inside the app-level bar.
+- No hover styles in mobile; only active/on states.
 
-## 6. Audit & polish pass
+### 6. Disable gestures on mobile
+- Keep gesture provider for desktop/tablet.
+- Do not render gesture feedback on mobile.
+- Prevent mobile swipe/gesture handlers from activating in mobile view.
+- This removes gesture interference with horizontal table scrolling.
 
-After above:
-- Sweep all mobile pages for: bottom-bar leftover offsets, duplicate close icons, `overflow-x-auto` on non-table containers (remove), `min-w-0` on flex parents.
-- Verify no horizontal page scroll at 320 / 360 / 390 / 414 widths via preview.
-- Verify AppLevelBar and TopBar icon clusters do not wrap at 320px (drop labels to icon-only below 360px as the only fluidity concession — formation preserved).
+### 7. Universal mobile toolbar replacement
+Update shared `DataTableToolbar` so mobile does not render the desktop toolbar.
 
-## Files
+Mobile toolbar formation:
 
-**Edit:** `MobileTaskbar.tsx`, `MobileTopBar.tsx`, `MobileDrawerNav.tsx`, `MobileTableToolbar.tsx`, `MobileDataTable.tsx`, `MobileProfitabilityHero.tsx`, `Profitability/Dashboard.tsx`, `src/index.css`.
+```text
+Row 1: [Products/Orders or left tabs] [Search field]
+Row 2: [Delta] [Sort/Group] [Filter] [Columns] [Export]
+```
 
-**Delete:** `MobileMarketplacePill.tsx`, `MobileAccountPill.tsx`.
+Rules:
+- No horizontal scrolling.
+- Fixed 32px control height.
+- Labels stay on one line.
+- Controls compress proportionally.
+- Write actions remain hidden on mobile.
+- Delta toggle uses the same `showDeltas/onShowDeltasChange` contract as desktop.
+- Filter/Columns/Sort popovers remain functional.
+- No mobile hover styles.
 
-**No changes to:** desktop, tablet, data, auth, business logic.
+This automatically fixes all pages using `DataTableToolbar`, including Profitability, Advertising, BI, Catalog, AMC, Reports, and Day Parting.
 
-## Out of scope
-- New features, new icons, new copy beyond the 3 button labels (Aan/Insights/Alerts).
-- Touching desktop `MarketplaceSelector` / `AccountSelector` internals (reused as-is).
+### 8. Table alignment hard fix
+Replace fragile global `display:block` table CSS with a deterministic scroll shell.
 
-Approve and I'll execute top-to-bottom in this order.
+Rules for all mobile tables:
+- The table itself keeps native table layout.
+- The wrapper owns horizontal scroll.
+- Header/body columns stay aligned.
+- First column is sticky, opaque, and stable.
+- Numeric columns are right-aligned with tabular numbers.
+- Header cells are single-line.
+- Product/order identity cells are constrained and intentionally truncated.
+- Remove/keep hidden any “Tap to expand” info-only columns.
+- Preserve existing expand chevrons and row expansion logic.
+
+Target widths:
+```text
+First column: 180px mobile
+Numeric columns: 92px minimum
+Action/info columns: hidden if redundant
+Row height: 44px
+Header height: 44px
+```
+
+### 9. Profitability Dashboard specific cleanup
+- Remove the nested extra rounded table card where it creates card-inside-card visuals.
+- Use the mobile toolbar path from shared `DataTableToolbar`.
+- Keep all columns horizontally accessible inside the table frame.
+- Keep Delta working exactly like desktop using the existing `showDeltas` state.
+- Ensure KPI/mobile hero cards no longer squeeze into clipped vertical cards.
+
+### 10. Mobile CSS cleanup
+- Remove CSS that globally changes every table to `display:block`.
+- Add scoped selectors for:
+  - `[data-mobile-shell]`
+  - `[data-mobile-taskbar]`
+  - `[data-mobile-toolbar]`
+  - `[data-mobile-table-frame]`
+- Add mobile-only rule disabling hover effects:
+
+```text
+html[data-view="mobile"] .mobile-no-hover ...
+```
+
+- Keep page-level horizontal overflow locked, but allow only table frames to scroll horizontally.
+
+### 11. Verification pass
+After implementation, verify at 390x844 on representative pages:
+- `/profitability/dashboard`
+- `/profitability/trends`
+- `/advertising/campaigns`
+- `/catalog/products`
+- `/bi/keyword-tracker`
+- `/reports/client-portal`
+- `/dayparting`
+
+Check:
+- Mobile shell appears.
+- App-level bar sticks under top bar.
+- No Home button.
+- Aan icon is dynamic.
+- Drawer contains merged marketplace/account selector.
+- Profile/theme are only in drawer bottom.
+- No gestures trigger.
+- Toolbar is aligned without horizontal scroll.
+- Table columns align header-to-body.
+- All columns are reachable horizontally inside the table frame.
+- No page-level horizontal scroll.
+- No mobile hover-only styling remains in the affected shell/toolbar/table controls.
