@@ -4,7 +4,6 @@ import {
   CalendarIcon,
   Play,
   Bell,
-  Home,
   ArrowLeft,
   Lightbulb,
 } from "lucide-react";
@@ -66,10 +65,9 @@ const QUICK_PRESETS = [
 ];
 
 /**
- * Mobile AppLevelBar — single sticky row directly below TopBar.
- * Layout uses a 3-zone grid (left: back, center: date, right: actions)
- * so it never wraps or scrolls horizontally. Action buttons carry text
- * labels for clarity (Aan / Insights / Alerts).
+ * Mobile AppLevelBar — sticky row directly below TopBar.
+ * Uses a 3-zone grid (left: back/title, center: date, right: actions).
+ * Sticky at top-14 (below TopBar).
  */
 export function MobileTaskbar({
   breadcrumbItems,
@@ -102,7 +100,6 @@ export function MobileTaskbar({
   }, [breadcrumbItems]);
   const current = breadcrumbItems?.[breadcrumbItems.length - 1];
 
-  const onHome = pathname.startsWith("/profitability/dashboard");
   const onAan = pathname.startsWith("/aan");
   const onInsights = dataPanel === "insights";
   const onAlerts = dataPanel === "notifications";
@@ -112,37 +109,37 @@ export function MobileTaskbar({
   return (
     <div
       data-mobile-taskbar
-      className="rounded-lg border border-primary/60 bg-card mx-3 mt-3 mb-2"
+      className="sticky top-14 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     >
       {/* Row 1 — AppLevelBar. 3-zone grid: left / center / right. */}
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center px-2 h-11 gap-1.5">
-        {/* Left — Back or current label */}
-        <div className="min-w-0">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center px-2 h-11 gap-1">
+        {/* Left — Back or current label (shrinakble) */}
+        <div className="min-w-0 flex justify-start">
           {parent ? (
             <button
               onClick={() => (parent.href ? navigate(parent.href) : navigate(-1))}
-              className="h-8 inline-flex items-center gap-1 pl-1.5 pr-2 rounded-md text-[12px] font-medium text-foreground hover:bg-muted max-w-[120px]"
+              className="h-8 inline-flex items-center gap-1 pl-1 pr-2 rounded-md text-[12px] font-medium text-foreground hover:bg-muted max-w-full"
             >
               <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <span className="truncate">{parent.label}</span>
             </button>
           ) : (
             current && (
-              <span className="block px-2 text-[12px] font-semibold text-foreground truncate max-w-[120px]">
+              <span className="block px-2 text-[12px] font-semibold text-foreground truncate max-w-full">
                 {current.label}
               </span>
             )
           )}
         </div>
 
-        {/* Center — Date */}
-        <div className="min-w-0 flex justify-center">
+        {/* Center — Date (stays centered) */}
+        <div className="shrink-0 flex justify-center">
           {showDateRange && (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
-                <button className="h-8 px-2 inline-flex items-center gap-1.5 rounded-md bg-muted/40 hover:bg-muted text-[12px] font-medium text-foreground max-w-full">
+                <button className="h-8 px-2 inline-flex items-center gap-1.5 rounded-md bg-muted/40 hover:bg-muted text-[12px] font-medium text-foreground">
                   <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="tabular-nums truncate">
+                  <span className="tabular-nums whitespace-nowrap">
                     {format(dateRange.from, "MMM dd")} – {format(dateRange.to, "MMM dd")}
                   </span>
                 </button>
@@ -193,20 +190,14 @@ export function MobileTaskbar({
           )}
         </div>
 
-        {/* Right — Home / Aan / Insights / Alerts (icon + label) */}
-        <div className="flex items-center gap-0.5 shrink-0">
-          <ActionButton
-            ariaLabel="Home"
-            active={onHome}
-            onClick={() => navigate("/profitability/dashboard")}
-            icon={<Home className="h-3.5 w-3.5" strokeWidth={onHome ? 2.4 : 1.8} />}
-          />
+        {/* Right — Actions (shrinakble/flexible) */}
+        <div className="min-w-0 flex justify-end gap-0.5">
           <ActionButton
             ariaLabel="Aan"
             label="Aan"
             active={onAan}
             onClick={() => navigate("/aan")}
-            icon={<AanGlyph className="h-3.5 w-3.5 aan-gradient-text" staticEyes />}
+            icon={<AanGlyph className="h-3.5 w-3.5 aan-gradient-text" />}
           />
           <ActionButton
             ariaLabel="Insights"
@@ -270,7 +261,7 @@ function ActionButton({
       )}
     >
       {icon}
-      {label && <span className="hidden min-[360px]:inline">{label}</span>}
+      {label && <span className="hidden min-[380px]:inline">{label}</span>}
       {badge && (
         <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-destructive" />
       )}
