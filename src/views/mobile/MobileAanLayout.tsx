@@ -72,7 +72,7 @@ export function MobileAanLayout() {
             <PanelLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-            <AanGlyph className="h-5 w-5 aan-gradient-text" staticEyes />
+            <AanGlyph className="h-5 w-5 aan-gradient-text" />
             <span className="font-aan text-2xl leading-none aan-gradient-text">Aan</span>
           </div>
           <button
@@ -98,7 +98,7 @@ export function MobileAanLayout() {
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <SheetContent side="left" className="w-[88vw] max-w-[340px] p-0 flex flex-col">
             <div className="h-14 shrink-0 px-3 flex items-center gap-2 border-b border-border">
-              <AanGlyph className="h-5 w-5 aan-gradient-text" staticEyes />
+              <AanGlyph className="h-5 w-5 aan-gradient-text" />
               <span className="font-aan text-2xl aan-gradient-text leading-none">Aan</span>
             </div>
             <div className="p-3 space-y-2 shrink-0">

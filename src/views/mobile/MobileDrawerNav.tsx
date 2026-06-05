@@ -1,9 +1,18 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   ChevronRight,
   Store,
   Check,
+  Sun,
+  Moon,
+  User,
+  CreditCard,
+  Settings,
+  SlidersHorizontal,
+  Users,
+  LogOut,
+  ChevronLeft,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -13,10 +22,12 @@ import { navigationGroups } from "@/components/layout/AppSidebar";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
 import { useMarketplace, Marketplace } from "@/contexts/MarketplaceContext";
 import { useAccounts } from "@/contexts/AccountContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 
-// Routes write-only on desktop, hidden on mobile drawer.
 const MOBILE_BLOCKED = new Set<string>([
   "/workspace",
   "/workspace/health-score",
@@ -48,6 +59,9 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
   const { newFeaturesVisible } = useFeatureToggle();
   const { marketplace, setMarketplace } = useMarketplace();
   const { accounts, currentAccount, setCurrentAccount } = useAccounts();
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const isDark = resolvedTheme === "dark";
 
   const filteredGroups = navigationGroups
     .map((g) => ({
@@ -66,8 +80,8 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
           .map((g) => g.label)
       )
   );
-  const [mpOpen, setMpOpen] = useState(false);
-  const [acctOpen, setAcctOpen] = useState(false);
+
+  const [selectorView, setSelectorView] = useState<"summary" | "marketplaces" | "accounts">("summary");
 
   const toggleGroup = (label: string) =>
     setOpenGroups((prev) => {
@@ -90,114 +104,130 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
         side="left"
         className="w-[88vw] max-w-[360px] p-0 flex flex-col gap-0 bg-background"
       >
-        {/* Header — single close affordance via SheetContent's built-in X */}
         <div className="h-14 shrink-0 px-4 flex items-center border-b border-border bg-card">
           <AnarixLogo variant="full" className="h-5 w-auto" />
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-auto py-2 px-2">
-          {/* Marketplace + Account stacked selectors */}
-          <div className="px-1 py-2 space-y-1.5">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground px-2">
-              Marketplace
-            </div>
-            <div className="border border-border rounded-md overflow-hidden">
-              <button
-                onClick={() => setMpOpen((v) => !v)}
-                className="w-full h-10 px-3 flex items-center gap-2 hover:bg-muted/60 text-left"
-              >
-                <MpLogo id={marketplace} className="h-4 w-4" />
-                <span className="flex-1 text-[13px] font-medium text-foreground">
-                  {activeMp?.label}
-                </span>
-                <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", mpOpen && "rotate-180")} />
-              </button>
-              {mpOpen && (
-                <div className="border-t border-border bg-muted/20">
-                  {MARKETPLACES.map((mp) => {
-                    const active = mp.id === marketplace;
-                    return (
-                      <button
-                        key={mp.id}
-                        onClick={() => {
-                          setMarketplace(mp.id);
-                          setMpOpen(false);
-                        }}
-                        className={cn(
-                          "w-full h-10 px-3 flex items-center gap-2 text-[13px] hover:bg-muted/60",
-                          active && "bg-primary/5 text-primary font-semibold"
-                        )}
-                      >
-                        <MpLogo id={mp.id} className="h-4 w-4" />
-                        <span className="flex-1 text-left">{mp.label}</span>
-                        {active && <Check className="h-3.5 w-3.5" />}
-                      </button>
-                    );
-                  })}
+        <div className="flex-1 overflow-auto py-2 px-2 flex flex-col">
+          {/* Unified Marketplace/Account Selector */}
+          <div className="px-1 py-2 mb-2">
+            <div className="border border-border rounded-lg bg-muted/20 overflow-hidden">
+              {selectorView === "summary" && (
+                <div className="divide-y divide-border/40">
+                  <button
+                    onClick={() => setSelectorView("marketplaces")}
+                    className="w-full h-11 px-3 flex items-center gap-2.5 hover:bg-muted/60 transition-colors text-left"
+                  >
+                    <MpLogo id={marketplace} className="h-4 w-4" />
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">Marketplace</span>
+                      <span className="text-[13px] font-medium text-foreground truncate">{activeMp?.label}</span>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => setSelectorView("accounts")}
+                    disabled={accountsForMp.length === 0}
+                    className="w-full h-11 px-3 flex items-center gap-2.5 hover:bg-muted/60 transition-colors text-left disabled:opacity-50"
+                  >
+                    <Store className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">Account</span>
+                      <span className="text-[13px] font-medium text-foreground truncate">
+                        {currentAccount?.merchantName ?? (accountsForMp.length === 0 ? "No accounts" : "Select account")}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
                 </div>
               )}
-            </div>
 
-            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground px-2 pt-1">
-              Account
-            </div>
-            <div className="border border-border rounded-md overflow-hidden">
-              <button
-                onClick={() => setAcctOpen((v) => !v)}
-                disabled={accountsForMp.length === 0}
-                className="w-full h-10 px-3 flex items-center gap-2 hover:bg-muted/60 text-left disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Store className="h-4 w-4 text-muted-foreground" />
-                <span className="flex-1 text-[13px] font-medium text-foreground truncate">
-                  {currentAccount?.merchantName ?? (accountsForMp.length === 0 ? "No accounts" : "Select account")}
-                </span>
-                {accountsForMp.length > 0 && (
-                  <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", acctOpen && "rotate-180")} />
-                )}
-              </button>
-              {acctOpen && accountsForMp.length > 0 && (
-                <div className="border-t border-border bg-muted/20 max-h-[200px] overflow-auto">
-                  {accountsForMp.map((a) => {
-                    const active = currentAccount?.id === a.id;
-                    return (
-                      <button
-                        key={a.id}
-                        onClick={() => {
-                          setCurrentAccount(a.id);
-                          setAcctOpen(false);
-                        }}
-                        className={cn(
-                          "w-full px-3 py-2 flex items-start gap-2 text-left hover:bg-muted/60",
-                          active && "bg-primary/5"
-                        )}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className={cn("text-[13px] truncate", active ? "text-primary font-semibold" : "text-foreground")}>
-                            {a.merchantName}
+              {selectorView === "marketplaces" && (
+                <div className="flex flex-col">
+                  <button 
+                    onClick={() => setSelectorView("summary")}
+                    className="h-9 px-2 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground border-b border-border/40"
+                  >
+                    <ChevronLeft className="h-3 w-3" /> Back
+                  </button>
+                  <div className="max-h-[240px] overflow-auto">
+                    {MARKETPLACES.map((mp) => {
+                      const active = mp.id === marketplace;
+                      return (
+                        <button
+                          key={mp.id}
+                          onClick={() => {
+                            setMarketplace(mp.id);
+                            setSelectorView("summary");
+                          }}
+                          className={cn(
+                            "w-full h-11 px-3 flex items-center gap-3 text-[13px] hover:bg-muted/60 transition-colors",
+                            active && "bg-primary/5 text-primary font-semibold"
+                          )}
+                        >
+                          <MpLogo id={mp.id} className="h-4 w-4" />
+                          <span className="flex-1 text-left">{mp.label}</span>
+                          {active && <Check className="h-3.5 w-3.5" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {selectorView === "accounts" && (
+                <div className="flex flex-col">
+                  <button 
+                    onClick={() => setSelectorView("summary")}
+                    className="h-9 px-2 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground border-b border-border/40"
+                  >
+                    <ChevronLeft className="h-3 w-3" /> Back
+                  </button>
+                  <div className="max-h-[240px] overflow-auto">
+                    {accountsForMp.map((a) => {
+                      const active = currentAccount?.id === a.id;
+                      return (
+                        <button
+                          key={a.id}
+                          onClick={() => {
+                            setCurrentAccount(a.id);
+                            setSelectorView("summary");
+                          }}
+                          className={cn(
+                            "w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-muted/60 transition-colors",
+                            active && "bg-primary/5"
+                          )}
+                        >
+                          <Store className={cn("h-4 w-4 mt-0.5", active ? "text-primary" : "text-muted-foreground")} />
+                          <div className="flex-1 min-w-0">
+                            <div className={cn("text-[13px] truncate", active ? "text-primary font-semibold" : "text-foreground")}>
+                              {a.merchantName}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground truncate">
+                              {a.region} · {a.accountType}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-muted-foreground truncate">
-                            {a.region} · {a.accountType}
-                          </div>
-                        </div>
-                        {active && <Check className="h-3.5 w-3.5 text-primary mt-0.5" />}
-                      </button>
-                    );
-                  })}
+                          {active && <Check className="h-3.5 w-3.5 text-primary mt-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
+          <Separator className="mx-2 mb-2 bg-border/40" />
+
           {/* Navigation */}
-          <div className="pt-2">
+          <div className="flex-1">
             {SUPER_SECTIONS.map((section) => {
               const sectionGroups = filteredGroups.filter((g) =>
                 section.groupLabels.includes(g.label)
               );
               if (sectionGroups.length === 0) return null;
               return (
-                <div key={section.label} className="mb-3">
+                <div key={section.label} className="mb-4">
                   <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     {section.label}
                   </div>
@@ -259,6 +289,56 @@ export function MobileDrawerNav({ open, onOpenChange }: Props) {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Footer — Profile + Theme */}
+        <div className="shrink-0 border-t border-border bg-card p-3 space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-semibold">
+                  JD
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[13px] font-semibold text-foreground truncate">John Doe</span>
+                <span className="text-[11px] text-muted-foreground truncate">john@anarix.com</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <button 
+              onClick={() => handleNav("/profile")}
+              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
+            >
+              <User className="h-3.5 w-3.5 text-muted-foreground" /> Profile
+            </button>
+            <button 
+              onClick={() => handleNav("/settings/billing")}
+              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
+            >
+              <CreditCard className="h-3.5 w-3.5 text-muted-foreground" /> Billing
+            </button>
+            <button 
+              onClick={() => handleNav("/settings")}
+              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
+            >
+              <Settings className="h-3.5 w-3.5 text-muted-foreground" /> Settings
+            </button>
+            <button 
+              onClick={() => handleNav("/auth/login")}
+              className="flex items-center gap-2 h-9 px-2.5 rounded-md hover:bg-muted text-[12px] font-medium text-foreground transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5 text-muted-foreground" /> Sign out
+            </button>
           </div>
         </div>
       </SheetContent>

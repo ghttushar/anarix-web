@@ -221,7 +221,7 @@ export function GestureProvider({ children }: { children: React.ReactNode }) {
 
   /* Edge swipe (touchscreen, single finger) */
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || window.innerWidth < 1024) return;
     let startX = 0;
     let startY = 0;
     let startTime = 0;
@@ -269,7 +269,7 @@ export function GestureProvider({ children }: { children: React.ReactNode }) {
 
   /* Two-finger trackpad swipes (wheel deltaX/Y bursts) */
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || window.innerWidth < 1024) return;
     let accX = 0;
     let accY = 0;
     let resetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -318,7 +318,7 @@ export function GestureProvider({ children }: { children: React.ReactNode }) {
 
   /* Multi-touch (2 and 3 finger) on touchscreens */
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || window.innerWidth < 1024) return;
     let startTouches: { x: number; y: number }[] = [];
     let startTime = 0;
     let fingers = 0;
