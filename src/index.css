@@ -601,70 +601,107 @@ html[data-view="mobile"] main > * {
 
 /* 4. AppTaskbar self-delegates to MobileTaskbar on mobile (Phase 2). */
 
-/* 5. Tables on mobile: keep native table layout intact so headers align with
-   body cells. Horizontal scroll is owned by the existing wrapper (parent
-   `overflow-x-auto` div). The first <th>/<td> in each row becomes sticky.
-   Header row sticks to the top of its scroll container. */
+/* 5. Tables on mobile: native layout, sticky first column, scroll inside frame. */
 html[data-view="mobile"] table {
-  border-collapse: separate;
-  border-spacing: 0;
-  /* min-width keeps columns honest at their natural widths so they don't
-     collapse into each other on narrow screens */
-  min-width: max-content;
+   border-collapse: separate;
+   border-spacing: 0;
+   min-width: max-content;
 }
 html[data-view="mobile"] table th,
 html[data-view="mobile"] table td {
-  white-space: nowrap;
-  font-size: 12px !important;
-  padding: 8px 10px !important;
-  line-height: 1.3;
+   white-space: nowrap;
+   font-size: 12px !important;
+   padding: 6px 8px !important;
+   line-height: 1.3;
+}
+/* Tighten numeric column min-width so 3-4 metric columns fit at 390px */
+html[data-view="mobile"] table th,
+html[data-view="mobile"] table td {
+   max-width: 140px;
 }
 html[data-view="mobile"] table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: hsl(var(--muted));
-  font-weight: 600;
-  color: hsl(var(--foreground));
+   position: sticky;
+   top: 0;
+   z-index: 2;
+   background: hsl(var(--muted));
+   font-weight: 600;
+   color: hsl(var(--foreground));
 }
-/* Sticky first column for orientation while scrolling horizontally. */
+/* Sticky first column — compact (148px) so 3+ data columns fit */
 html[data-view="mobile"] table thead th:first-child,
 html[data-view="mobile"] table tbody td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: hsl(var(--card));
-  box-shadow: 1px 0 0 0 hsl(var(--border));
-  max-width: 200px;
+   position: sticky;
+   left: 0;
+   z-index: 2;
+   background: hsl(var(--card));
+   box-shadow: 1px 0 0 0 hsl(var(--border));
+   max-width: 148px;
+   min-width: 120px;
 }
-/* Row hover/selected first-cell tints inherit so the sticky cell never
-   appears transparent over horizontally-scrolled body cells. */
+html[data-view="mobile"] table tbody td:first-child {
+   white-space: normal;
+   overflow: hidden;
+   text-overflow: ellipsis;
+}
+/* First-column content: hide secondary metadata blocks (tags/sublines >1) */
+html[data-view="mobile"] table tbody td:first-child img {
+   width: 28px !important;
+   height: 28px !important;
+}
 html[data-view="mobile"] table tbody tr[data-state="selected"] td:first-child,
 html[data-view="mobile"] table tbody tr.bg-muted\/30 td:first-child,
 html[data-view="mobile"] table tbody tr.bg-muted\/40 td:first-child {
-  background: hsl(var(--card));
+   background: hsl(var(--card));
 }
 html[data-view="mobile"] table thead th:first-child {
-  z-index: 4;
-  background: hsl(var(--muted));
+   z-index: 4;
+   background: hsl(var(--muted));
 }
-/* Redundant "Info / Tap to expand" column hidden on mobile — chevron in
-   the first column already exposes expand/collapse. */
+/* HIDE bulk-selection checkbox columns on mobile.
+   Detects the checkbox cell pattern used across CampaignTable/ImpactTable/etc. */
+html[data-view="mobile"] table thead th:has(> [role="checkbox"]),
+html[data-view="mobile"] table tbody td:has(> [role="checkbox"]),
+html[data-view="mobile"] table thead th:has(> button[role="checkbox"]),
+html[data-view="mobile"] table tbody td:has(> button[role="checkbox"]) {
+   display: none !important;
+}
+/* When checkbox column is hidden, the next sibling becomes first — re-sticky it. */
+html[data-view="mobile"] table thead th:has(> [role="checkbox"]) + th,
+html[data-view="mobile"] table tbody td:has(> [role="checkbox"]) + td {
+   position: sticky;
+   left: 0;
+   z-index: 2;
+   background: hsl(var(--card));
+   box-shadow: 1px 0 0 0 hsl(var(--border));
+   max-width: 160px;
+}
 html[data-view="mobile"] [data-info-col] {
-  display: none !important;
+   display: none !important;
 }
 
-/* 5b. DataTableToolbar on mobile: never scroll horizontally; let the
-   stacked rows in the component own layout. */
+/* 5b. DataTableToolbar on mobile: never scroll horizontally. */
 html[data-view="mobile"] [data-table-toolbar] {
-  overflow-x: visible !important;
+   overflow-x: visible !important;
 }
 html[data-view="mobile"] [data-table-toolbar] .max-w-xs {
-  max-width: 100% !important;
+   max-width: 100% !important;
 }
 html[data-view="mobile"] [data-table-toolbar] [data-tb-actions] {
-  flex-wrap: wrap !important;
-  gap: 4px !important;
+   flex-wrap: wrap !important;
+   gap: 4px !important;
+}
+
+/* 5d. Applied filter chip rows: cap at 3 rows, then horizontal scroll. */
+html[data-view="mobile"] [data-table-toolbar] > div:nth-child(2) {
+   max-height: 84px;
+   overflow-y: auto;
+   overflow-x: hidden;
+}
+
+/* 5e. Hide chart action toolbars (download/export/maximize) on mobile. */
+html[data-view="mobile"] [data-chart-actions],
+html[data-view="mobile"] [data-viz-toolbar] {
+   display: none !important;
 }
 
 /* 5c. Kill hover background/color changes on mobile — touch devices have

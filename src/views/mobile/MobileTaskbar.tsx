@@ -111,7 +111,7 @@ export function MobileTaskbar({
   const onInsights = dataPanel === "insights";
   const onAlerts = dataPanel === "notifications";
 
-  const hasSecondRow = !!children || showRunButton;
+  
 
   return (
     <div
@@ -119,87 +119,80 @@ export function MobileTaskbar({
       className="sticky top-14 z-30 px-3 pt-2 pb-1 bg-background"
     >
       <div className="rounded-lg border border-border bg-card shadow-sm">
-        {/* Row 1 — AppLevelBar */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,auto)] items-center px-2 h-11 gap-2">
-          {/* Left — Back pill on drill-down only; else current label */}
-          <div className="min-w-0 flex items-center">
-            {parent ? (
-              <button
-                onClick={() => (parent.href ? navigate(parent.href) : navigate(-1))}
-                className="h-8 inline-flex items-center gap-1 pl-1 pr-2 rounded-md text-[12px] font-semibold text-foreground active:bg-muted min-w-0 max-w-[44vw]"
-              >
-                <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">{current?.label ?? parent.label}</span>
-              </button>
-            ) : (
-              <span className="px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate">
-                Workspace
-              </span>
-            )}
-          </div>
+        {/* Row A — Selectors (back pill + date) ............................. */}
+        <div className="flex items-center px-2 py-1.5 gap-2 min-w-0">
+          {parent && (
+            <button
+              onClick={() => (parent.href ? navigate(parent.href) : navigate(-1))}
+              className="h-8 inline-flex items-center gap-1 pl-1 pr-2 rounded-md text-[12px] font-semibold text-foreground active:bg-muted min-w-0 max-w-[40vw] shrink-0"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="truncate">{current?.label ?? parent.label}</span>
+            </button>
+          )}
 
-          {/* Center — Date */}
-          <div className="min-w-0 flex justify-center shrink">
-            {showDateRange && (
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <button className="h-8 px-2 inline-flex items-center gap-1.5 rounded-md bg-muted/60 text-[11px] font-medium text-foreground max-w-full active:bg-muted">
-                    <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="tabular-nums truncate">
-                      {format(dateRange.from, "MMM dd")}–{format(dateRange.to, "MMM dd")}
+          {showDateRange && (
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <button className="h-8 px-2 inline-flex items-center gap-1.5 rounded-md bg-muted/60 text-[11px] font-medium text-foreground active:bg-muted min-w-0">
+                  <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="tabular-nums truncate">
+                    {format(dateRange.from, "MMM dd")}–{format(dateRange.to, "MMM dd")}
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[92vw] max-w-[360px] p-0" align="start" side="bottom">
+                <div className="max-h-[72vh] overflow-auto">
+                  <div className="px-3 pt-3 pb-2 flex gap-1.5 overflow-x-auto no-scrollbar border-b border-border">
+                    {QUICK_PRESETS.map((p) => (
+                      <button
+                        key={p.label}
+                        onClick={() => setDraftRange(p.getRange())}
+                        className="h-7 px-2.5 rounded-full bg-muted/50 active:bg-muted text-[11px] font-medium text-foreground whitespace-nowrap shrink-0"
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  <Calendar
+                    mode="range"
+                    selected={{ from: draftRange.from, to: draftRange.to }}
+                    onSelect={(r) => {
+                      if (r?.from && r?.to) setDraftRange({ from: r.from, to: r.to });
+                      else if (r?.from) setDraftRange({ from: r.from, to: r.from });
+                    }}
+                    numberOfMonths={1}
+                    className="p-3 pointer-events-auto"
+                  />
+                  <div className="flex items-center justify-between px-3 pb-3 pt-2 border-t border-border">
+                    <span className="text-[11px] text-muted-foreground tabular-nums">
+                      {format(draftRange.from, "MMM dd")} – {format(draftRange.to, "MMM dd, yyyy")}
                     </span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[92vw] max-w-[360px] p-0" align="center" side="bottom">
-                  <div className="max-h-[72vh] overflow-auto">
-                    <div className="px-3 pt-3 pb-2 flex gap-1.5 overflow-x-auto no-scrollbar border-b border-border">
-                      {QUICK_PRESETS.map((p) => (
-                        <button
-                          key={p.label}
-                          onClick={() => setDraftRange(p.getRange())}
-                          className="h-7 px-2.5 rounded-full bg-muted/50 active:bg-muted text-[11px] font-medium text-foreground whitespace-nowrap shrink-0"
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                    <Calendar
-                      mode="range"
-                      selected={{ from: draftRange.from, to: draftRange.to }}
-                      onSelect={(r) => {
-                        if (r?.from && r?.to) setDraftRange({ from: r.from, to: r.to });
-                        else if (r?.from) setDraftRange({ from: r.from, to: r.from });
-                      }}
-                      numberOfMonths={1}
-                      className="p-3 pointer-events-auto"
-                    />
-                    <div className="flex items-center justify-between px-3 pb-3 pt-2 border-t border-border">
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {format(draftRange.from, "MMM dd")} – {format(draftRange.to, "MMM dd, yyyy")}
-                      </span>
-                      <div className="flex gap-1">
-                        <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => setOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button size="sm" className="h-8 text-[12px]" onClick={apply}>
-                          Apply
-                        </Button>
-                      </div>
+                    <div className="flex gap-1">
+                      <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => setOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" className="h-8 text-[12px]" onClick={apply}>
+                        Apply
+                      </Button>
                     </div>
                   </div>
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
 
-          {/* Right — Aan / Insight / Alert */}
-          <div className="flex items-center gap-0.5 shrink-0">
+          {/* Spacer pushes action cluster to the right */}
+          <div className="flex-1 min-w-0" />
+
+          {/* Right — separated action cluster (Aan / Insight / Alert) */}
+          <div className="flex items-center gap-0.5 shrink-0 pl-2 ml-1 border-l border-border/60">
             <ActionButton
               ariaLabel="Aan"
               label="Aan"
               active={onAan}
               onClick={() => navigate("/aan")}
-              icon={<AanGlyph className="h-4 w-4 aan-gradient-text" />}
+              icon={<AanGlyph state="idle" className="h-4 w-4 aan-gradient-text" />}
             />
             <ActionButton
               ariaLabel="Insight"
@@ -219,17 +212,19 @@ export function MobileTaskbar({
           </div>
         </div>
 
-        {/* Row 2 — page-provided filter chips + Run */}
-        {hasSecondRow && (
-          <div className="flex items-center px-2 py-1.5 gap-2 border-t border-border/40">
-            <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {children}
-            </div>
-            {showRunButton && (
-              <Button size="sm" className="h-8 px-3 gap-1 shrink-0" onClick={onRun}>
-                <Play className="h-3.5 w-3.5" /> Run
-              </Button>
-            )}
+        {/* Row B — page-provided selectors/filter chips */}
+        {!!children && (
+          <div className="px-2 py-1.5 gap-1.5 border-t border-border/40 flex flex-wrap items-center" style={{ maxHeight: "calc(36px * 3 + 12px)", overflowY: "auto" }}>
+            {children}
+          </div>
+        )}
+
+        {/* Row C — Run CTA, clearly separated */}
+        {showRunButton && (
+          <div className="flex items-center justify-end px-2 py-1.5 border-t border-border/40">
+            <Button size="sm" className="h-8 px-3 gap-1" onClick={onRun}>
+              <Play className="h-3.5 w-3.5" /> Run
+            </Button>
           </div>
         )}
       </div>

@@ -430,9 +430,9 @@ export function DataTableToolbar({
             </DropdownMenu>
           )}
 
-          {/* Export/Download Button */}
+          {/* Export/Download Button — hidden on mobile */}
           {onDownload && (
-            <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={onDownload} title="Export data">
+            <Button data-write-action variant="ghost" size="sm" className="h-8 gap-1 text-xs cursor-pointer" onClick={onDownload} title="Export data">
               <Download className="h-3.5 w-3.5" />
               <span data-tb-label>Export</span>
             </Button>
