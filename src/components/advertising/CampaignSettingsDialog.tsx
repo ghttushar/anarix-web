@@ -164,7 +164,7 @@ export function CampaignSettingsDialog({ campaign, open, onOpenChange, onSave }:
 
         <DialogFooter>
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button size="sm" onClick={handleSave}>Save Changes</Button>
+          <Button size="sm" onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

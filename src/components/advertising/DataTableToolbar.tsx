@@ -473,14 +473,14 @@ export function DataTableToolbar({
       <AlertDialog open={editConfirmOpen} onOpenChange={setEditConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Save Changes?</AlertDialogTitle>
+            <AlertDialogTitle>Save?</AlertDialogTitle>
             <AlertDialogDescription>
               You have made edits to this table. Would you like to save your changes or discard them?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleEditDiscard}>Discard</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditSave}>Save Changes</AlertDialogAction>
+            <AlertDialogAction onClick={handleEditSave}>Save</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

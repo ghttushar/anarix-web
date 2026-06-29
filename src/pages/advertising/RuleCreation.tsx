@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Copy, Trash2, ChevronDown, ChevronRight, Info, Home, ArrowRight, X, Save } from "lucide-react";
-import { ruleTemplates, metricOptions, operatorOptions, actionOptions, lookbackOptions, frequencyOptions, type RuleCriteria, type RuleCondition } from "@/data/mockRules";
+import { ruleTemplates, metricOptions, operatorOptions, actionOptions, lookbackOptions, frequencyOptions, dateRangeOptions, type RuleCriteria, type RuleCondition } from "@/data/mockRules";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { RuleCampaignSelector } from "@/components/advertising/RuleCampaignSelector";
@@ -49,7 +49,8 @@ export default function RuleCreation() {
   const [ruleName, setRuleName] = useState(template ? `${template.name}` : "");
   const [status, setStatus] = useState(true);
   const [lookback, setLookback] = useState("14");
-  const [frequency, setFrequency] = useState("daily");
+  const [frequency, setFrequency] = useState("not_set");
+  const [dateRange, setDateRange] = useState("not_set");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [criteria, setCriteria] = useState<RuleCriteria[]>([createCriteria(1)]);
   const [step, setStep] = useState<"builder" | "campaigns">("builder");
@@ -139,7 +140,7 @@ export default function RuleCreation() {
               : "Define conditions, actions, and apply to campaigns"
           }
           actions={
-            step === "builder" ? (
+            step === "builder" && !isEdit ? (
               <Button variant="outline" size="sm" onClick={handleSaveDraft}>
                 <Save className="mr-1.5 h-3.5 w-3.5" />
                 Save Draft
@@ -160,7 +161,7 @@ export default function RuleCreation() {
                     <Input value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="Enter rule name" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Status</Label>
+                    <Label className="text-sm font-semibold text-foreground">Status</Label>
                     <div className="flex items-center gap-2 h-10">
                       <Switch checked={status} onCheckedChange={setStatus} />
                       <span className="text-sm text-muted-foreground">{status ? "Active" : "Inactive"}</span>
@@ -172,6 +173,17 @@ export default function RuleCreation() {
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {lookbackOptions.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Select Date Range</Label>
+                    <Select value={dateRange} onValueChange={setDateRange}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {dateRangeOptions.map((o) => (
                           <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                         ))}
                       </SelectContent>
@@ -251,13 +263,14 @@ export default function RuleCreation() {
                 Add Criteria
               </Button>
               <Button size="sm" onClick={() => setStep("campaigns")}>
-                Select Campaigns
+                {isEdit ? "Update Campaigns" : "Select Campaigns"}
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Button>
             </div>
           </>
         ) : (
           <RuleCampaignSelector
+            isEdit={isEdit}
             onBack={() => setStep("builder")}
             onSaveDraft={handleSaveDraft}
             onApplyRule={handleApplyRule}
@@ -346,7 +359,20 @@ function CriteriaBlock({
               value={cond.value}
               onChange={(e) => onUpdateCondition(cond.id, { value: parseFloat(e.target.value) || 0 })}
               className="h-8 w-20 text-xs"
+              placeholder={cond.operator === "between" ? "Min" : undefined}
             />
+            {cond.operator === "between" && (
+              <>
+                <span className="text-xs text-muted-foreground">and</span>
+                <Input
+                  type="number"
+                  value={cond.maxValue ?? 0}
+                  onChange={(e) => onUpdateCondition(cond.id, { maxValue: parseFloat(e.target.value) || 0 })}
+                  className="h-8 w-20 text-xs"
+                  placeholder="Max"
+                />
+              </>
+            )}
             {criteria.conditions.length > 1 && (
               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onRemoveCondition(cond.id)} title="Remove condition">
                 <X className="h-3.5 w-3.5" />

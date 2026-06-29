@@ -11,6 +11,7 @@ export interface RuleCondition {
   operator: string;
   valueType: "absolute" | "percentage";
   value: number;
+  maxValue?: number;
 }
 
 export interface RuleAction {
@@ -34,7 +35,7 @@ export interface AppliedRule {
   entityLabel: string;
   frequency: string;
   lastRun: string;
-  status: "active" | "paused" | "draft";
+  status: "active" | "paused" | "draft" | "ended";
 }
 
 export const ruleTemplates: RuleTemplate[] = [
@@ -70,14 +71,15 @@ export const operatorOptions = [
   { value: "greater_equal", label: "Greater than or equal" },
   { value: "less_equal", label: "Less than or equal" },
   { value: "equals", label: "Equals" },
+  { value: "between", label: "Between" },
 ];
 
 export const actionOptions = [
   { value: "set_bid", label: "Set bid to" },
   { value: "increase_bid_percent", label: "Increase bid by %" },
   { value: "decrease_bid_percent", label: "Decrease bid by %" },
-  { value: "increase_bid_amount", label: "Increase bid by amount" },
-  { value: "decrease_bid_amount", label: "Decrease bid by amount" },
+  { value: "increase_bid_amount", label: "Increase Bid by $" },
+  { value: "decrease_bid_amount", label: "Decrease Bid by $" },
   { value: "pause", label: "Pause" },
   { value: "enable", label: "Enable" },
   { value: "set_budget", label: "Set budget to" },
@@ -92,10 +94,19 @@ export const lookbackOptions = [
 ];
 
 export const frequencyOptions = [
+  { value: "not_set", label: "Not Set" },
   { value: "hourly", label: "Hourly" },
   { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
+];
+
+export const dateRangeOptions = [
+  { value: "not_set", label: "Not Set" },
+  { value: "last_7", label: "Last 7 days" },
+  { value: "last_14", label: "Last 14 days" },
+  { value: "last_30", label: "Last 30 days" },
+  { value: "custom", label: "Custom" },
 ];
 
 export const suggestionChips = [
@@ -118,4 +129,6 @@ export const appliedRules: AppliedRule[] = [
   { id: "ar-8", name: "Inventory Sync Rule", ruleType: "Inventory Rule", entitiesCount: 189, entityLabel: "products", frequency: "Daily", lastRun: "2026-03-08 06:00", status: "active" },
   { id: "ar-9", name: "SOV Threshold Alert", ruleType: "Share of Voice Rule", entitiesCount: 12, entityLabel: "brands", frequency: "Daily", lastRun: "", status: "draft" },
   { id: "ar-10", name: "Auto-Pause Low CTR", ruleType: "Campaign Rule", entitiesCount: 22, entityLabel: "campaigns", frequency: "Daily", lastRun: "", status: "draft" },
+  { id: "ar-11", name: "Holiday Promo Bidder", ruleType: "Bidder Rule", entitiesCount: 18, entityLabel: "campaigns", frequency: "Daily", lastRun: "2025-12-26 09:00", status: "ended" },
+  { id: "ar-12", name: "Black Friday Budget Boost", ruleType: "Budget Rule", entitiesCount: 9, entityLabel: "campaigns", frequency: "Hourly", lastRun: "2025-11-30 23:00", status: "ended" },
 ];

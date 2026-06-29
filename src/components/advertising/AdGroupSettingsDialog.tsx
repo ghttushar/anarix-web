@@ -87,7 +87,7 @@ export function AdGroupSettingsDialog({ adGroup, open, onOpenChange, onSave }: A
 
         <DialogFooter>
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button size="sm" onClick={handleSave}>Save Changes</Button>
+          <Button size="sm" onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

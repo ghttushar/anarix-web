@@ -15,6 +15,7 @@ const statusStyles: Record<string, string> = {
   active: "bg-success/10 text-success border-success/20",
   paused: "bg-warning/10 text-warning border-warning/20",
   draft: "bg-muted text-muted-foreground border-muted",
+  ended: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const statusTabs = [
@@ -22,6 +23,7 @@ const statusTabs = [
   { value: "active", label: "Active", count: appliedRules.filter((r) => r.status === "active").length },
   { value: "paused", label: "Paused", count: appliedRules.filter((r) => r.status === "paused").length },
   { value: "draft", label: "Drafts", count: appliedRules.filter((r) => r.status === "draft").length },
+  { value: "ended", label: "Ended", count: appliedRules.filter((r) => r.status === "ended").length },
 ];
 
 type SortKey = "name" | "ruleType" | "entitiesCount" | "frequency" | "lastRun" | "status";
@@ -110,7 +112,7 @@ export default function AppliedRules() {
                 <SortHeader label="Rule Name" field="name" />
                 <SortHeader label="Rule Type" field="ruleType" />
                 <SortHeader label="Entities Count" field="entitiesCount" />
-                <SortHeader label="Frequency" field="frequency" />
+                <SortHeader label="Schedule" field="frequency" />
                 <SortHeader label="Last Run" field="lastRun" />
                 <SortHeader label="Status" field="status" />
                 <TableHead className="w-[60px]">Actions</TableHead>

@@ -113,7 +113,14 @@ export function AddKeywordTargetModal({ isOpen, onClose, onAdd }: AddKeywordTarg
             </div>
 
             <div className="rounded-lg border border-border">
-              {/* Header */}
+              {/* Match Type to Add header */}
+              <div className="grid grid-cols-[1fr_180px_80px_32px] gap-2 px-3 pt-2 pb-1 text-[11px] text-muted-foreground font-medium">
+                <span />
+                <span className="text-center">Match Type to Add</span>
+                <span />
+                <span />
+              </div>
+              {/* Column header */}
               <div className="grid grid-cols-[1fr_60px_60px_60px_80px_32px] gap-2 px-3 py-2 bg-muted text-[11px] text-muted-foreground font-medium">
                 <span>Keyword</span>
                 <span className="text-center">Broad</span>
@@ -180,7 +187,7 @@ export function AddKeywordTargetModal({ isOpen, onClose, onAdd }: AddKeywordTarg
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
           <Button size="sm" onClick={handleAdd} disabled={!hasValid}>
-            Add Keywords
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -721,7 +721,7 @@ function PanelsSection() {
       {/* CampaignSettingsPanel */}
       <Card className="p-4 space-y-2">
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">CampaignSettingsPanel</Label>
-        <PanelMockup title="Campaign Settings" footer={<><Button variant="outline" size="sm" className="text-xs">Cancel</Button><Button size="sm" className="text-xs">Save Changes</Button></>}>
+        <PanelMockup title="Campaign Settings" footer={<><Button variant="outline" size="sm" className="text-xs">Cancel</Button><Button size="sm" className="text-xs">Save</Button></>}>
           <div className="space-y-1.5"><Label className="text-xs">Campaign Name</Label><Input defaultValue="Summer Sale SP" className="h-8 text-xs" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Campaign ID</Label><Input value="CAMP-2024-001" disabled className="h-8 text-xs bg-muted" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Status</Label>
@@ -744,7 +744,7 @@ function PanelsSection() {
       {/* AdGroupSettingsPanel */}
       <Card className="p-4 space-y-2">
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">AdGroupSettingsPanel</Label>
-        <PanelMockup title="Ad Group Settings" footer={<><Button variant="outline" size="sm" className="text-xs">Cancel</Button><Button size="sm" className="text-xs">Save Changes</Button></>}>
+        <PanelMockup title="Ad Group Settings" footer={<><Button variant="outline" size="sm" className="text-xs">Cancel</Button><Button size="sm" className="text-xs">Save</Button></>}>
           <div className="space-y-1.5"><Label className="text-xs">Ad Group Name</Label><Input defaultValue="High-Performance Keywords" className="h-8 text-xs" /></div>
           <div className="space-y-1.5"><Label className="text-xs">Status</Label>
             <Select defaultValue="live"><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="live" className="text-xs">Live</SelectItem><SelectItem value="paused" className="text-xs">Paused</SelectItem></SelectContent></Select>

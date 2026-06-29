@@ -186,7 +186,7 @@ export function CampaignSettingsPanel({ campaign, onSave }: CampaignSettingsPane
       {/* Footer */}
       <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border shrink-0">
         <Button variant="ghost" size="sm" onClick={closeDataPanel}>Cancel</Button>
-        <Button size="sm" onClick={handleSave}>Save Changes</Button>
+        <Button size="sm" onClick={handleSave}>Save</Button>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Filter, Plus, Trash2, ArrowLeft, Save, ArrowRight, X } from "lucide-react";
+import { Search, Filter, Plus, Trash2, ArrowLeft, ArrowRight, X } from "lucide-react";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { Campaign } from "@/types/campaign";
 import { cn } from "@/lib/utils";
@@ -14,23 +14,26 @@ interface RuleCampaignSelectorProps {
   onSaveDraft: () => void;
   onApplyRule: () => void;
   ruleName: string;
+  isEdit?: boolean;
 }
 
-export function RuleCampaignSelector({ onBack, onSaveDraft, onApplyRule, ruleName }: RuleCampaignSelectorProps) {
+export function RuleCampaignSelector({ onBack, onSaveDraft: _onSaveDraft, onApplyRule, ruleName, isEdit = false }: RuleCampaignSelectorProps) {
   const [leftSearch, setLeftSearch] = useState("");
   const [rightSearch, setRightSearch] = useState("");
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [selectedLeft, setSelectedLeft] = useState<Set<string>>(new Set());
   const [selectedRight, setSelectedRight] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<"active" | "all">("active");
 
   const availableCampaigns = useMemo(() => {
     return mockCampaigns.filter(
       (c) =>
         !addedIds.has(c.id) &&
+        (statusFilter === "all" || c.status === "live") &&
         (c.name.toLowerCase().includes(leftSearch.toLowerCase()) ||
           c.id.toLowerCase().includes(leftSearch.toLowerCase()))
     );
-  }, [leftSearch, addedIds]);
+  }, [leftSearch, addedIds, statusFilter]);
 
   const addedCampaigns = useMemo(() => {
     return mockCampaigns.filter(
@@ -141,7 +144,25 @@ export function RuleCampaignSelector({ onBack, onSaveDraft, onApplyRule, ruleNam
                 className="h-8 pl-8 text-xs"
               />
             </div>
+            <div className="inline-flex items-center rounded-md border border-border p-0.5 text-[11px]">
+              {(["active", "all"] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setStatusFilter(opt)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-sm capitalize transition-colors",
+                    statusFilter === opt
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {opt === "active" ? "Active" : "All"}
+                </button>
+              ))}
+            </div>
           </div>
+
 
           {/* Column header */}
           <div className="flex items-center gap-3 px-4 py-2 border-y border-border bg-muted/30">
@@ -282,12 +303,8 @@ export function RuleCampaignSelector({ onBack, onSaveDraft, onApplyRule, ruleNam
 
       {/* Footer */}
       <div className="flex items-center justify-end gap-3 rounded-lg border border-border bg-card px-5 py-3">
-        <Button variant="outline" size="sm" onClick={onSaveDraft}>
-          <Save className="mr-1.5 h-3.5 w-3.5" />
-          Save as Draft
-        </Button>
         <Button size="sm" onClick={onApplyRule} disabled={addedIds.size === 0}>
-          Apply Rule
+          {isEdit ? "Update Campaigns" : "Apply Rule"}
           <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
         </Button>
       </div>

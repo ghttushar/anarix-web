@@ -1,107 +1,71 @@
-# Rules Engine — Review Feedback Implementation Plan
 
-Scope: apply the documented Rules Engine feedback across the Rule Form, Applied Rules, and Configuration (mapping / keyword actions) flows. Underlying rule-execution logic stays untouched; this is UX, labels, defaults, and a couple of small data-model additions.
+# Rules Engine — Review Feedback Implementation
 
-The attached `Untitled_1.fig` is a binary Figma file and can't be parsed in-sandbox, so the spec text in the message is the source of truth.
-
----
+Scope: UX, labels, defaults, and small data-model additions across Rule Form, Applied Rules, Campaign Selector, and the Mapping / Keyword Actions surfaces. No rule-execution logic touched.
 
 ## 1. Data layer — `src/data/mockRules.ts`
-
-- Extend `RuleCondition` with optional `maxValue?: number` to support the new **Between** operator.
-- Extend `AppliedRule["status"]` union to include `"ended"`.
+- `RuleCondition`: add optional `maxValue?: number` (for "Between").
+- `AppliedRule["status"]`: add `"ended"`.
 - `operatorOptions`: append `{ value: "between", label: "Between" }`.
-- `actionOptions`: rename absolute bid actions to match spec — `"Increase Bid by $"` and `"Decrease Bid by $"` (keep the percentage ones as they are).
-- `frequencyOptions`: prepend `{ value: "not_set", label: "Not Set" }` so it can be the default.
-- Add a `dateRangeOptions` array: `Not Set`, `Last 7 days`, `Last 14 days`, `Last 30 days`, `Custom`.
-- `appliedRules` mock: mark 1–2 rows as `status: "ended"` with a past end date so the new badge has data.
+- `actionOptions`: rename absolute bid actions to `"Increase Bid by $"` / `"Decrease Bid by $"`.
+- `frequencyOptions`: prepend `{ value: "not_set", label: "Not Set" }`.
+- Add `dateRangeOptions`: `Not Set`, `Last 7 / 14 / 30 days`, `Custom`.
+- `appliedRules` mock: mark 1–2 rows as `ended` with a past end date.
 
 ## 2. Rule Form — `src/pages/advertising/RuleCreation.tsx`
-
-Status & basic info
-- Bump the **Status** label from `text-xs` to `text-sm font-semibold` (the spec explicitly calls out the label being hard to notice).
-- Add a **Select Date Range** field (formerly "Run Between") in Basic Information, defaulting to `not_set`.
-- Change **Frequency** default from `"daily"` to `"not_set"`.
-
-Conditions
-- `createCondition()` keeps `metric: "acos"` so newly added conditions are pre-selected (spec 2.6 — already satisfied, just verify).
-- When `operator === "between"`, render two numeric inputs (min / max) wired to `value` and `maxValue`; for all other operators, the existing single input.
-- No `scrollIntoView` / autoscroll is introduced when adding conditions (spec 2.7).
-- Keep `Add Condition` button **below** the existing conditions list (already structured this way — keep, remove any duplicate top-right placement if present).
-
-Edit-draft mode (`isEdit === true`)
-- Footer primary action label: `"Select Campaigns"` → `"Update Campaigns"`.
-- Top-right `"Save Draft"` action: hide entirely when `isEdit` (drafts being edited save as `"Save"` via the campaign-selector footer instead).
-
-Bidder-rule template
-- For the Bidder Rule template (`templateId === "bidder"`), the tROAS / Min Bid / Max Bid inputs (when surfaced in the future) are optional by default; only tROAS becomes required when the selected condition metric is `roas/troas`. Today these inputs aren't rendered, so add a `// TODO(bidder-optional)` marker next to the criteria block to document the contract — no UI added beyond that until the bidder template panel exists.
+- **Status** label: `text-sm font-semibold` (was `text-xs`).
+- Add **Select Date Range** field in Basic Information, default `not_set`.
+- **Frequency** default → `not_set`.
+- When `operator === "between"`, render two numeric inputs (min / max → `value`, `maxValue`).
+- Keep `Add Condition` button below the conditions list (already there — verified, no duplicate).
+- No autoscroll on add condition (none today — keep that way).
+- New condition pre-selects metric `acos` (already does).
+- `isEdit === true`:
+  - Hide top-right `Save Draft` button.
+  - Footer primary label: `Select Campaigns` → `Update Campaigns`.
+- Bidder Rule template: add `// TODO(bidder-optional)` comment near criteria block documenting the contract; no UI added until that template panel exists.
 
 ## 3. Campaign Selector — `src/components/advertising/RuleCampaignSelector.tsx`
-
-- Add `isEdit?: boolean` prop, passed from `RuleCreation`.
-- **Remove** the `Save as Draft` button from the footer entirely (spec 2.10 — drop Save & Draft from Entity Selection page).
-- Primary button label:
-  - new rule → `"Apply Rule"` (unchanged)
-  - editing a draft → `"Update Campaigns"`
-- Default the left-pane campaign list to **Active** campaigns (use `c.status === "active"` filter; expose a small "All / Active" segmented control with Active pre-selected so users can opt out).
+- New prop `isEdit?: boolean` from `RuleCreation`.
+- Remove `Save as Draft` from footer entirely.
+- Primary button: `Apply Rule` (new) / `Update Campaigns` (edit).
+- Default left-pane filter to **Active** campaigns with a small "All / Active" segmented toggle (Active pre-selected).
 
 ## 4. Applied Rules — `src/pages/advertising/AppliedRules.tsx`
-
-- Add `ended` entry to `statusStyles` (muted/red border) and a new **Ended** tab in `statusTabs`.
-- If a rule has `status === "ended"`, force the running toggle into the paused visual state and disable it (no execution).
-- Rename any displayed "Run Between" copy to **"Schedule"** (today the column is "Frequency" — add a tooltip/header alias rather than restructure if the column doesn't exist).
+- Add `ended` entry to `statusStyles` + new **Ended** tab in `statusTabs`.
+- Rules with `status === "ended"`: force toggle into paused visual + disabled.
+- Rename any displayed "Run Between" copy to **"Schedule"** (header alias only — no column restructure).
 
 ## 5. Mapping / Keyword Actions — `src/pages/advertising/TargetingActions.tsx`
-
-- Page-level terminology pass:
-  - `Match Type` column header → **Match Type to Add**.
-  - Any `Exclude Branded` toggle copy → **Exclude Branded Terms**.
-  - Section heading `Source & Targeting Mapping` → **Keyword Actions** (apply wherever it surfaces in toolbar/headers).
-- **Existing-mapping indicator**: when a row's `targetAdGroupId` is already set, render an `Existing Mapping` badge inside the Target Ad Group cell and prevent re-selecting the same ad group (disabled option + tooltip).
-- **Amazon-only**: surface a `Negate in Source Ad Group` switch in the bulk-action popover; hide it entirely when `isWalmart`.
-- **Mapping creation feedback**: after a successful add/update, briefly highlight the affected row (`bg-success/5` for ~2s via a `recentlyMappedIds` set) and emit a `toast.success` describing the new mapping (campaign → ad group).
+- `Match Type` column header → **Match Type to Add**.
+- Any `Exclude Branded` copy → **Exclude Branded Terms**.
+- Section heading `Source & Targeting Mapping` → **Keyword Actions** (where it surfaces).
+- **Existing Mapping** badge inside the Target Ad Group cell when `targetAdGroupId` already set; disable selecting the same ad group again (tooltip).
+- Amazon-only: `Negate in Source Ad Group` switch in the bulk-action popover; hidden when `isWalmart`.
+- Mapping creation feedback: `recentlyMappedIds` set highlights affected row with `bg-success/5` for ~2s; toast describes new mapping (campaign → ad group).
 
 ## 6. Add Keyword Modal — `src/components/advertising/AddKeywordTargetModal.tsx`
-
-- Add a `Match Type to Add` label row above the Broad/Exact/Phrase column group.
-- Primary button label: `Add Keywords` → `Save` (spec 4.4 shorter labels).
+- Add **Match Type to Add** label row above Broad/Exact/Phrase column group.
+- Primary button: `Add Keywords` → `Save`.
 
 ## 7. "Save Changes" → "Save" rename
+Applied in:
+- `AdGroupSettingsPanel.tsx`
+- `AdGroupSettingsDialog.tsx`
+- `CampaignSettingsPanel.tsx`
+- `CampaignSettingsDialog.tsx`
+- `DataTableToolbar.tsx` (AlertDialog title `Save Changes?` → `Save?` + action button)
+- `pages/settings/ComponentLibrary.tsx` mockups (parity)
 
-Single-character labels updated in:
-- `src/components/advertising/AdGroupSettingsPanel.tsx`
-- `src/components/advertising/AdGroupSettingsDialog.tsx`
-- `src/components/advertising/CampaignSettingsPanel.tsx`
-- `src/components/advertising/CampaignSettingsDialog.tsx`
-- `src/components/advertising/DataTableToolbar.tsx` (both the AlertDialog title `Save Changes?` → `Save?` and its action button label)
-- `src/pages/settings/ComponentLibrary.tsx` mockups (cosmetic parity)
+## 8. New flow seed (spec 4.5)
+Add a "Start from Mapping" CTA on `TargetingActions` that deep-links to `RuleCreation` with `?mappingId=...`; `RuleCreation` reads the param and pre-adds that mapping in the campaign selector. No route changes.
 
-## 8. Updated user flow (spec 4.5)
-
-Document — no immediate routing change — the intended entry-point shift: mapping selection becomes the **start** of the rule-creation flow rather than its result. Concretely, add a "Start from Mapping" call-to-action on `TargetingActions` that deep-links into `RuleCreation` with the chosen mapping pre-filled via query params (`?mappingId=...`). `RuleCreation` reads the param and hydrates the campaign-selector with that mapping pre-added.
-
-## 9. Out of scope (explicitly NOT implemented)
-
-- Multi-condition AND/OR grouping (spec 2.5, future).
-- Custom frequency (run N times in M days) — spec section 5.
-
----
+## 9. Explicitly out of scope
+- Multi-condition AND/OR grouping.
+- Custom frequency (run N times in M days).
+- New bidder-template UI panel.
 
 ## File-touch summary
+Edit: `src/data/mockRules.ts`, `src/pages/advertising/RuleCreation.tsx`, `src/pages/advertising/AppliedRules.tsx`, `src/pages/advertising/TargetingActions.tsx`, `src/components/advertising/RuleCampaignSelector.tsx`, `src/components/advertising/AddKeywordTargetModal.tsx`, `src/components/advertising/MatchTypePicker.tsx`, `src/components/advertising/AdGroupSettingsPanel.tsx`, `src/components/advertising/AdGroupSettingsDialog.tsx`, `src/components/advertising/CampaignSettingsPanel.tsx`, `src/components/advertising/CampaignSettingsDialog.tsx`, `src/components/advertising/DataTableToolbar.tsx`, `src/pages/settings/ComponentLibrary.tsx`.
 
-Edit:
-- `src/data/mockRules.ts`
-- `src/pages/advertising/RuleCreation.tsx`
-- `src/pages/advertising/AppliedRules.tsx`
-- `src/pages/advertising/TargetingActions.tsx`
-- `src/components/advertising/RuleCampaignSelector.tsx`
-- `src/components/advertising/AddKeywordTargetModal.tsx`
-- `src/components/advertising/MatchTypePicker.tsx` (column-label alignment with "Match Type to Add")
-- `src/components/advertising/AdGroupSettingsPanel.tsx`
-- `src/components/advertising/AdGroupSettingsDialog.tsx`
-- `src/components/advertising/CampaignSettingsPanel.tsx`
-- `src/components/advertising/CampaignSettingsDialog.tsx`
-- `src/components/advertising/DataTableToolbar.tsx`
-- `src/pages/settings/ComponentLibrary.tsx`
-
-No new routes, no business-logic changes, no design-system primitives added.
+No new routes, no business-logic changes, no new design primitives.
