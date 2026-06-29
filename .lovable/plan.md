@@ -1,115 +1,107 @@
+# Rules Engine — Review Feedback Implementation Plan
 
-# Mobile rebuild — full sweep against new spec
+Scope: apply the documented Rules Engine feedback across the Rule Form, Applied Rules, and Configuration (mapping / keyword actions) flows. Underlying rule-execution logic stays untouched; this is UX, labels, defaults, and a couple of small data-model additions.
 
-Goal: replace the current mobile shell, taskbar, drawer, tables, charts, and Aan layout with a single coherent system that matches the new UX spec. View-only everywhere except: hamburger nav, account panel nav, page tabs, KPI metric dropdowns, chart metric/expand/rotate, search input, filter/column icons, table row tap-through, and Aan chat.
+The attached `Untitled_1.fig` is a binary Figma file and can't be parsed in-sandbox, so the spec text in the message is the source of truth.
 
 ---
 
-## 1. Global shell
+## 1. Data layer — `src/data/mockRules.ts`
 
-Files: `src/views/mobile/MobileShell.tsx`, `MobileTopBar.tsx`, `MobileDrawerNav.tsx`, new `MobileAccountSheet.tsx`, new `MobileAppLevelBar.tsx`, `MobileTaskbar.tsx` (becomes a thin wrapper around `MobileAppLevelBar`).
+- Extend `RuleCondition` with optional `maxValue?: number` to support the new **Between** operator.
+- Extend `AppliedRule["status"]` union to include `"ended"`.
+- `operatorOptions`: append `{ value: "between", label: "Between" }`.
+- `actionOptions`: rename absolute bid actions to match spec — `"Increase Bid by $"` and `"Decrease Bid by $"` (keep the percentage ones as they are).
+- `frequencyOptions`: prepend `{ value: "not_set", label: "Not Set" }` so it can be the default.
+- Add a `dateRangeOptions` array: `Not Set`, `Last 7 days`, `Last 14 days`, `Last 30 days`, `Custom`.
+- `appliedRules` mock: mark 1–2 rows as `status: "ended"` with a past end date so the new badge has data.
 
-- **Sticky top bar (56px)** on every page: `[☰]  Page Name (centered, truncates)  [👤]`.
-  - Page name resolved from a small `pageTitleByRoute` map + route params for drill-downs (e.g. "Campaign: ACME-BR-001").
-  - Drill-down pages get a leading `←` before the title.
-  - Remove logo, Aan/insight/alert clusters, theme toggle, density toggle from top bar — they live elsewhere.
-- **App-level selector bar** (sticky, directly under top bar, `bg-card` with bottom border):
-  - Row 1: breadcrumb text only (no actions).
-  - Row 2: Account chip + Marketplace chip (read-only display, opens drawer marketplace section on tap so user can switch — still considered nav).
-  - Row 3: Date range chip + Frequency chip (read-only display; tap opens a bottom sheet to change — confirm in build). **Run button hidden on mobile.**
-  - One component, used on every page. No filter chips here anymore.
-- **Bottom bar removed.** Only floating Aan FAB remains (see §5).
+## 2. Rule Form — `src/pages/advertising/RuleCreation.tsx`
 
-## 2. Hamburger drawer (left)
+Status & basic info
+- Bump the **Status** label from `text-xs` to `text-sm font-semibold` (the spec explicitly calls out the label being hard to notice).
+- Add a **Select Date Range** field (formerly "Run Between") in Basic Information, defaulting to `not_set`.
+- Change **Frequency** default from `"daily"` to `"not_set"`.
 
-Rebuild `MobileDrawerNav.tsx` to match spec exactly:
+Conditions
+- `createCondition()` keeps `metric: "acos"` so newly added conditions are pre-selected (spec 2.6 — already satisfied, just verify).
+- When `operator === "between"`, render two numeric inputs (min / max) wired to `value` and `maxValue`; for all other operators, the existing single input.
+- No `scrollIntoView` / autoscroll is introduced when adding conditions (spec 2.7).
+- Keep `Add Condition` button **below** the existing conditions list (already structured this way — keep, remove any duplicate top-right placement if present).
 
-1. Header row: Anarix logo + ✕ close.
-2. `✦ Ask Aan` row — navigates to `/aan`.
-3. `MARKETPLACE` section: Amazon / Walmart / Shopify / TikTok with active highlight.
-4. Main nav (flat, single-level expand): Profitability, Advertising, Rules, Catalog, AMC, Business Intelligence, Day Parting. Each with `>` chevron; tap expands inline child list (read from existing `navigationGroups`, filtered against `MOBILE_BLOCKED`).
-5. Footer: Light/Dark toggle only. **Remove profile/email/account actions from drawer** — they live in the account sheet.
+Edit-draft mode (`isEdit === true`)
+- Footer primary action label: `"Select Campaigns"` → `"Update Campaigns"`.
+- Top-right `"Save Draft"` action: hide entirely when `isEdit` (drafts being edited save as `"Save"` via the campaign-selector footer instead).
 
-Tap outside or ✕ closes drawer.
+Bidder-rule template
+- For the Bidder Rule template (`templateId === "bidder"`), the tROAS / Min Bid / Max Bid inputs (when surfaced in the future) are optional by default; only tROAS becomes required when the selected condition metric is `roas/troas`. Today these inputs aren't rendered, so add a `// TODO(bidder-optional)` marker next to the criteria block to document the contract — no UI added beyond that until the bidder template panel exists.
 
-## 3. Account sheet (top-right 👤)
+## 3. Campaign Selector — `src/components/advertising/RuleCampaignSelector.tsx`
 
-New `MobileAccountSheet.tsx`, opened from top bar 👤. Right-side sheet using existing `MobileRightSheet`. Items in exact order:
+- Add `isEdit?: boolean` prop, passed from `RuleCreation`.
+- **Remove** the `Save as Draft` button from the footer entirely (spec 2.10 — drop Save & Draft from Entity Selection page).
+- Primary button label:
+  - new rule → `"Apply Rule"` (unchanged)
+  - editing a draft → `"Update Campaigns"`
+- Default the left-pane campaign list to **Active** campaigns (use `c.status === "active"` filter; expose a small "All / Active" segmented control with Active pre-selected so users can opt out).
 
-`Anarix Website, Preferences, Accounts, Integrations, Team, System, Design System, Component Library, Billing, Profile` — then a divider and **Logout in red**.
+## 4. Applied Rules — `src/pages/advertising/AppliedRules.tsx`
 
-All items are navigation links. No inline editing.
+- Add `ended` entry to `statusStyles` (muted/red border) and a new **Ended** tab in `statusTabs`.
+- If a rule has `status === "ended"`, force the running toggle into the paused visual state and disable it (no execution).
+- Rename any displayed "Run Between" copy to **"Schedule"** (today the column is "Frequency" — add a tooltip/header alias rather than restructure if the column doesn't exist).
 
-## 4. Page template (used by Campaign Manager + all data pages)
+## 5. Mapping / Keyword Actions — `src/pages/advertising/TargetingActions.tsx`
 
-New `MobilePageTemplate.tsx` composing in order:
-1. KPI Cards — `MobileKpiGrid` (new). 2×2 fixed grid, no scroll. Each card: metric dropdown (interactive), large value, delta with arrow+color, "vs prev" line.
-2. Performance Overview chart — `MobileChartFrame` updated: title left, controls right (Show Impact toggle display-only, metric dropdown(s), rotate, expand). Full-width dual-axis line chart. Color legend row below (4 chips).
-3. Horizontally scrollable page tab strip — new `MobileTabStrip` with snap scroll, active underline.
-4. Search + filter icon + column icon row — `MobileTableToolbar` reworked: search input **enabled**, filter & column icons **enabled** (open existing sheets). All write actions stripped.
-5. Data table — `MobileDataTable`: native table, sticky first column, horizontal scroll inside frame only, **totals row pinned at bottom** (bold, distinct bg). No bulk checkboxes. Row tap navigates to drill-down route.
+- Page-level terminology pass:
+  - `Match Type` column header → **Match Type to Add**.
+  - Any `Exclude Branded` toggle copy → **Exclude Branded Terms**.
+  - Section heading `Source & Targeting Mapping` → **Keyword Actions** (apply wherever it surfaces in toolbar/headers).
+- **Existing-mapping indicator**: when a row's `targetAdGroupId` is already set, render an `Existing Mapping` badge inside the Target Ad Group cell and prevent re-selecting the same ad group (disabled option + tooltip).
+- **Amazon-only**: surface a `Negate in Source Ad Group` switch in the bulk-action popover; hide it entirely when `isWalmart`.
+- **Mapping creation feedback**: after a successful add/update, briefly highlight the affected row (`bg-success/5` for ~2s via a `recentlyMappedIds` set) and emit a `toast.success` describing the new mapping (campaign → ad group).
 
-Drill-down pages (Ad Group, Product, etc.) reuse the same template — only title + data change. Title row gets `←` back.
+## 6. Add Keyword Modal — `src/components/advertising/AddKeywordTargetModal.tsx`
 
-## 5. Aan FAB + Aan page (OPT A)
+- Add a `Match Type to Add` label row above the Broad/Exact/Phrase column group.
+- Primary button label: `Add Keywords` → `Save` (spec 4.4 shorter labels).
 
-- New `MobileAanFab.tsx`: fixed bottom-right (`bottom: 16px + safe-area`, `right: 16px`), 56px, gradient ring, Aan glyph. Hidden on `/aan` and on Aan-owned panels. Rendered in `MobileShell`.
-- Rewrite `MobileAanLayout.tsx` for OPT A:
-  - Top bar: `[☰ app nav]  Aan AI  [＋ new chat] [⋯ aan settings] [👤]`.
-  - Body: scrollable conversation, `flex-1 min-h-0`.
-  - Composer docked above the keyboard using `100dvh` + visualViewport listener; input stays visible when keyboard opens. Send + attach buttons inside composer.
-  - No right-side history drawer.
+## 7. "Save Changes" → "Save" rename
 
-## 6. View-only enforcement
+Single-character labels updated in:
+- `src/components/advertising/AdGroupSettingsPanel.tsx`
+- `src/components/advertising/AdGroupSettingsDialog.tsx`
+- `src/components/advertising/CampaignSettingsPanel.tsx`
+- `src/components/advertising/CampaignSettingsDialog.tsx`
+- `src/components/advertising/DataTableToolbar.tsx` (both the AlertDialog title `Save Changes?` → `Save?` and its action button label)
+- `src/pages/settings/ComponentLibrary.tsx` mockups (cosmetic parity)
 
-`src/index.css`:
-- Keep `data-write-action`, `data-chart-actions`, `data-viz-toolbar` hidden in mobile view.
-- Add: hide Run button on app-level bar in mobile.
-- Allow search input, filter trigger, column trigger (remove any prior mobile disable).
-- Force table first column sticky + opaque bg-card.
-- Hide bulk-selection checkbox columns globally on mobile.
+## 8. Updated user flow (spec 4.5)
 
-Page components keep their desktop logic; the template + CSS gates do the trimming. No business logic edits.
+Document — no immediate routing change — the intended entry-point shift: mapping selection becomes the **start** of the rule-creation flow rather than its result. Concretely, add a "Start from Mapping" call-to-action on `TargetingActions` that deep-links into `RuleCreation` with the chosen mapping pre-filled via query params (`?mappingId=...`). `RuleCreation` reads the param and hydrates the campaign-selector with that mapping pre-added.
 
-## 7. Pages to touch (full sweep)
+## 9. Out of scope (explicitly NOT implemented)
 
-Apply the new template/shell to every mobile-visible route. For data pages, swap their current mobile wrapper to `MobilePageTemplate` with the right KPI set, chart, tabs, and table data:
+- Multi-condition AND/OR grouping (spec 2.5, future).
+- Custom frequency (run N times in M days) — spec section 5.
 
-- Advertising: Campaign Manager, Ad Group detail, Product Ad detail, Targeting Actions, Impact Analysis (+ drill-downs), Search Harvesting, Anomaly Alerts, Budget Pacing, Creative Analyzer, Applied Rules.
-- Profitability: Dashboard, Trends, Profit & Loss, Geographical, Unified P&L.
-- Catalog: Products, Inventory Ads.
-- BI: Brand SOV, Keyword SOV, Product SOV, Keyword Tracker, Competitor Pricing.
-- AMC: Instances, Queries, Executed Queries, Schedules, Audiences, Created Audiences.
-- Day Parting: Hourly Data.
-- Reports: Client Portal.
-- Settings (all listed in §3) — already mostly read-only on mobile; just verify top bar title and account sheet entry points.
-- Aan: `/aan` rebuilt as in §5.
+---
 
-Mobile blocks remain for write-only routes (Workspace, Rule Agents, Rule Creation).
+## File-touch summary
 
-## 8. Out of scope (no changes)
+Edit:
+- `src/data/mockRules.ts`
+- `src/pages/advertising/RuleCreation.tsx`
+- `src/pages/advertising/AppliedRules.tsx`
+- `src/pages/advertising/TargetingActions.tsx`
+- `src/components/advertising/RuleCampaignSelector.tsx`
+- `src/components/advertising/AddKeywordTargetModal.tsx`
+- `src/components/advertising/MatchTypePicker.tsx` (column-label alignment with "Match Type to Add")
+- `src/components/advertising/AdGroupSettingsPanel.tsx`
+- `src/components/advertising/AdGroupSettingsDialog.tsx`
+- `src/components/advertising/CampaignSettingsPanel.tsx`
+- `src/components/advertising/CampaignSettingsDialog.tsx`
+- `src/components/advertising/DataTableToolbar.tsx`
+- `src/pages/settings/ComponentLibrary.tsx`
 
-Desktop/tablet shells, business logic, data fetching, route names, role/permission system, design tokens (Periwinkle stays).
-
-## 9. Verification
-
-Test at 390×844 and 360×800, light + dark:
-- Top bar title centered and truncating; ☰ and 👤 tap targets ≥44px.
-- Drawer matches §2 exactly; ✕ + outside-tap close.
-- Account sheet matches §3 exactly; Logout red at bottom.
-- App-level bar shows 3 rows, no Run button, sticky under top bar.
-- 4 KPI cards always visible in 2×2, dropdowns swap metrics in chart.
-- Chart full width, dual axis, 4-chip legend below, controls top-right.
-- Page tabs scroll horizontally, snap, active state visible.
-- Search/filter/column work; no Export/Upload/Save/Edit/Create/Run anywhere.
-- Tables: sticky first column, horizontal scroll inside frame only, totals row at bottom.
-- Row tap navigates to drill-down, drill-down shows ← back in title.
-- Aan FAB visible on all data pages, hidden on /aan; Aan composer stays above keyboard; OPT A nav.
-- No page-level horizontal scroll; no light/dark contrast failures on primary buttons, toggles, delta chips.
-
-## Technical notes
-
-- New files: `MobileAppLevelBar.tsx`, `MobileAccountSheet.tsx`, `MobilePageTemplate.tsx`, `MobileKpiGrid.tsx`, `MobileTabStrip.tsx`, `MobileAanFab.tsx`, `pageTitleByRoute.ts`.
-- Modified: `MobileShell.tsx`, `MobileTopBar.tsx`, `MobileDrawerNav.tsx`, `MobileTaskbar.tsx`, `MobileDataTable.tsx`, `MobileTableToolbar.tsx`, `MobileChartFrame.tsx`, `MobileAanLayout.tsx`, `index.css`, and the per-page mobile wrappers listed in §7.
-- Delete: any now-unused mobile-only bits (old bottom bar, old in-drawer profile actions, old AppLevelBar variants that don't match §1).
-- Memory: after build, save a new `mem://features/viewport-variants/phase-mobile-redesign-4` entry replacing redesigns 2 & 3 as the source of truth.
+No new routes, no business-logic changes, no design-system primitives added.
