@@ -149,7 +149,9 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
   const { openPanel: openAan } = useAan();
   const { openPanel: openInsights } = useInsights();
   const { pendingCount: aanPendingCount, criticalCount: aanCriticalCount } = useAanEvents();
+  const navigate = useNavigate();
   const islandOff = !effects.floatingIsland;
+
 
   const [draftRange, setDraftRange] = useState<{ from: Date; to: Date }>(dateRange);
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
