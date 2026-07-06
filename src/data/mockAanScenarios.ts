@@ -189,6 +189,27 @@ export const SCENARIOS: ScenarioTemplate[] = [
       "Recommended budget covers projected 4x traffic without breaching account ACoS target.",
       "Campaign scheduled to auto-pause 11:59 PM PT Jul 9.",
     ],
+    meetingRef: {
+      title: "Prime Day '26 Planning",
+      when: "Fri 2:00 PM · 60 min",
+      attendees: ["Dorothy (host)", "Mike", "Priya", "Ravi (Finance)", "You", "Aan"],
+      decisions: [
+        "12 Mount-It hero SKUs selected for Prime Day '26 event coverage.",
+        "Event daily budget capped at $680; +35% top-of-search modifier approved.",
+        "Aan owns pre-event checklist delivery on Jul 7 at 9 AM.",
+      ],
+      actionItems: [
+        { owner: "Aan", due: "Today", task: "Draft SP | Prime Day '26 campaign with 12 SKUs for approval" },
+        { owner: "Mike", due: "Jul 6", task: "Confirm inventory buffer for all 12 hero SKUs" },
+        { owner: "Priya", due: "Jul 7", task: "Finalize creatives + A+ pages for event SKUs" },
+        { owner: "You", due: "Today", task: "Approve $680/day budget and event schedule" },
+      ],
+      callouts: [
+        "Dorothy: 'Bamboo Queen and MI-311/312 need to be supported from day one — no ramp-up excuses.'",
+        "Ravi: 'Keep account ACoS under 22% or we eat the promo margin.'",
+      ],
+      notes: "Event window: Jul 8 00:00 → Jul 9 23:59 PT. Auto-pause at end. All 12 SKUs exceeded baseline in the last 3 events.",
+    },
     recommendation: "Schedule 'SP | Prime Day '26 — Hero SKUs' with 12 SKUs, $680/day budget, Jul 8 00:00 → Jul 9 23:59 PT.",
     actionLabel: "Schedule Prime Day campaign",
     steps: [
@@ -236,6 +257,24 @@ export const SCENARIOS: ScenarioTemplate[] = [
       when: "Tue",
       quote: "Please make sure MI-311 and MI-312 are supported from day one.",
     },
+    meetingRef: {
+      title: "Mount-It Launch Sync",
+      when: "Tue 11:00 AM · 25 min",
+      attendees: ["Dorothy (host)", "Mike", "You", "Aan"],
+      decisions: [
+        "Every new Mount-It SKU launches with SP Manual + SP Auto coverage from day one.",
+        "Launch budget defaults to $30/SKU/day for the first 14 days.",
+      ],
+      actionItems: [
+        { owner: "Aan", due: "Auto", task: "Detect any launched SKU with zero ad coverage and propose campaigns" },
+        { owner: "Mike", due: "Wed", task: "Confirm seed keyword list for MI-311/312" },
+        { owner: "You", due: "Today", task: "Approve launch campaign structure for MI-311/312" },
+      ],
+      callouts: [
+        "Dorothy: 'Please make sure MI-311 and MI-312 are supported from day one.'",
+      ],
+      notes: "Launch coverage gap is the #1 slow-ramp predictor in this category. Team agreed Aan should auto-draft campaigns within 24h of a new SKU going live.",
+    },
     recommendation: "Create 1 SP Manual + 1 SP Auto campaign covering both SKUs, $60/day combined.",
     actionLabel: "Create launch campaigns",
     steps: [
@@ -276,6 +315,24 @@ export const SCENARIOS: ScenarioTemplate[] = [
       "Ad-attributed sales are driving losses (each ad-attributed order loses ~$4.60).",
       "Two paths: (a) pause advertising, sustain organic; (b) raise price $2.99 and retain ads.",
     ],
+    meetingRef: {
+      title: "Walmart P&L Review — Weekly",
+      when: "Yesterday 3:00 PM · 30 min",
+      attendees: ["Mike (host)", "Dorothy", "Ravi (Finance)", "You", "Aan"],
+      decisions: [
+        "SKUs posting negative net margin > 10d get paused pending pricing review.",
+        "Mike owns Walmart pricing decisions for Mount-It line.",
+      ],
+      actionItems: [
+        { owner: "Mike", due: "Thu 11 AM", task: "Review MI-088 pricing — decide pause vs. +$2.99 price bump" },
+        { owner: "Ravi", due: "Fri", task: "Confirm updated COGS from supplier for MI-088 batch" },
+        { owner: "Aan", due: "Auto", task: "Notify #retail-pricing when MI-088 breaches −10% margin", done: true },
+      ],
+      callouts: [
+        "Dorothy: 'If we can't fix MI-088 margin this week, we pause. No ad-attributed losses on my line.'",
+      ],
+      notes: "Finance flagged that supplier switch on Jun 12 caused the 18% COGS jump. Pricing review is the primary lever; ad-pause is the safety net.",
+    },
     recommendation: "Pause SKU MI-088 in all Walmart advertising campaigns until pricing review is complete.",
     actionLabel: "Pause MI-088 ads",
     editable: {
@@ -487,6 +544,24 @@ export const SCENARIOS: ScenarioTemplate[] = [
       who: "Monday QBR — Retail Sync",
       when: "Mon",
       quote: "Bharath: 'Any product-quality signals from reviews need to be flagged same-day.'",
+    },
+    meetingRef: {
+      title: "Monday QBR — Retail Sync",
+      when: "Mon 9:00 AM · 45 min",
+      attendees: ["Bharath (host)", "Priya", "Dorothy", "Mike", "You", "Aan"],
+      decisions: [
+        "Any product-quality review signals must be flagged same-day.",
+        "Priya owns cross-functional quality escalations for hero SKUs.",
+      ],
+      actionItems: [
+        { owner: "Priya", due: "Fri 5 PM", task: "Investigate 'thin cushioning' theme on MI-101" },
+        { owner: "Aan", due: "Auto", task: "Compile review summary + trend chart when signal appears", done: true },
+        { owner: "You", due: "Wed", task: "Approve refreshed QA checklist for hero SKUs" },
+      ],
+      callouts: [
+        "Bharath: 'Product-quality signals from reviews need to be flagged same-day — no exceptions.'",
+      ],
+      notes: "Team aligned on treating rating drops on hero SKUs as P1. Priya requested screenshots of clustered review themes with every escalation.",
     },
     recommendation: "Create Slack thread in #quality-mi-101 with review summary + trend chart + owner tag @Priya.",
     actionLabel: "Create quality escalation",
