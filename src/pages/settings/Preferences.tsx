@@ -601,7 +601,38 @@ export default function Preferences() {
             <Switch checked={liveMode} onCheckedChange={setLiveMode} />
           </div>
 
+          {/* Alert categories — turn on/off per category */}
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="mb-3">
+              <h3 className="font-heading text-sm font-semibold text-foreground">Alert categories</h3>
+              <p className="text-[12px] text-muted-foreground mt-0.5">Choose which situations Aan surfaces in your Alerts stream. Off means silent — Aan still watches, but won't notify.</p>
+            </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {ALERT_CATEGORIES.map(({ key, icon: CatIcon, label, description }) => {
+                const enabled = categoryPrefs[key] ?? true;
+                return (
+                  <li key={key} className={cn("rounded-md border p-3 flex items-start gap-3 transition-colors", enabled ? "border-primary/25 bg-primary/[0.02]" : "border-border bg-background")}>
+                    <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                      <CatIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12.5px] font-medium text-foreground">{label}</div>
+                      <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">{description}</div>
+                    </div>
+                    <Switch checked={enabled} onCheckedChange={() => toggleCategory(key)} />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="pt-1">
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">How Aan can act without asking</div>
+          </div>
+
           <ul className="space-y-3">
+
+
 
             {policies.map((p) => (
               <li key={p.id} className={cn("rounded-lg border bg-card p-4 transition-colors", p.enabled ? "border-primary/30" : "border-border")}>
