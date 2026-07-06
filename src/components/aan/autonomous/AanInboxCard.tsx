@@ -23,9 +23,8 @@ const severityDot: Record<string, string> = {
 };
 
 /**
- * Overview card — Insight → Value → Action → Verification.
- * Inline Accept/Reject shown for events needing approval.
- * Meeting-sourced events use primary blue on left edge to differentiate visually.
+ * Overview card — hierarchy: Insight (title) → Value (highlighted band) → Action (instruction) → Footer.
+ * Value is the visual anchor; buttons are secondary.
  */
 export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Props) {
   const s = event.scenario;
@@ -37,16 +36,29 @@ export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Pr
   const needsApproval = ["awaiting_approval", "detected", "analyzing"].includes(event.lifecycle);
   const isMeeting = channel === "meeting";
 
+  // Value band accent varies by state
+  const valueBand = isFulfilled
+    ? "border-success bg-success/[0.05]"
+    : isRejected
+    ? "border-muted-foreground/40 bg-muted/40"
+    : "border-primary bg-primary/[0.05]";
+  const valueLabelTone = isFulfilled
+    ? "text-success"
+    : isRejected
+    ? "text-muted-foreground"
+    : "text-primary";
+  const valueLabel = isFulfilled ? "Result" : isRejected ? "Status" : "Value";
+
   return (
     <div
       className={cn(
         "rounded-lg border border-l-4 bg-card px-5 py-4 transition-colors hover:bg-muted/20",
         isMeeting ? "border-l-primary" : severityAccent[s.severity],
-        isRejected && "opacity-60"
+        isRejected && "opacity-70"
       )}
     >
       {/* Meta strip */}
-      <div className="flex items-center gap-1.5 mb-2.5">
+      <div className="flex items-center gap-1.5 mb-3">
         <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", isMeeting ? "bg-primary" : severityDot[s.severity])} />
         {channelLabel && (
           <span className={cn(
@@ -69,44 +81,51 @@ export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Pr
         )}
       </div>
 
-      {/* Insight */}
-      <Zone label="Insight">
-        <span className="font-medium text-foreground">{s.title}.</span>{" "}
-        <span className="text-foreground/70">{s.subtitle}.</span>
-      </Zone>
+      {/* Insight — title + subtitle */}
+      <div className="mb-3">
+        <h3 className="text-[15px] font-semibold text-foreground leading-snug">
+          {s.title}
+        </h3>
+        <p className="mt-0.5 text-[12px] text-muted-foreground leading-snug line-clamp-2">
+          {s.subtitle}
+        </p>
+      </div>
 
-      {/* Value */}
-      <Zone label="Value">
-        <span className="text-foreground/80">{s.impact}</span>
-      </Zone>
+      {/* Value — highlighted band (the anchor) */}
+      <div className={cn("rounded-md border-l-2 px-3 py-2", valueBand)}>
+        <div className={cn("text-[9.5px] uppercase tracking-wider font-semibold mb-0.5", valueLabelTone)}>
+          {valueLabel}
+        </div>
+        <div className="text-[14px] font-semibold text-foreground leading-snug">
+          {isFulfilled
+            ? s.fulfillmentNote
+            : isRejected
+            ? "Declined. Aan won't repeat this for 24h."
+            : s.impact}
+        </div>
+      </div>
 
-      {/* Action or Verification */}
-      {isFulfilled ? (
-        <Zone label="Verification" tone="success">
-          <span className="text-foreground/80 inline-flex items-start gap-1.5">
-            <Check className="h-3 w-3 text-success mt-0.5 shrink-0" />
-            <span>{s.fulfillmentNote}</span>
+      {/* Action — instruction, only when pending */}
+      {!isFulfilled && !isRejected && (
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="text-[9.5px] uppercase tracking-wider font-semibold text-muted-foreground shrink-0">
+            Action
           </span>
-        </Zone>
-      ) : isRejected ? (
-        <Zone label="Verification" tone="muted">
-          <span className="text-muted-foreground italic">Declined. Aan won't repeat this for 24h.</span>
-        </Zone>
-      ) : (
-        <Zone label="Action">
-          <span className="text-foreground/80">{s.recommendation}</span>
-        </Zone>
+          <span className="text-[13px] text-foreground/80 leading-snug line-clamp-2">
+            {s.recommendation}
+          </span>
+        </div>
       )}
 
       {/* Footer: Accept / Reject + View more */}
-      <div className="mt-3.5 flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+      <div className="mt-3.5 flex items-center justify-between gap-2 pt-2.5 border-t border-border/40">
         <div className="flex items-center gap-1.5">
           {needsApproval && (
             <>
               <Button
                 size="sm"
                 onClick={(e) => { e.stopPropagation(); approve(event.eventId); }}
-                className="h-7 px-3 text-[11.5px]"
+                className="h-7 px-3 text-[11.5px] shadow-none"
               >
                 <Check className="h-3 w-3 mr-1" />
                 {s.actionLabel ?? "Accept"}
@@ -135,27 +154,3 @@ export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Pr
 }
 
 export const AanInboxCard = AanEventCard;
-
-function Zone({
-  label,
-  tone,
-  children,
-}: {
-  label: string;
-  tone?: "success" | "muted";
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid grid-cols-[86px_1fr] gap-3 items-baseline py-1">
-      <span
-        className={cn(
-          "text-[9.5px] uppercase tracking-wider font-semibold",
-          tone === "success" ? "text-success" : "text-muted-foreground"
-        )}
-      >
-        {label}
-      </span>
-      <div className="text-[13px] leading-snug line-clamp-2">{children}</div>
-    </div>
-  );
-}
