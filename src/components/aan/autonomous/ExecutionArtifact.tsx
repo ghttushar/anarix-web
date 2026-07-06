@@ -24,7 +24,10 @@ export function ExecutionArtifact({ event, onClose }: Props) {
   const ContextIcon = s.workspaceContext ? contextIcons[s.workspaceContext.kind] : null;
 
   return (
-    <div className="flex h-full w-[560px] shrink-0 flex-col border-l border-border bg-background">
+    <>
+      <div className="fixed inset-0 z-40 bg-foreground/20" onClick={onClose} aria-hidden />
+      <div className="fixed top-0 left-0 bottom-0 z-50 flex h-full w-[560px] max-w-[92vw] shrink-0 flex-col border-r border-border bg-background shadow-xl animate-in slide-in-from-left duration-200">
+
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">
         <div className="min-w-0">
