@@ -1,53 +1,37 @@
-## Alerts page redesign — refinements
+## Fix Alerts channel mix + replace right rail with tabs
 
-### 1. Page title & header
-- Rename "Aan's day" → **"Alerts"** (with subtitle "What Aan noticed for you today").
-- Remove the "Live mode" toggle from the header; move it into Preferences → Edit Alerts section as a switch row ("Live mode — stream new alerts in real-time").
+### 1. Fix channel distribution in `src/pages/Alerts.tsx`
+Current `inferChannel` marks every 5th event as `meeting` and everything else as `live` (nothing is `overnight`). Rewrite so the mix reflects reality:
 
-### 2. Layout — reduce empty space, less compact feel
-- Drop the `max-w-[820px] mx-auto` constraint. Use a two-column layout:
-  - **Left column (main, ~flex-1)**: timeline of alert cards.
-  - **Right column (~320px, sticky)**: summary rail — counts by severity, "What's next" (top 3 pending), and a compact "Today's channels" legend (Overnight / Meeting / Live).
-- Increase card padding (`px-5 py-4`), zone label width, and font sizes (Insight ~14px, Value/Action ~13px) so cards breathe.
-- Add generous section spacing (`space-y-10`) between time buckets.
+- **Overnight**: events with `createdAt` hour `< 8` OR older than ~10h → `overnight` (morning brief).
+- **Meeting**: a small, stable subset (e.g. `eventId` hash `% 7 === 0`) → `meeting`.
+- **Live**: everything else created during the working day → `live`.
 
-### 3. Overview cards — inline Accept / Reject
-- Restore action buttons directly on the overview card for events in `awaiting_approval` / `detected` / `analyzing` states.
-- Footer row of the card: `[ Accept ] [ Reject ]` on the left, `[ View more → ]` on the right.
-- Use existing `useAanEvents` handlers (approve/reject).
-- Fulfilled / executing / rejected cards keep verification zone only (no buttons).
+Result: a natural mix of morning brief items, live intraday items, and a few meeting-sourced items. Meeting-blue left edge stays limited to actual meeting items.
 
-### 4. Filter tabs — add "Meetings"
-- Add a fourth pill: **Meetings** — filters to events whose inferred channel is `meeting`.
-- Keep existing: All · Needs approval · Executing · Done · Meetings.
-- Order: All, Needs approval, Meetings, Executing, Done.
+### 2. Remove the right summary rail
+Delete the entire `<aside>` block (Today at a glance / Up next / Channels) and switch the layout back to a single-column timeline:
 
-### 5. Card left-edge severity color — meeting override
-- Currently left border uses severity color (destructive/success/muted).
-- When channel = `meeting`, override left border and severity dot to **`border-l-primary` / `bg-primary`** regardless of severity, so meeting-derived items are visually distinguishable.
-- Pass `channelLabel` and a new `channel` prop into `AanEventCard` for this.
+- Grid `lg:grid-cols-[1fr_320px]` → single column, centered with existing `max-w-[1400px]`.
+- Remove the `Stat` helper and `CHANNEL_LEGEND` / `upNext` computations that are no longer used.
 
-### 6. Hide Floating Action Island on Alerts route
-- In `FloatingActionIsland.tsx`, add `/alerts` to the hidden-routes list (alongside existing hidden routes like `/aan`).
+### 3. Promote rail content to top-level tabs
+Extend the existing filter pill row into a proper tab set. Keep the current lifecycle filters and add channel/summary tabs:
 
-### 7. Detail panel — inline chat, no redirect
-- Currently "Talk to Aan" input redirects to `/aan?ctx=<eventId>`.
-- Replace with an in-panel chat thread rendered inside `ExecutionArtifact`:
-  - Chat area above the composer showing user turns + Aan mock replies (local component state; no backend).
-  - Composer submits into that local thread; Aan replies with a canned contextual acknowledgement using the event's title/recommendation.
-  - Mirrors the pattern of the minimized right-side Aan panel: header, scrollable messages (`flex-1 min-h-0`), sticky composer at bottom.
-- Remove the router push to `/aan`.
+Tabs (in order):
+1. **All**
+2. **Needs approval** (existing)
+3. **Overnight** — channel = overnight (morning brief)
+4. **Meetings** — channel = meeting (existing, relabeled position)
+5. **Live** — channel = live
+6. **Executing** (existing)
+7. **Done** (existing)
 
-### 8. Preferences — Live mode toggle
-- Add a row in the "Edit Alerts" section of `Preferences.tsx`: Live mode switch, wired to `useAanEvents().liveMode` / `setLiveMode`.
+Each tab shows its count. Filtering logic extended in the same `filtered` `useMemo` to branch on channel for the three new channel tabs.
 
-### Files to edit
-- `src/pages/Alerts.tsx` — title, layout (2-col), remove toggle, add Meetings tab, pass channel to cards.
-- `src/components/aan/autonomous/AanInboxCard.tsx` — inline Accept/Reject, channel-based border color, larger padding/type.
-- `src/components/aan/autonomous/ExecutionArtifact.tsx` — inline chat thread replacing redirect.
-- `src/features/creative/FloatingActionIsland.tsx` — hide on `/alerts`.
-- `src/pages/settings/Preferences.tsx` — add Live mode row in Edit Alerts.
+No other files touched. No changes to card design, lifecycle, chat panel, or preferences.
 
-### Out of scope
-- No changes to event lifecycle logic, mock data, routing, or the taskbar bell.
-- No new palette tokens (reuse `primary`, `destructive`, `success`, `muted`).
+### Technical notes
+- `inferChannel` becomes deterministic on `eventId` + `createdAt` so the mix is stable across renders.
+- `Stat`, `CHANNEL_LEGEND`, `upNext` are removed to keep the file clean per the "delete unused code" rule.
+- Filter pill styling stays; only the tab list grows.
