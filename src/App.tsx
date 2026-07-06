@@ -313,6 +313,7 @@ const App = () => (
             <FilterProvider>
               <ActivePanelProvider>
                 <AanProvider>
+                  <AanEventsProvider>
                   <InsightsProvider>
                     <VisualEffectsProvider>
                       <FeatureToggleProvider>
@@ -341,6 +342,7 @@ const App = () => (
                       </FeatureToggleProvider>
                     </VisualEffectsProvider>
                   </InsightsProvider>
+                  </AanEventsProvider>
                 </AanProvider>
               </ActivePanelProvider>
             </FilterProvider>
