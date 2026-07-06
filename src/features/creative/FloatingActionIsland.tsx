@@ -140,17 +140,17 @@ export function FloatingActionIsland() {
   };
 
   const inboxBadge = aanPendingCount;
-  const inboxLabel = aanCriticalCount > 0
-    ? `Aan Inbox (${aanPendingCount} · ${aanCriticalCount} critical)`
-    : aanPendingCount > 0 ? `Aan Inbox (${aanPendingCount})` : "Aan Inbox";
+  const alertsLabel = aanCriticalCount > 0
+    ? `Alerts (${aanPendingCount} · ${aanCriticalCount} critical)`
+    : aanPendingCount > 0 ? `Alerts (${aanPendingCount})` : "Alerts";
 
   const appActions: ActionItem[] = [
-    { icon: Inbox, label: inboxLabel, onClick: () => setDataPanel("aan-inbox"), highlight: aanCriticalCount > 0, badge: inboxBadge > 0 ? inboxBadge : undefined },
-    { icon: Bell, label: "Alerts", onClick: () => navigate("/alerts") },
+    { icon: Bell, label: alertsLabel, onClick: () => navigate("/alerts"), highlight: aanCriticalCount > 0, badge: inboxBadge > 0 ? inboxBadge : undefined },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
     { icon: Download, label: "Export", onClick: () => toast.success("Export started") },
     themeAction,
   ];
+
 
 
   const websiteActions: ActionItem[] = [
