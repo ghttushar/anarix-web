@@ -176,6 +176,48 @@ export function AanInput() {
     setAttachedFiles([]);
     addMessage(userMessage, "user");
 
+    // Trigger console keywords: "trigger <scenario-id>" fires an autonomous scenario
+    const triggerMatch = userMessage.match(/^\s*trigger\s+([\w-]+)\s*$/i);
+    if (triggerMatch) {
+      const id = triggerMatch[1].toLowerCase();
+      const found = SCENARIOS.find((s) => s.id === id);
+      if (found) {
+        fireScenario(id);
+        setDataPanel("aan-inbox");
+        addMessage(
+          `Fired scenario **${found.title}**. Check the Aan Inbox — it will progress through detection → analysis → approval.`,
+          "assistant"
+        );
+        return;
+      }
+      addMessage(
+        `Unknown trigger \`${id}\`. Available: ${SCENARIOS.map((s) => `\`${s.id}\``).join(", ")}.`,
+        "assistant"
+      );
+      return;
+    }
+
+    // Universal workspace search: "find: <query>"
+    const findMatch = userMessage.match(/^\s*find:\s*(.+)$/i);
+    if (findMatch) {
+      const q = findMatch[1].toLowerCase();
+      const hits = WORKSPACE_CORPUS.filter((w) =>
+        w.title.toLowerCase().includes(q) ||
+        w.snippet.toLowerCase().includes(q) ||
+        w.keywords.some((k) => k.includes(q))
+      ).slice(0, 6);
+      if (hits.length === 0) {
+        addMessage(`No results for \`${findMatch[1]}\` across Slack, Email, Meetings, Amazon, Walmart, or Docs.`, "assistant");
+        return;
+      }
+      const body = hits
+        .map((h) => `**[${h.source}] ${h.title}** — ${h.snippet}\n_${h.who} · ${h.when}_`)
+        .join("\n\n");
+      addMessage(`Found ${hits.length} results across your workspace:\n\n${body}`, "assistant");
+      return;
+    }
+
+
     if (isReportRequest(userMessage)) {
       setIsLoading(true);
       await new Promise((resolve) => setTimeout(resolve, 500));
