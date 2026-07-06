@@ -16,7 +16,7 @@ export function AanAutonomyBadge() {
 
   return (
     <button
-      onClick={() => navigate("/aan/policies")}
+      onClick={() => navigate("/settings/appearance#edit-alerts")}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors hover:opacity-80",
         meta.color

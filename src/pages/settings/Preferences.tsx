@@ -12,7 +12,7 @@ import { useBillingFlow } from "@/contexts/BillingFlowContext";
 import { useTrial } from "@/contexts/TrialContext";
 import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { cn } from "@/lib/utils";
-import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard } from "lucide-react";
+import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard, Bell, Shield, Zap, AlertTriangle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { useViewport, AppView } from "@/contexts/ViewportContext";
@@ -21,6 +21,8 @@ import { ShortcutEditor } from "@/features/shortcuts/ShortcutEditor";
 import { GestureMapper } from "@/components/gestures/GestureMapper";
 import { useTutorial } from "@/features/tutorial/TutorialContext";
 import { MobilePreferences } from "@/views/mobile/MobilePreferences";
+import { POLICIES, Policy } from "@/data/mockAanPolicies";
+import { CONNECTED_SYSTEMS } from "@/data/mockAanFeed";
 
 const CUSTOM_SHORTCUTS_KEY = "anarix-custom-shortcuts";
 
@@ -167,6 +169,21 @@ export default function Preferences() {
   const currencyList = Object.values(CURRENCIES);
   const [customShortcuts, setCustomShortcuts] = useState<Record<string, string[]>>(loadCustomShortcuts);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [policies, setPolicies] = useState<Policy[]>(POLICIES);
+  const [howAanOpen, setHowAanOpen] = useState(false);
+
+  const togglePolicy = (id: string) =>
+    setPolicies((prev) => prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)));
+
+  // Deep-link support: scroll to #edit-alerts on mount if the hash matches.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash === "#edit-alerts") {
+      requestAnimationFrame(() => {
+        document.getElementById("edit-alerts")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, []);
 
   const handleViewChange = (next: AppView) => {
     if (next === view) return;
@@ -477,6 +494,108 @@ export default function Preferences() {
         </section>
 
         <Separator />
+
+        {/* Edit Alerts — Aan automation policies, connected systems, and how Aan decides. */}
+        <section className="space-y-4" id="edit-alerts">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+                <h2 className="font-heading text-lg font-medium text-foreground">Edit Alerts</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Decide what Aan can act on without asking, and what still needs your approval. Every policy is
+                a decision pattern you approved once — turn any off and Aan falls back to asking.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 flex items-start gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+            <div className="text-[12px] text-foreground/80">
+              <span className="font-medium">Autonomy is opt-in.</span> Aan only auto-executes scenarios covered by an
+              enabled policy. Everything else lands in Alerts for your approval.
+            </div>
+          </div>
+
+          <ul className="space-y-3">
+            {policies.map((p) => (
+              <li key={p.id} className={cn("rounded-lg border bg-card p-4 transition-colors", p.enabled ? "border-primary/30" : "border-border")}>
+                <div className="flex items-start gap-3">
+                  <div className={cn("mt-0.5 h-8 w-8 rounded-md flex items-center justify-center shrink-0", p.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-heading text-sm font-semibold text-foreground">{p.name}</h3>
+                      <span className={cn("text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded", p.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                        {p.enabled ? "Active" : "Off"}
+                      </span>
+                    </div>
+                    <p className="text-[12.5px] text-muted-foreground mt-1 leading-relaxed">{p.description}</p>
+                    <div className="mt-2">
+                      <div className="text-[9.5px] uppercase tracking-wider font-semibold text-muted-foreground mb-1">Guardrails</div>
+                      <ul className="flex flex-wrap gap-1.5">
+                        {p.guardrails.map((g, i) => (
+                          <li key={i} className="text-[10.5px] rounded bg-muted px-2 py-0.5 text-foreground/70">
+                            {g}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-2 text-[10.5px] text-muted-foreground">
+                      Triggered {p.timesTriggered} times{p.lastTriggered ? ` · last: ${p.lastTriggered}` : ""}
+                    </div>
+                  </div>
+                  <Switch checked={p.enabled} onCheckedChange={() => togglePolicy(p.id)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Connected systems + How Aan decides — collapsed by default */}
+          <div className="rounded-lg border border-border bg-card">
+            <button
+              type="button"
+              onClick={() => setHowAanOpen((v) => !v)}
+              className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/30 rounded-lg"
+            >
+              <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-foreground">How Aan decides</div>
+                <div className="text-[11px] text-muted-foreground">Connected systems and decision model</div>
+              </div>
+              <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", howAanOpen && "rotate-180")} />
+            </button>
+            {howAanOpen && (
+              <div className="border-t border-border/60 px-4 py-4 space-y-4">
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  Aan is an autonomous coworker, not a chatbot. It watches your channels, correlates that context
+                  with your live business data, and never acts without your approval unless a policy above allows it.
+                </p>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">Connected systems</div>
+                  <ul className="grid grid-cols-2 gap-y-1.5 gap-x-4">
+                    {CONNECTED_SYSTEMS.map((sys) => (
+                      <li key={sys.id} className="flex items-center gap-2 text-[12px]">
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          {sys.pulse && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />}
+                          <span className={cn("relative inline-flex h-2 w-2 rounded-full", sys.status === "active" ? "bg-success" : "bg-muted-foreground/40")} />
+                        </span>
+                        <span className="text-foreground/80 flex-1 truncate">{sys.name}</span>
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{sys.status}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <Separator />
+
+
 
         {/* Keyboard Shortcuts */}
         <section className="space-y-4" id="shortcuts">

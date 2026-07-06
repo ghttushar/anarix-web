@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AanMascot } from "@/components/aan/AanMascot";
-import { FEED_ENTRIES, CONNECTED_SYSTEMS, FeedEntry } from "@/data/mockAanFeed";
+import { FEED_ENTRIES, FeedEntry } from "@/data/mockAanFeed";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Ear, Eye, Sparkles, Zap, Coffee, MessageSquare, Wrench, Video, Activity, ChevronDown } from "lucide-react";
@@ -40,7 +40,7 @@ export default function AanFeedPage() {
       <AppTaskbar
         breadcrumbItems={[{ label: "Aan", href: "/aan" }, { label: "Feed" }]}
       />
-      <div className="p-6 max-w-[1200px] mx-auto">
+      <div className="p-6 max-w-[900px] mx-auto">
         <header className="mb-6 flex items-start gap-4">
           <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
             <AanMascot size={42} state={liveMode ? "listening" : "idle"} interactive={false} />
@@ -58,94 +58,64 @@ export default function AanFeedPage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-[1fr_320px] gap-6">
-          {/* Timeline */}
-          <div className="bg-card rounded-lg border border-border">
-            <div className="px-4 py-3 border-b border-border">
-              <h2 className="font-heading text-sm font-semibold">Timeline</h2>
-            </div>
-            <ScrollArea className="h-[calc(100vh-260px)]">
-              <ol className="p-4 space-y-0">
-                {visibleEntries.map((entry, i) => {
-                  const meta = kindMeta[entry.kind];
-                  const Icon = meta.icon;
-                  const isAmbient = (entry.importance ?? "material") === "ambient";
-                  return (
-                    <li key={entry.id} className={cn("relative pl-8 pb-4", isAmbient && "opacity-60")}>
-                      {i < visibleEntries.length - 1 && (
-                        <span className="absolute left-3 top-6 bottom-0 w-px bg-border" />
-                      )}
-                      <div className={cn("absolute left-0 top-1 h-6 w-6 rounded-full bg-muted flex items-center justify-center", meta.color)}>
-                        <Icon className="h-3 w-3" />
-                      </div>
-                      <div className="flex items-baseline gap-2 mb-0.5">
-                        <span className="text-[10px] font-mono text-muted-foreground">{entry.time}</span>
-                        <span className={cn("text-[9px] uppercase tracking-wider font-semibold", meta.color)}>{meta.label}</span>
-                        {entry.source && <span className="text-[9px] text-muted-foreground">· {entry.source}</span>}
-                      </div>
-                      <div className="text-[13px] text-foreground font-medium">{entry.headline}</div>
-                      {entry.detail && <div className="text-[11.5px] text-muted-foreground mt-0.5">{entry.detail}</div>}
-                      {entry.scenarioId && (
-                        <button
-                          onClick={() => navigate("/advertising/rules/applied")}
-                          className="mt-1 text-[10px] text-primary hover:underline"
-                        >
-                          View linked artifact →
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-                {ambientCount > 0 && (
-                  <li className="pl-8 pt-2 border-t border-border/40 mt-2">
-                    <button
-                      onClick={() => setShowAmbient((v) => !v)}
-                      className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <ChevronDown className={cn("h-3 w-3 transition-transform", showAmbient && "rotate-180")} />
-                      {showAmbient
-                        ? `Hide ${ambientCount} ambient event${ambientCount === 1 ? "" : "s"}`
-                        : `Show activity log (${ambientCount} ambient event${ambientCount === 1 ? "" : "s"})`}
-                    </button>
-                  </li>
-                )}
-              </ol>
-            </ScrollArea>
-
+        {/* Timeline (full-width) */}
+        <div className="bg-card rounded-lg border border-border">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h2 className="font-heading text-sm font-semibold">Timeline</h2>
+            <button
+              onClick={() => navigate("/settings/appearance#edit-alerts")}
+              className="text-[11px] text-primary hover:underline"
+            >
+              Edit alerts →
+            </button>
           </div>
-
-          {/* Connected Systems */}
-          <aside className="space-y-4">
-            <div className="bg-card rounded-lg border border-border p-4">
-              <h2 className="font-heading text-sm font-semibold mb-3">Connected Systems</h2>
-              <p className="text-[11px] text-muted-foreground mb-3">
-                Aan pulls context from every connected system. Green pulse = actively reading right now.
-              </p>
-              <ul className="space-y-1.5">
-                {CONNECTED_SYSTEMS.map((sys) => (
-                  <li key={sys.id} className="flex items-center gap-2 text-[12px]">
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      {sys.pulse && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />}
-                      <span className={cn("relative inline-flex h-2 w-2 rounded-full", sys.status === "active" ? "bg-success" : "bg-muted-foreground/40")} />
-                    </span>
-                    <span className="text-foreground/80 flex-1">{sys.name}</span>
-                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{sys.status}</span>
+          <ScrollArea className="h-[calc(100vh-260px)]">
+            <ol className="p-4 space-y-0">
+              {visibleEntries.map((entry, i) => {
+                const meta = kindMeta[entry.kind];
+                const Icon = meta.icon;
+                const isAmbient = (entry.importance ?? "material") === "ambient";
+                return (
+                  <li key={entry.id} className={cn("relative pl-8 pb-4", isAmbient && "opacity-60")}>
+                    {i < visibleEntries.length - 1 && (
+                      <span className="absolute left-3 top-6 bottom-0 w-px bg-border" />
+                    )}
+                    <div className={cn("absolute left-0 top-1 h-6 w-6 rounded-full bg-muted flex items-center justify-center", meta.color)}>
+                      <Icon className="h-3 w-3" />
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-0.5">
+                      <span className="text-[10px] font-mono text-muted-foreground">{entry.time}</span>
+                      <span className={cn("text-[9px] uppercase tracking-wider font-semibold", meta.color)}>{meta.label}</span>
+                      {entry.source && <span className="text-[9px] text-muted-foreground">· {entry.source}</span>}
+                    </div>
+                    <div className="text-[13px] text-foreground font-medium">{entry.headline}</div>
+                    {entry.detail && <div className="text-[11.5px] text-muted-foreground mt-0.5">{entry.detail}</div>}
+                    {entry.scenarioId && (
+                      <button
+                        onClick={() => navigate("/advertising/rules/applied")}
+                        className="mt-1 text-[10px] text-primary hover:underline"
+                      >
+                        View linked artifact →
+                      </button>
+                    )}
                   </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-card rounded-lg border border-border p-4">
-              <h2 className="font-heading text-sm font-semibold mb-2">How Aan works</h2>
-              <p className="text-[11.5px] text-muted-foreground leading-relaxed">
-                Aan is an autonomous coworker, not a chatbot. It attends your meetings, watches your channels,
-                and quietly correlates that context with your live business data. It never acts without your
-                approval — unless you save a decision as a policy.
-              </p>
-              <button onClick={() => navigate("/aan/policies")} className="mt-3 text-[11px] text-primary hover:underline">
-                Review automation policies →
-              </button>
-            </div>
-          </aside>
+                );
+              })}
+              {ambientCount > 0 && (
+                <li className="pl-8 pt-2 border-t border-border/40 mt-2">
+                  <button
+                    onClick={() => setShowAmbient((v) => !v)}
+                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ChevronDown className={cn("h-3 w-3 transition-transform", showAmbient && "rotate-180")} />
+                    {showAmbient
+                      ? `Hide ${ambientCount} ambient event${ambientCount === 1 ? "" : "s"}`
+                      : `Show activity log (${ambientCount} ambient event${ambientCount === 1 ? "" : "s"})`}
+                  </button>
+                </li>
+              )}
+            </ol>
+          </ScrollArea>
         </div>
       </div>
     </AppLayout>

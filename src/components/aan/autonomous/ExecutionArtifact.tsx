@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { X, Check, Loader2, ArrowRight, Slack, Mail, Video, FileText, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { X, Check, Loader2, ArrowRight, Slack, Mail, Video, FileText, Pencil, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { AanEvent, useAanEvents } from "./AanEventsContext";
+import { toast } from "sonner";
 
 interface Props {
   event: AanEvent;
@@ -17,11 +19,25 @@ const contextIcons = { slack: Slack, email: Mail, meeting: Video, doc: FileText 
 
 export function ExecutionArtifact({ event, onClose }: Props) {
   const { approve, reject } = useAanEvents();
+  const navigate = useNavigate();
   const s = event.scenario;
   const [editValue, setEditValue] = useState<string>(s.editable?.current ?? "");
+  const [chatDraft, setChatDraft] = useState("");
   const progress = event.executionProgress ?? 0;
 
   const ContextIcon = s.workspaceContext ? contextIcons[s.workspaceContext.kind] : null;
+
+  const handleEditAlert = () => {
+    navigate("/settings/appearance#edit-alerts");
+  };
+
+  const handleAskAan = () => {
+    const q = chatDraft.trim();
+    if (!q) return;
+    toast.success("Question sent to Aan", { description: q });
+    setChatDraft("");
+    navigate(`/aan?ctx=${event.eventId}`);
+  };
 
   return (
     <>
@@ -29,23 +45,34 @@ export function ExecutionArtifact({ event, onClose }: Props) {
       <div className="fixed top-0 right-0 bottom-0 z-50 flex h-full w-[560px] max-w-[92vw] shrink-0 flex-col border-l border-border bg-background shadow-xl animate-in slide-in-from-right duration-200">
 
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">
-        <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80">Aan Execution Artifact</div>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0 gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-wider font-semibold text-primary/80">Aan Alert · Details</div>
           <h2 className="font-heading text-sm font-semibold text-foreground truncate">{s.title}</h2>
           <p className="text-[11px] text-muted-foreground">{s.marketplace} · Confidence {s.confidence}%</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleEditAlert}
+            className="h-7 w-7 text-muted-foreground hover:text-primary"
+            title="Edit alert rule"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
 
       <ScrollArea className="flex-1 min-h-0">
         <div className="p-4 space-y-5">
-          {/* INPUT */}
+          {/* INSIGHT (Input) */}
           <section>
-            <SectionHeader label="Input" />
+            <SectionHeader label="Insight" />
             <div className="text-[12.5px] text-foreground/80 leading-relaxed mb-3">{s.signal}</div>
             <div className="space-y-1.5">
               {s.evidence.map((row, i) => (
@@ -143,10 +170,6 @@ export function ExecutionArtifact({ event, onClose }: Props) {
                   <Button size="sm" variant="ghost" onClick={() => reject(event.eventId)} className="h-8 text-[12px]">
                     Reject
                   </Button>
-                  <Button size="sm" variant="ghost" className="h-8 text-[12px] text-primary ml-auto" title="Save this decision pattern as a policy Aan can auto-apply next time">
-                    <Shield className="h-3.5 w-3.5 mr-1" />
-                    Set as policy
-                  </Button>
                 </div>
               )}
               {event.lifecycle === "rejected" && <div className="text-[11px] text-muted-foreground italic">You rejected this recommendation.</div>}
@@ -185,10 +208,10 @@ export function ExecutionArtifact({ event, onClose }: Props) {
             </section>
           )}
 
-          {/* FULFILLMENT */}
+          {/* VERIFICATION */}
           {event.lifecycle === "fulfilled" && (
             <section>
-              <SectionHeader label="Fulfillment" />
+              <SectionHeader label="Verification" />
               <div className="rounded-md border border-success/30 bg-success/5 p-3">
                 <div className="flex items-start gap-2 text-[12px] text-foreground mb-3">
                   <Check className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
@@ -218,7 +241,6 @@ export function ExecutionArtifact({ event, onClose }: Props) {
                   <button className="ml-auto text-muted-foreground hover:text-foreground">Undo</button>
                 </div>
               </div>
-              {/* Audit log line */}
               <div className="mt-2 text-[10px] font-mono text-muted-foreground">
                 audit_log · evt_{event.eventId.slice(-8)} · {new Date(event.updatedAt).toLocaleString()} · actor:aan · policy:{event.policyId ?? "user_approval"}
               </div>
@@ -226,6 +248,27 @@ export function ExecutionArtifact({ event, onClose }: Props) {
           )}
         </div>
       </ScrollArea>
+
+      {/* Talk to Aan about this event */}
+      <div className="border-t border-border p-3 shrink-0 bg-muted/20">
+        <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">
+          Talk to Aan about this event
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Input
+            value={chatDraft}
+            onChange={(e) => setChatDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleAskAan();
+            }}
+            placeholder="Ask a question, request an alternative…"
+            className="h-8 text-[12px] flex-1"
+          />
+          <Button size="sm" onClick={handleAskAan} disabled={!chatDraft.trim()} className="h-8 px-2.5">
+            <Send className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
       </div>
     </>
   );
