@@ -12,13 +12,6 @@ interface Props {
   onClose: () => void;
 }
 
-const STAGES: { key: "Input" | "Value" | "Action" | "Execution" | "Fulfillment"; matchLifecycles: Lifecycle[] }[] = [
-  { key: "Input", matchLifecycles: ["detected", "analyzing", "awaiting_approval", "executing", "fulfilled"] },
-  { key: "Value", matchLifecycles: ["analyzing", "awaiting_approval", "executing", "fulfilled"] },
-  { key: "Action", matchLifecycles: ["awaiting_approval", "executing", "fulfilled"] },
-  { key: "Execution", matchLifecycles: ["executing", "fulfilled"] },
-  { key: "Fulfillment", matchLifecycles: ["fulfilled"] },
-];
 
 const contextIcons = { slack: Slack, email: Mail, meeting: Video, doc: FileText };
 
