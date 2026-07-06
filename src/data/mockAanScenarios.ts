@@ -89,6 +89,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "+$180 projected sales",
     confidence: 92,
+    tags: ["Budget", "Bamboo Queen", "Peak-hour", "ROAS"],
     signal: "Campaign 'SP | Bamboo Queen' has consumed $135 of $150 daily budget (90%) with 4 hours of peak traffic remaining.",
     evidence: [
       { label: "Spend so far", value: "$135.00 / $150.00", delta: "90%", deltaTone: "negative" },
@@ -135,6 +136,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "+$310/wk projected sales",
     confidence: 88,
+    tags: ["Keywords", "Auto→Manual", "Bamboo", "Harvest"],
     signal: "3 customer search terms in 'SP | Bamboo Auto' converted 6+ times each over 14 days at ACoS < 22%.",
     evidence: [
       { label: "bamboo bed sheets queen", value: "8 orders • ACoS 19%", deltaTone: "positive" },
@@ -173,6 +175,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "+$14,200 projected event sales",
     confidence: 84,
+    tags: ["Prime Day", "Event", "Hero SKUs", "Scheduling"],
     signal: "12 SKUs match Prime Day eligibility: in-stock, ≥ 4.2 star rating, historical event lift > 60%.",
     evidence: [
       { label: "Eligible SKUs", value: "12 (of 47 catalog)" },
@@ -213,6 +216,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "$840/wk sales opportunity",
     confidence: 79,
+    tags: ["Launch", "Mount-It", "Coverage Gap", "MI-311/312"],
     signal: "SKUs MI-311 and MI-312 went live in the catalog 4 days ago and have received 0 sponsored impressions.",
     evidence: [
       { label: "MI-311 organic sessions", value: "42 (last 4d)" },
@@ -258,6 +262,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Walmart US",
     impact: "$430/wk margin recovery",
     confidence: 91,
+    tags: ["Margin", "Walmart", "MI-088", "COGS"],
     signal: "MI-088 has posted negative net contribution for 12 consecutive days despite continued ad-attributed sales.",
     evidence: [
       { label: "Net margin (12d)", value: "−12.4%", deltaTone: "negative" },
@@ -302,6 +307,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "+9% ROAS lift projected",
     confidence: 87,
+    tags: ["Placement", "Top-of-Search", "Bid Modifier"],
     signal: "Top-of-search placement is delivering 32% higher ROAS than the account average across 4 SP campaigns.",
     evidence: [
       { label: "Top-of-search ROAS", value: "5.4x", delta: "+32%", deltaTone: "positive" },
@@ -339,6 +345,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "$840/wk saved",
     confidence: 90,
+    tags: ["Day Parting", "Waste", "Overnight", "Schedule"],
     signal: "Between 2 AM and 5 AM, spend continues at 68% of daily-peak rate but converts at 11% of daily-peak rate.",
     evidence: [
       { label: "Avg 2–5 AM spend", value: "$120/day" },
@@ -375,6 +382,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "$220/day revenue at risk",
     confidence: 96,
+    tags: ["Suppression", "Compliance", "MI-041", "Auto-fix"],
     signal: "SKU MI-041 detail page returned to search results as SUPPRESSED with reason 'Main image contains prohibited text overlay'.",
     evidence: [
       { label: "Suppression code", value: "IMG_COMPLIANCE_005" },
@@ -419,6 +427,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "$1,120/day revenue at risk",
     confidence: 94,
+    tags: ["Buy Box", "Pricing", "Hero SKU", "Competitor"],
     signal: "MI-101 and MI-107 lost Buy Box between 04:30 and 05:00 AM PT. Winning offer is 'FastShipDeals' at −$0.42.",
     evidence: [
       { label: "MI-101 our price", value: "$34.99" },
@@ -459,6 +468,7 @@ export const SCENARIOS: ScenarioTemplate[] = [
     marketplace: "Amazon US",
     impact: "Conversion rate protection",
     confidence: 76,
+    tags: ["Reviews", "Quality", "MI-101", "Escalation"],
     signal: "MI-101 rating dropped from 4.5★ to 3.8★ (21d). Recent 7 negatives cluster around 'thin cushioning' and 'squeaky arm'.",
     evidence: [
       { label: "Rating (21d)", value: "3.8★", delta: "−0.7", deltaTone: "negative" },
