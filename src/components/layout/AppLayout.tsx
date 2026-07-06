@@ -1,8 +1,7 @@
 import { ReactNode, useEffect, useRef, lazy, Suspense, useCallback } from "react";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { InsightsPanel } from "@/components/insights/InsightsPanel";
-import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
+import { AanInboxPanel } from "@/components/aan/autonomous/AanInboxPanel";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { useDensity } from "@/contexts/DensityContext";
 import { useTrial } from "@/contexts/TrialContext";
@@ -29,8 +28,7 @@ function LayoutInner({ children }: { children: ReactNode }) {
   const autoCollapsedRef = useRef(false);
   const prevHasPanelRef = useRef(hasAnyPanel);
 
-  const showInsights = dataPanel === "insights";
-  const showNotifications = dataPanel === "notifications";
+  const showInboxPanel = dataPanel === "aan-inbox";
   const showCopilot = aiPanel === "copilot";
 
   // Close data panels (productDetail, periodBreakdown) when clicking main content
@@ -78,15 +76,13 @@ function LayoutInner({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", apply);
   }, [setOpen]);
 
-  const showAnyPanel = showInsights || showNotifications || showCopilot;
+  const showAnyPanel = showInboxPanel || showCopilot;
 
   const handleBackdropClick = useCallback(() => {
-    // In portrait drawer mode, tapping the backdrop closes closable data panels.
-    // Copilot keeps its explicit close button (no backdrop-close).
-    if (isClosableDataPanel || showInsights || showNotifications) {
+    if (isClosableDataPanel || showInboxPanel) {
       closeDataPanel();
     }
-  }, [isClosableDataPanel, showInsights, showNotifications, closeDataPanel]);
+  }, [isClosableDataPanel, showInboxPanel, closeDataPanel]);
 
   return (
     <div className="flex min-h-screen w-full overflow-x-hidden">
@@ -107,10 +103,6 @@ function LayoutInner({ children }: { children: ReactNode }) {
             children
           )}
         </main>
-        {/* Portrait-only backdrop: visible only when a panel is open AND
-            html[data-view=tablet][data-orientation=portrait]. CSS handles
-            visibility; click handler is always wired but only fires when
-            the backdrop is actually displayed (pointer-events gated). */}
         {showAnyPanel && (
           <div
             data-panel-backdrop
@@ -119,8 +111,7 @@ function LayoutInner({ children }: { children: ReactNode }) {
             aria-hidden="true"
           />
         )}
-        {showInsights && <InsightsPanel />}
-        {showNotifications && <NotificationsPanel />}
+        {showInboxPanel && <AanInboxPanel />}
         {showCopilot && <Suspense fallback={null}><AanCopilotPanel /></Suspense>}
       </div>
       <Suspense fallback={null}><AskAanTooltip /></Suspense>
