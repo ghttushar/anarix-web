@@ -12,7 +12,7 @@ import { useBillingFlow } from "@/contexts/BillingFlowContext";
 import { useTrial } from "@/contexts/TrialContext";
 import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { cn } from "@/lib/utils";
-import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard, Bell, Shield, Zap, AlertTriangle, ChevronDown } from "lucide-react";
+import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard, Bell, Shield, Zap, AlertTriangle, ChevronDown, ShoppingCart, AlertOctagon, Wallet, KeyRound, Target, Clock, Rocket, TrendingDown, Star, Calendar, Video, Sun, MessageSquare, Mail, Users, FileText, Plug } from "lucide-react";
 import { toast } from "sonner";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { useViewport, AppView } from "@/contexts/ViewportContext";
@@ -174,8 +174,70 @@ export default function Preferences() {
   const [howAanOpen, setHowAanOpen] = useState(false);
   const { liveMode, setLiveMode } = useAanEvents();
 
+  // Alert categories — persisted mock toggles
+  const ALERT_CATEGORIES = [
+    { key: "buybox", icon: ShoppingCart, label: "Buy Box changes", description: "Losses, recovery, competitor undercuts on hero SKUs." },
+    { key: "suppression", icon: AlertOctagon, label: "Listing suppressions & compliance", description: "Image/text policy violations, ASIN suppression, auto-fixes." },
+    { key: "budget", icon: Wallet, label: "Budget pacing & spend", description: "Approaching caps, overspend, peak-hour top-ups." },
+    { key: "keywords", icon: KeyRound, label: "Keyword promotion & harvesting", description: "Auto → Manual graduation, negative harvesting." },
+    { key: "placement", icon: Target, label: "Placement optimization", description: "Top-of-search and product-page bid modifiers." },
+    { key: "dayparting", icon: Clock, label: "Day parting & schedules", description: "Waste windows, overnight pauses, schedule drift." },
+    { key: "launch", icon: Rocket, label: "Launch coverage", description: "New SKUs missing ad coverage from day one." },
+    { key: "margin", icon: TrendingDown, label: "Loss-making SKUs & margin", description: "Sustained negative net margin, COGS swings." },
+    { key: "reviews", icon: Star, label: "Reviews & rating trends", description: "Rating drops, clustered negative themes on hero SKUs." },
+    { key: "events", icon: Calendar, label: "Event campaigns", description: "Prime Day, Black Friday, Big Deal Days scheduling." },
+    { key: "meetings", icon: Video, label: "Meeting-derived action items", description: "Decisions and owners captured during meetings." },
+    { key: "morning", icon: Sun, label: "Morning briefing (overnight)", description: "Overnight roll-up of critical detections and opportunities." },
+  ] as const;
+  const [categoryPrefs, setCategoryPrefs] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem("anarix-alert-categories");
+      if (stored) return JSON.parse(stored);
+    } catch { /* noop */ }
+    return Object.fromEntries(ALERT_CATEGORIES.map((c) => [c.key, true]));
+  });
+  const toggleCategory = (key: string) => {
+    setCategoryPrefs((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try { localStorage.setItem("anarix-alert-categories", JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  };
+
+  // Workspace connections — mock connect/disconnect
+  const WORKSPACE_CONNECTORS = [
+    { key: "google-workspace", icon: Sparkles, name: "Google Workspace" },
+    { key: "gmail", icon: Mail, name: "Gmail" },
+    { key: "gcal", icon: Calendar, name: "Google Calendar" },
+    { key: "teams", icon: Video, name: "Microsoft Teams" },
+    { key: "outlook", icon: Mail, name: "Outlook" },
+    { key: "slack", icon: MessageSquare, name: "Slack" },
+    { key: "zoom", icon: Video, name: "Zoom" },
+    { key: "notion", icon: FileText, name: "Notion" },
+    { key: "linear", icon: Users, name: "Linear" },
+    { key: "seventh-gear", icon: Video, name: "7thGear" },
+  ] as const;
+  const [connectedWorkspaces, setConnectedWorkspaces] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem("anarix-connected-workspaces");
+      if (stored) return JSON.parse(stored);
+    } catch { /* noop */ }
+    return { slack: true, gmail: true, gcal: true };
+  });
+  const toggleWorkspace = (key: string, name: string) => {
+    setConnectedWorkspaces((prev) => {
+      const isNowConnected = !prev[key];
+      const next = { ...prev, [key]: isNowConnected };
+      try { localStorage.setItem("anarix-connected-workspaces", JSON.stringify(next)); } catch { /* noop */ }
+      toast.success(isNowConnected ? `Connected ${name} (mock)` : `Disconnected ${name}`);
+      return next;
+    });
+  };
+
   const togglePolicy = (id: string) =>
     setPolicies((prev) => prev.map((p) => (p.id === id ? { ...p, enabled: !p.enabled } : p)));
+
+
 
   // Deep-link support: scroll to #edit-alerts on mount if the hash matches.
   useEffect(() => {
@@ -539,7 +601,38 @@ export default function Preferences() {
             <Switch checked={liveMode} onCheckedChange={setLiveMode} />
           </div>
 
+          {/* Alert categories — turn on/off per category */}
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="mb-3">
+              <h3 className="font-heading text-sm font-semibold text-foreground">Alert categories</h3>
+              <p className="text-[12px] text-muted-foreground mt-0.5">Choose which situations Aan surfaces in your Alerts stream. Off means silent — Aan still watches, but won't notify.</p>
+            </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {ALERT_CATEGORIES.map(({ key, icon: CatIcon, label, description }) => {
+                const enabled = categoryPrefs[key] ?? true;
+                return (
+                  <li key={key} className={cn("rounded-md border p-3 flex items-start gap-3 transition-colors", enabled ? "border-primary/25 bg-primary/[0.02]" : "border-border bg-background")}>
+                    <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                      <CatIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12.5px] font-medium text-foreground">{label}</div>
+                      <div className="text-[11px] text-muted-foreground leading-snug mt-0.5">{description}</div>
+                    </div>
+                    <Switch checked={enabled} onCheckedChange={() => toggleCategory(key)} />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="pt-1">
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">How Aan can act without asking</div>
+          </div>
+
           <ul className="space-y-3">
+
+
 
             {policies.map((p) => (
               <li key={p.id} className={cn("rounded-lg border bg-card p-4 transition-colors", p.enabled ? "border-primary/30" : "border-border")}>
@@ -610,10 +703,48 @@ export default function Preferences() {
                     ))}
                   </ul>
                 </div>
+
+                {/* Connect a workspace — mock connectors */}
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <Plug className="h-3 w-3" /> Connect a workspace
+                  </div>
+                  <p className="text-[11.5px] text-muted-foreground mb-2 leading-relaxed">
+                    Give Aan access to the places your team already works. Aan reads context (decisions, action items,
+                    threads) — it never posts without your approval unless a policy above allows it.
+                  </p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {WORKSPACE_CONNECTORS.map(({ key, icon: WIcon, name }) => {
+                      const connected = !!connectedWorkspaces[key];
+                      return (
+                        <li key={key} className={cn("rounded-md border p-2.5 flex items-center gap-2.5 transition-colors", connected ? "border-primary/25 bg-primary/[0.02]" : "border-border bg-background")}>
+                          <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", connected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                            <WIcon className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12.5px] font-medium text-foreground truncate">{name}</div>
+                            <div className={cn("text-[10px] uppercase tracking-wider font-semibold", connected ? "text-success" : "text-muted-foreground")}>
+                              {connected ? "Connected" : "Not connected"}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={connected ? "outline" : "default"}
+                            className="h-7 text-[11px] px-2.5 shrink-0"
+                            onClick={() => toggleWorkspace(key, name)}
+                          >
+                            {connected ? "Manage" : "Connect"}
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             )}
           </div>
         </section>
+
 
         <Separator />
 

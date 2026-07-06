@@ -1,5 +1,5 @@
 import * as LucideIcons from "lucide-react";
-import { ArrowRight, Check, X } from "lucide-react";
+import { ArrowRight, Check, X, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AanEvent, useAanEvents } from "./AanEventsContext";
@@ -23,8 +23,8 @@ const severityDot: Record<string, string> = {
 };
 
 /**
- * Overview card — hierarchy: Insight (title) → Value (highlighted band) → Action (instruction) → Footer.
- * Value is the visual anchor; buttons are secondary.
+ * Overview card — Insight and Value sit side-by-side; tags + optional
+ * meeting chip run beneath; action instruction and footer follow.
  */
 export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Props) {
   const s = event.scenario;
@@ -48,6 +48,11 @@ export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Pr
     ? "text-muted-foreground"
     : "text-primary";
   const valueLabel = isFulfilled ? "Result" : isRejected ? "Status" : "Value";
+  const valueText = isFulfilled
+    ? s.fulfillmentNote
+    : isRejected
+    ? "Declined. Aan won't repeat this for 24h."
+    : s.impact;
 
   return (
     <div
@@ -81,29 +86,51 @@ export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Pr
         )}
       </div>
 
-      {/* Insight — title + subtitle */}
-      <div className="mb-3">
-        <h3 className="text-[15px] font-semibold text-foreground leading-snug">
-          {s.title}
-        </h3>
-        <p className="mt-0.5 text-[12px] text-muted-foreground leading-snug line-clamp-2">
-          {s.subtitle}
-        </p>
+      {/* Insight | Value — side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3 items-start">
+        {/* Insight */}
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold text-foreground leading-snug">
+            {s.title}
+          </h3>
+          <p className="mt-0.5 text-[12px] text-muted-foreground leading-snug line-clamp-2">
+            {s.subtitle}
+          </p>
+        </div>
+
+        {/* Value — highlighted band, right column */}
+        <div className={cn("rounded-md border-l-2 px-3 py-2", valueBand)}>
+          <div className={cn("text-[9.5px] uppercase tracking-wider font-semibold mb-0.5", valueLabelTone)}>
+            {valueLabel}
+          </div>
+          <div className="text-[13.5px] font-semibold text-foreground leading-snug">
+            {valueText}
+          </div>
+        </div>
       </div>
 
-      {/* Value — highlighted band (the anchor) */}
-      <div className={cn("rounded-md border-l-2 px-3 py-2", valueBand)}>
-        <div className={cn("text-[9.5px] uppercase tracking-wider font-semibold mb-0.5", valueLabelTone)}>
-          {valueLabel}
+      {/* Tags */}
+      {s.tags && s.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {s.tags.map((t) => (
+            <span key={t} className="text-[10px] rounded bg-muted px-1.5 py-0.5 text-foreground/70">
+              {t}
+            </span>
+          ))}
         </div>
-        <div className="text-[14px] font-semibold text-foreground leading-snug">
-          {isFulfilled
-            ? s.fulfillmentNote
-            : isRejected
-            ? "Declined. Aan won't repeat this for 24h."
-            : s.impact}
-        </div>
-      </div>
+      )}
+
+      {/* Meeting chip */}
+      {s.meetingRef && (
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] text-primary hover:underline"
+        >
+          <Video className="h-3 w-3" />
+          From: {s.meetingRef.title} · {s.meetingRef.actionItems.length} action items
+        </button>
+      )}
 
       {/* Action — instruction, only when pending */}
       {!isFulfilled && !isRejected && (
