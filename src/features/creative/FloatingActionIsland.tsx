@@ -27,7 +27,7 @@ interface ActionItem {
   alwaysShowLabel?: boolean;
 }
 
-const hiddenRoutes = ["/login", "/onboarding", "/settings"];
+const hiddenRoutes = ["/login", "/onboarding", "/settings", "/alerts"];
 
 export function FloatingActionIsland() {
   const { view } = useViewport();

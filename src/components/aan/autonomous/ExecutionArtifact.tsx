@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Check, Loader2, ArrowRight, Slack, Mail, Video, FileText, Pencil, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,35 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { AanEvent, useAanEvents } from "./AanEventsContext";
-import { toast } from "sonner";
+import { AanMascot } from "@/components/aan/AanMascot";
 
 interface Props {
   event: AanEvent;
   onClose: () => void;
 }
 
+interface ChatMsg {
+  id: string;
+  role: "user" | "aan";
+  text: string;
+}
 
 const contextIcons = { slack: Slack, email: Mail, meeting: Video, doc: FileText };
+
+function aanReplyFor(question: string, event: AanEvent): string {
+  const s = event.scenario;
+  const q = question.toLowerCase();
+  if (q.includes("why") || q.includes("how")) {
+    return `Here's my reasoning on "${s.title}": ${s.reasoning?.[0] ?? s.signal}. Confidence ${s.confidence}%.`;
+  }
+  if (q.includes("alternative") || q.includes("instead") || q.includes("other")) {
+    return `Alternatives I considered before recommending "${s.recommendation}": I weighed the trade-offs against ${s.evidence?.[0]?.label ?? "current performance"} — happy to walk through a specific option.`;
+  }
+  if (q.includes("risk") || q.includes("safe")) {
+    return `Risk profile: this recommendation is bounded by the guardrails on your active policy. Worst-case impact stays within your approved thresholds.`;
+  }
+  return `Noted. On "${s.title}": ${s.impact}. Want me to draft an alternative or explain a specific step?`;
+}
 
 export function ExecutionArtifact({ event, onClose }: Props) {
   const { approve, reject } = useAanEvents();
@@ -23,9 +43,15 @@ export function ExecutionArtifact({ event, onClose }: Props) {
   const s = event.scenario;
   const [editValue, setEditValue] = useState<string>(s.editable?.current ?? "");
   const [chatDraft, setChatDraft] = useState("");
+  const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const progress = event.executionProgress ?? 0;
 
   const ContextIcon = s.workspaceContext ? contextIcons[s.workspaceContext.kind] : null;
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMsgs.length]);
 
   const handleEditAlert = () => {
     navigate("/settings/appearance#edit-alerts");
@@ -34,10 +60,17 @@ export function ExecutionArtifact({ event, onClose }: Props) {
   const handleAskAan = () => {
     const q = chatDraft.trim();
     if (!q) return;
-    toast.success("Question sent to Aan", { description: q });
+    const userMsg: ChatMsg = { id: `u-${Date.now()}`, role: "user", text: q };
+    setChatMsgs((prev) => [...prev, userMsg]);
     setChatDraft("");
-    navigate(`/aan?ctx=${event.eventId}`);
+    setTimeout(() => {
+      setChatMsgs((prev) => [
+        ...prev,
+        { id: `a-${Date.now()}`, role: "aan", text: aanReplyFor(q, event) },
+      ]);
+    }, 500);
   };
+
 
   return (
     <>
@@ -249,12 +282,35 @@ export function ExecutionArtifact({ event, onClose }: Props) {
         </div>
       </ScrollArea>
 
-      {/* Talk to Aan about this event */}
-      <div className="border-t border-border p-3 shrink-0 bg-muted/20">
-        <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">
-          Talk to Aan about this event
+      {/* Talk to Aan about this event — inline thread + composer */}
+      <div className="border-t border-border shrink-0 bg-muted/20 flex flex-col max-h-[45%]">
+        <div className="px-3 pt-2.5 pb-1 flex items-center gap-1.5 shrink-0">
+          <AanMascot size={16} state="idle" interactive={false} />
+          <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+            Talk to Aan about this
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        {chatMsgs.length > 0 && (
+          <ScrollArea className="flex-1 min-h-0 px-3">
+            <div className="space-y-2 py-2">
+              {chatMsgs.map((m) => (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "text-[12px] leading-relaxed rounded-md px-2.5 py-1.5 max-w-[92%]",
+                    m.role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground"
+                      : "mr-auto bg-card border border-border text-foreground"
+                  )}
+                >
+                  {m.text}
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+          </ScrollArea>
+        )}
+        <div className="p-3 pt-2 flex items-center gap-1.5 shrink-0">
           <Input
             value={chatDraft}
             onChange={(e) => setChatDraft(e.target.value)}
@@ -269,6 +325,7 @@ export function ExecutionArtifact({ event, onClose }: Props) {
           </Button>
         </div>
       </div>
+
       </div>
     </>
   );
