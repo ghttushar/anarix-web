@@ -226,9 +226,11 @@ export function ExecutionArtifact({ event, onClose }: Props) {
           )}
         </div>
       </ScrollArea>
-    </div>
+      </div>
+    </>
   );
 }
+
 
 function SectionHeader({ label }: { label: string }) {
   return <div className="text-[10px] uppercase tracking-wider font-semibold text-primary mb-2">{label}</div>;
