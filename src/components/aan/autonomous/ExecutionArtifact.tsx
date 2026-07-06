@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { AanEvent, Lifecycle, useAanEvents } from "./AanEventsContext";
+import { AanEvent, useAanEvents } from "./AanEventsContext";
 
 interface Props {
   event: AanEvent;
