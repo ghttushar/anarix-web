@@ -129,7 +129,6 @@ export function AanInboxPanel({ standalone = false, focusScenarioId, onlyMorning
                     key={evt.eventId}
                     event={evt}
                     onOpenDetails={() => setDetailFor(evt)}
-                    defaultOpen={focusScenarioId === evt.scenarioId}
                   />
                 ))}
                 {approval.length > APPROVAL_PREVIEW && (
