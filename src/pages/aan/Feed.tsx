@@ -25,6 +25,15 @@ const kindMeta: Record<FeedEntry["kind"], { icon: any; color: string; label: str
 export default function AanFeedPage() {
   const navigate = useNavigate();
   const { presenceIndex, liveMode } = useAanEvents();
+  const [showAmbient, setShowAmbient] = useState(false);
+
+  const materialEntries = useMemo(
+    () => FEED_ENTRIES.filter((e) => (e.importance ?? "material") === "material"),
+    []
+  );
+  const ambientCount = FEED_ENTRIES.length - materialEntries.length;
+  const visibleEntries = showAmbient ? FEED_ENTRIES : materialEntries;
+
 
   return (
     <AppLayout>
