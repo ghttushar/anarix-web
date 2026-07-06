@@ -1,64 +1,60 @@
 
 ## Goals
-Reduce cognitive load on the Aan Inbox, restore Insights access in the AppTaskbar as a fallback when the Floating Action Island is off, and give every right-side panel state its own URL so it can be exported to Figma via html-to-figma.
 
-## 1. Strip the two top bars from the Aan side panel
-- Remove `AanPresenceStrip` from `AanInboxPanel.tsx` (the "AAN · Scanning 4,231 SKUs · LIVE" bar).
-- Remove the `INPUT → VALUE → ACTION → EXECUTION → FULFILLMENT` lifecycle stepper from `ExecutionArtifact.tsx` header.
-- Both concepts are preserved elsewhere: live-mode toggle stays in the Trigger Console; lifecycle is still implicit in per-step status chips inside the artifact body.
+1. **Taskbar utility cluster is conditional** — only show Insights + island-mirrored actions in `AppTaskbar` when the Floating Action Island is hidden. When the island is visible, the taskbar goes back to its prior minimal state (no duplication).
+2. **Alerts / Notifications get a full-screen route** — replace the small right-side sheet with a dedicated page.
+3. **Condense the Aan Feed timeline** — drop low-signal "scanning / monitoring" chatter, keep only material events.
 
-## 2. Insights + island actions in the AppTaskbar
-- Add a compact utility cluster to the right side of `AppTaskbar`: Insights, Aan Inbox (with unread badge), Refresh, Export, Theme toggle, Screenshot. Icon-only, tooltips on hover, same handlers the Floating Action Island uses today.
-- These render always (not only when the island is off) so the taskbar becomes the canonical entry, and the island can be dismissed without losing access.
-- Insights button opens the existing `InsightsPanel` via `setDataPanel("insights")`; it currently has no trigger outside the island.
+---
 
-## 3. Simplify the Aan Inbox (reduce cognitive load)
-Redesign `AanInboxPanel` around grouped, collapsible sections with progressive disclosure inside each:
+## 1. Conditional taskbar cluster
 
-Sections (collapsed by default except the first two):
-1. **Morning briefing** — expanded. Big type headline + 3-item at-a-glance. Adds a nested collapsed sub-tab **"Action items from your last meeting"** (uses `mockAanFeed` meeting summary data, otherwise a seeded 3-item list).
-2. **Needs your approval** — expanded. Shows top 2 cards in full, remaining behind a "Show N more" link.
-3. **Executing now** — collapsed, count in header.
-4. **Recently fulfilled** — collapsed, count in header.
-5. **Watching** — collapsed, low-priority FYI items.
+- Read Floating Action Island visibility from the same source the island itself uses (context/preference flag — currently checked in `FloatingActionIsland` mount logic).
+- In `AppTaskbar.tsx`, wrap the new utility cluster (Insights, Aan Inbox w/ badge, Ask Aan, Refresh, Alerts) in `{islandHidden && (...)}`.
+- Keep the badge count wiring intact so when the island returns, no state is lost.
+- No visual redesign of the cluster itself — only its mount condition changes.
 
-Card-level changes to reduce density:
-- Larger base font (13px → 14px body, 15px title).
-- More vertical padding (`py-3` → `py-4`), thinner dividers.
-- Hide metadata chips (confidence %, domain tag) behind a "Details" toggle on each card.
-- Quick-approve stays inline; secondary actions collapse into a `⋯` menu.
+## 2. Alerts as a full-screen route
 
-## 4. Dedicated `/panels/*` routes for every right-side panel
-New route tree so each panel state has a shareable URL and renders as a standalone page (still using the panel component, wrapped in a minimal shell for Figma export):
+- New route: `/alerts` (and `/panels/alerts` already exists for the panel form — keep it for Figma export).
+- New page `src/pages/Alerts.tsx` rendered inside `AppLayout`:
+  - Full-width, two-column layout: left = filter rail (Severity, Source, Time, Marketplace, Status), right = alerts list with grouping by day.
+  - Row actions: Acknowledge, Snooze, Open related artifact, Assign.
+  - Uses existing alerts data source (System Alerts from Floating Action Island bell).
+- Bell icon in Floating Action Island and Alerts button in taskbar both `navigate('/alerts')` instead of opening the right-side sheet.
+- Remove the small right-side Alerts sheet trigger from in-app surfaces (keep the component file for `/panels/alerts` standalone route only).
 
-```
-/panels/aan-inbox                        → full inbox
-/panels/aan-inbox/:scenarioId            → inbox with card expanded
-/panels/aan-inbox/:scenarioId/details    → artifact viewer for that scenario
-/panels/aan-inbox/morning                → morning briefing only
-/panels/aan-inbox/meeting-actions        → action-items-from-last-meeting card
-/panels/insights                         → InsightsPanel standalone
-/panels/insights/:insightId              → InsightsPanel with card open
-/panels/notifications                    → NotificationsPanel standalone
-```
+## 3. Condense Aan Feed timeline
 
-Implementation:
-- New `src/pages/panels/PanelRoute.tsx` — reads params, wraps the existing panel component in a fixed-width figma-friendly frame (`w-[420px]`, plain background, no app chrome).
-- Register routes in `App.tsx` under a new `<Route path="/panels/*">` group, outside `AppLayout`.
-- Existing in-app opens (island / taskbar) keep using `setDataPanel` — no behavior change. The `/panels/*` URLs are additive for Figma export and deep links.
+Current feed (`src/pages/aan/Feed.tsx` + `mockAanFeed.ts`) includes low-signal entries like "Scanning campaign X", "Monitoring keyword Y", "Refreshed metrics". These add noise.
 
-## 5. Persist the "independent URL" rule as project memory
-Save `mem://architecture/routing/independent-panel-urls` and add a one-liner to `mem://index.md` Core so every future right-side panel, sheet, or artifact gets both an in-app trigger AND a dedicated `/panels/...` route by default.
+Rules for what stays vs. drops:
+
+| Keep | Drop |
+|---|---|
+| Executed action (with impact) | "Scanning ..." |
+| Needs approval | "Monitoring ..." |
+| Anomaly / threshold breach | "Refreshed metrics" |
+| Morning briefing | "Heartbeat / still watching" |
+| Meeting action item | Passive status pings |
+| Policy change | Duplicate consecutive scans |
+
+Changes:
+- Filter `mockAanFeed` items by an `importance` field (`material` vs `ambient`); only `material` renders in the main timeline.
+- Add a small collapsed footer: "N ambient events hidden — Show activity log" that expands the noisy items on demand (progressive disclosure, matches the Inbox pattern).
+- Tighten row density: single-line title + one-line context, timestamp right-aligned; secondary metadata behind hover/expand.
 
 ## Files
-- edit: `src/components/aan/autonomous/AanInboxPanel.tsx` (remove strip, add collapsible sections, meeting-actions sub-tab, progressive disclosure)
-- edit: `src/components/aan/autonomous/AanInboxCard.tsx` (density, details toggle, ⋯ menu)
-- edit: `src/components/aan/autonomous/ExecutionArtifact.tsx` (remove lifecycle stepper)
-- delete usage of: `src/components/aan/autonomous/AanPresenceStrip.tsx` (file kept for Trigger Console)
-- edit: `src/components/layout/AppTaskbar.tsx` (utility cluster with Insights + island actions)
-- new: `src/pages/panels/PanelRoute.tsx` + small index/registry
-- edit: `src/App.tsx` (register `/panels/*` routes)
-- new memory: `mem://architecture/routing/independent-panel-urls`, updated `mem://index.md`
+
+- `src/components/layout/AppTaskbar.tsx` — gate utility cluster on island-hidden.
+- `src/features/creative/FloatingActionIsland.tsx` — bell → `navigate('/alerts')`.
+- `src/pages/Alerts.tsx` (new) — full-screen alerts page.
+- `src/App.tsx` — register `/alerts` route.
+- `src/pages/aan/Feed.tsx` — filter + progressive disclosure for ambient events.
+- `src/data/mockAanFeed.ts` — add `importance` field; mark scanning/monitoring as `ambient`.
 
 ## Out of scope
-No changes to data, scenarios, execution logic, or the Aan chat surface itself.
+
+- No changes to Aan Inbox layout, Morning Briefing, or Execution Artifact.
+- No changes to `/panels/*` routes (Alerts panel remains for Figma export only).
+- No data model changes beyond the `importance` tag.
