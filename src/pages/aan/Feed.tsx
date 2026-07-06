@@ -66,12 +66,13 @@ export default function AanFeedPage() {
             </div>
             <ScrollArea className="h-[calc(100vh-260px)]">
               <ol className="p-4 space-y-0">
-                {FEED_ENTRIES.map((entry, i) => {
+                {visibleEntries.map((entry, i) => {
                   const meta = kindMeta[entry.kind];
                   const Icon = meta.icon;
+                  const isAmbient = (entry.importance ?? "material") === "ambient";
                   return (
-                    <li key={entry.id} className="relative pl-8 pb-4">
-                      {i < FEED_ENTRIES.length - 1 && (
+                    <li key={entry.id} className={cn("relative pl-8 pb-4", isAmbient && "opacity-60")}>
+                      {i < visibleEntries.length - 1 && (
                         <span className="absolute left-3 top-6 bottom-0 w-px bg-border" />
                       )}
                       <div className={cn("absolute left-0 top-1 h-6 w-6 rounded-full bg-muted flex items-center justify-center", meta.color)}>
@@ -95,8 +96,22 @@ export default function AanFeedPage() {
                     </li>
                   );
                 })}
+                {ambientCount > 0 && (
+                  <li className="pl-8 pt-2 border-t border-border/40 mt-2">
+                    <button
+                      onClick={() => setShowAmbient((v) => !v)}
+                      className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ChevronDown className={cn("h-3 w-3 transition-transform", showAmbient && "rotate-180")} />
+                      {showAmbient
+                        ? `Hide ${ambientCount} ambient event${ambientCount === 1 ? "" : "s"}`
+                        : `Show activity log (${ambientCount} ambient event${ambientCount === 1 ? "" : "s"})`}
+                    </button>
+                  </li>
+                )}
               </ol>
             </ScrollArea>
+
           </div>
 
           {/* Connected Systems */}
