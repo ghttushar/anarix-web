@@ -703,10 +703,48 @@ export default function Preferences() {
                     ))}
                   </ul>
                 </div>
+
+                {/* Connect a workspace — mock connectors */}
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <Plug className="h-3 w-3" /> Connect a workspace
+                  </div>
+                  <p className="text-[11.5px] text-muted-foreground mb-2 leading-relaxed">
+                    Give Aan access to the places your team already works. Aan reads context (decisions, action items,
+                    threads) — it never posts without your approval unless a policy above allows it.
+                  </p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {WORKSPACE_CONNECTORS.map(({ key, icon: WIcon, name }) => {
+                      const connected = !!connectedWorkspaces[key];
+                      return (
+                        <li key={key} className={cn("rounded-md border p-2.5 flex items-center gap-2.5 transition-colors", connected ? "border-primary/25 bg-primary/[0.02]" : "border-border bg-background")}>
+                          <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", connected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                            <WIcon className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12.5px] font-medium text-foreground truncate">{name}</div>
+                            <div className={cn("text-[10px] uppercase tracking-wider font-semibold", connected ? "text-success" : "text-muted-foreground")}>
+                              {connected ? "Connected" : "Not connected"}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={connected ? "outline" : "default"}
+                            className="h-7 text-[11px] px-2.5 shrink-0"
+                            onClick={() => toggleWorkspace(key, name)}
+                          >
+                            {connected ? "Manage" : "Connect"}
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
             )}
           </div>
         </section>
+
 
         <Separator />
 
