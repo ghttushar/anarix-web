@@ -12,7 +12,7 @@ import { useBillingFlow } from "@/contexts/BillingFlowContext";
 import { useTrial } from "@/contexts/TrialContext";
 import { useVisualEffects } from "@/contexts/VisualEffectsContext";
 import { cn } from "@/lib/utils";
-import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard } from "lucide-react";
+import { Pencil, RotateCcw, Globe, Monitor, Tablet, Smartphone, Sparkles, Hand, Play, Keyboard, Bell, Shield, Zap, AlertTriangle, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { useViewport, AppView } from "@/contexts/ViewportContext";
@@ -21,6 +21,8 @@ import { ShortcutEditor } from "@/features/shortcuts/ShortcutEditor";
 import { GestureMapper } from "@/components/gestures/GestureMapper";
 import { useTutorial } from "@/features/tutorial/TutorialContext";
 import { MobilePreferences } from "@/views/mobile/MobilePreferences";
+import { POLICIES, Policy } from "@/data/mockAanPolicies";
+import { CONNECTED_SYSTEMS } from "@/data/mockAanFeed";
 
 const CUSTOM_SHORTCUTS_KEY = "anarix-custom-shortcuts";
 
