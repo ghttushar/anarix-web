@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Check, Loader2, ArrowRight, Slack, Mail, Video, FileText, Pencil, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,35 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { AanEvent, useAanEvents } from "./AanEventsContext";
-import { toast } from "sonner";
+import { AanMascot } from "@/components/aan/AanMascot";
 
 interface Props {
   event: AanEvent;
   onClose: () => void;
 }
 
+interface ChatMsg {
+  id: string;
+  role: "user" | "aan";
+  text: string;
+}
 
 const contextIcons = { slack: Slack, email: Mail, meeting: Video, doc: FileText };
+
+function aanReplyFor(question: string, event: AanEvent): string {
+  const s = event.scenario;
+  const q = question.toLowerCase();
+  if (q.includes("why") || q.includes("how")) {
+    return `Here's my reasoning on "${s.title}": ${s.reasoning?.[0] ?? s.signal}. Confidence ${s.confidence}%.`;
+  }
+  if (q.includes("alternative") || q.includes("instead") || q.includes("other")) {
+    return `Alternatives I considered before recommending "${s.recommendation}": I weighed the trade-offs against ${s.evidence?.[0]?.label ?? "current performance"} — happy to walk through a specific option.`;
+  }
+  if (q.includes("risk") || q.includes("safe")) {
+    return `Risk profile: this recommendation is bounded by the guardrails on your active policy. Worst-case impact stays within your approved thresholds.`;
+  }
+  return `Noted. On "${s.title}": ${s.impact}. Want me to draft an alternative or explain a specific step?`;
+}
 
 export function ExecutionArtifact({ event, onClose }: Props) {
   const { approve, reject } = useAanEvents();
@@ -23,9 +43,15 @@ export function ExecutionArtifact({ event, onClose }: Props) {
   const s = event.scenario;
   const [editValue, setEditValue] = useState<string>(s.editable?.current ?? "");
   const [chatDraft, setChatDraft] = useState("");
+  const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const progress = event.executionProgress ?? 0;
 
   const ContextIcon = s.workspaceContext ? contextIcons[s.workspaceContext.kind] : null;
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMsgs.length]);
 
   const handleEditAlert = () => {
     navigate("/settings/appearance#edit-alerts");
@@ -34,10 +60,17 @@ export function ExecutionArtifact({ event, onClose }: Props) {
   const handleAskAan = () => {
     const q = chatDraft.trim();
     if (!q) return;
-    toast.success("Question sent to Aan", { description: q });
+    const userMsg: ChatMsg = { id: `u-${Date.now()}`, role: "user", text: q };
+    setChatMsgs((prev) => [...prev, userMsg]);
     setChatDraft("");
-    navigate(`/aan?ctx=${event.eventId}`);
+    setTimeout(() => {
+      setChatMsgs((prev) => [
+        ...prev,
+        { id: `a-${Date.now()}`, role: "aan", text: aanReplyFor(q, event) },
+      ]);
+    }, 500);
   };
+
 
   return (
     <>
