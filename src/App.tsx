@@ -266,6 +266,10 @@ function AppRoutes() {
       {/* Reports */}
       <Route path="/reports/client-portal" element={<ClientPortal />} />
 
+      {/* Alerts (full-screen) */}
+      <Route path="/alerts" element={<AlertsPage />} />
+
+
       {/* Standalone panel routes — for figma export and shareable deep links */}
       <Route path="/panels" element={<PanelIndex />} />
       <Route path="/panels/aan-inbox" element={<AanInboxPanelRoute />} />
