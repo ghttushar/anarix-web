@@ -385,8 +385,8 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 relative" onClick={() => setDataPanel("aan-inbox")}>
-                    <Inbox className="h-3.5 w-3.5" />
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 relative" onClick={() => navigate("/alerts")}>
+                    <Bell className="h-3.5 w-3.5" />
                     {aanPendingCount > 0 && (
                       <span className={cn(
                         "absolute -top-0.5 -right-0.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full px-1 text-[9px] font-bold",
@@ -398,7 +398,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p>Aan Inbox{aanPendingCount > 0 ? ` (${aanPendingCount})` : ""}</p>
+                  <p>Alerts{aanPendingCount > 0 ? ` (${aanPendingCount})` : ""}</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -417,18 +417,9 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
                 </TooltipTrigger>
                 <TooltipContent side="bottom"><p>Refresh</p></TooltipContent>
               </Tooltip>
-              <div className="pl-1 border-l border-border ml-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate("/alerts")}>
-                      <Bell className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom"><p>Alerts</p></TooltipContent>
-                </Tooltip>
-              </div>
             </div>
           )}
+
 
         </div>
       )}
