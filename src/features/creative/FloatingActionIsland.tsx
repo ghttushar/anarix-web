@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell, CalendarPlus, ArrowUp, Sun, Moon } from "lucide-react";
+import { RefreshCw, Download, Camera, Lightbulb, GripVertical, Bell, CalendarPlus, ArrowUp, Sun, Moon, Inbox } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 import { AanGlyph } from "@/components/aan/AanGlyph";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 import { useInsights } from "@/components/insights";
+import { useAanEvents } from "@/components/aan/autonomous/AanEventsContext";
 import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 import { useBranding } from "@/contexts/BrandingContext";
@@ -42,7 +43,8 @@ export function FloatingActionIsland() {
   const location = useLocation();
   const navigate = useNavigate();
   const { openCopilot, mode } = useAan();
-  const { openPanel: openInsights, criticalCount } = useInsights();
+  const { criticalCount: insightsCriticalCount } = useInsights();
+  const { pendingCount: aanPendingCount, criticalCount: aanCriticalCount } = useAanEvents();
   const { newBranding } = useBranding();
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -137,9 +139,13 @@ export function FloatingActionIsland() {
     onClick: () => setTheme(isDark ? "light" : "dark"),
   };
 
+  const inboxBadge = aanPendingCount;
+  const inboxLabel = aanCriticalCount > 0
+    ? `Aan Inbox (${aanPendingCount} · ${aanCriticalCount} critical)`
+    : aanPendingCount > 0 ? `Aan Inbox (${aanPendingCount})` : "Aan Inbox";
+
   const appActions: ActionItem[] = [
-    { icon: Bell, label: criticalCount > 0 ? `Alerts (${criticalCount})` : "Alerts", onClick: () => setDataPanel("notifications"), highlight: criticalCount > 0, badge: criticalCount > 0 ? criticalCount : undefined },
-    { icon: Lightbulb, label: "Insights", onClick: openInsights },
+    { icon: Inbox, label: inboxLabel, onClick: () => setDataPanel("aan-inbox"), highlight: aanCriticalCount > 0, badge: inboxBadge > 0 ? inboxBadge : undefined },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
     { icon: Download, label: "Export", onClick: () => toast.success("Export started") },
     themeAction,
