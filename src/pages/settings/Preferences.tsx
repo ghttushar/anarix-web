@@ -23,6 +23,7 @@ import { useTutorial } from "@/features/tutorial/TutorialContext";
 import { MobilePreferences } from "@/views/mobile/MobilePreferences";
 import { POLICIES, Policy } from "@/data/mockAanPolicies";
 import { CONNECTED_SYSTEMS } from "@/data/mockAanFeed";
+import { useAanEvents } from "@/components/aan/autonomous/AanEventsContext";
 
 const CUSTOM_SHORTCUTS_KEY = "anarix-custom-shortcuts";
 
