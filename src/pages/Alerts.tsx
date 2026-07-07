@@ -21,6 +21,27 @@ type FilterKey =
   | "executing"
   | "done";
 
+type SortKey = "latest" | "value" | "critical";
+
+function impactMagnitude(impact: string): number {
+  const m = impact.match(/([\d.,]+)/);
+  if (!m) return 0;
+  const n = parseFloat(m[1].replace(/,/g, ""));
+  if (Number.isNaN(n)) return 0;
+  if (/k/i.test(impact)) return n * 1_000;
+  if (/m/i.test(impact)) return n * 1_000_000;
+  return n;
+}
+const severityRank: Record<string, number> = { critical: 0, opportunity: 1, fyi: 2 };
+
+  | "all"
+  | "approval"
+  | "overnight"
+  | "meetings"
+  | "live"
+  | "executing"
+  | "done";
+
 const KEPT_DOMAINS = new Set(["campaign", "retail", "profitability", "inventory"]);
 
 type Channel = "overnight" | "meeting" | "live";
