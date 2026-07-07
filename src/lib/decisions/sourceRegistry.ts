@@ -1,70 +1,72 @@
 // Source registry. Every Decision has exactly one source — Anarix's own
 // monitors, Aan's inference, or an external channel Aan is listening to.
-// Icons intentionally simple lucide monoline so the row scans clean.
+//
+// v3: glyphs are colorless (all render as `text-muted-foreground`).
+// Anarix and Aan use real brand marks; external channels use generic
+// monoline lucide glyphs (Calendar/MessageSquare/Users/Mail).
 
-import {
-  Activity,     // anarix — the platform's own monitors
-  Sparkles,     // aan — Aan-originated inference (only source we allow the sparkle glyph for)
-  Video,        // meeting
-  Hash,         // slack (channel #)
-  Users,        // teams
-  Mail,         // email
-  LucideIcon,
-} from "lucide-react";
+import { Calendar, MessageSquare, Users, Mail, type LucideIcon } from "lucide-react";
+import { AnarixMark } from "@/components/branding/AnarixMark";
+import { AanMark } from "@/components/branding/AanMark";
+import type { ComponentType } from "react";
 
 export type DecisionSource = "anarix" | "aan" | "meeting" | "slack" | "teams" | "email";
+
+export type SourceIcon = LucideIcon | ComponentType<{ size?: number; className?: string }>;
 
 export interface SourceMeta {
   key: DecisionSource;
   label: string;
-  icon: LucideIcon;
-  /** Tailwind text color token used for the icon in default state. */
+  icon: SourceIcon;
+  /** Kept for future theming, but v3 always uses muted-foreground at rest. */
   colorClass: string;
   /** Explanation of what this source means. */
   description: string;
 }
 
+const NEUTRAL = "text-muted-foreground";
+
 export const SOURCE_REGISTRY: Record<DecisionSource, SourceMeta> = {
   anarix: {
     key: "anarix",
     label: "Anarix",
-    icon: Activity,
-    colorClass: "text-foreground/80",
+    icon: AnarixMark,
+    colorClass: NEUTRAL,
     description: "Anarix platform monitor",
   },
   aan: {
     key: "aan",
     label: "Aan",
-    icon: Sparkles,
-    colorClass: "text-primary",
-    description: "Aan's own inference",
+    icon: AanMark,
+    colorClass: NEUTRAL,
+    description: "My own inference",
   },
   meeting: {
     key: "meeting",
     label: "Meeting",
-    icon: Video,
-    colorClass: "text-[hsl(268_65%_58%)]",
+    icon: Calendar,
+    colorClass: NEUTRAL,
     description: "Captured from a meeting",
   },
   slack: {
     key: "slack",
     label: "Slack",
-    icon: Hash,
-    colorClass: "text-[hsl(150_55%_42%)]",
+    icon: MessageSquare,
+    colorClass: NEUTRAL,
     description: "Slack channel or DM",
   },
   teams: {
     key: "teams",
     label: "Teams",
     icon: Users,
-    colorClass: "text-[hsl(232_60%_58%)]",
+    colorClass: NEUTRAL,
     description: "Microsoft Teams",
   },
   email: {
     key: "email",
     label: "Email",
     icon: Mail,
-    colorClass: "text-[hsl(28_80%_52%)]",
+    colorClass: NEUTRAL,
     description: "Inbox thread",
   },
 };

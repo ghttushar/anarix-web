@@ -1,8 +1,6 @@
-// Mock Decision seed data for the new Action Items v2 surface.
-// Each Decision names its dollar impact + a single verb the user takes.
-// Items are chosen to demonstrate the full source mix (Anarix / Aan /
-// Meeting / Slack / Teams / Email) and the full value-kind mix
-// (gain / cost / at_risk / info).
+// Mock Decision seed data for Action Items v3.
+// Each Decision names its dollar impact + a single verb the user takes,
+// and now carries richer copy for the 2-line row + expanded "Know more" panel.
 
 import type { DecisionSource } from "@/lib/decisions/sourceRegistry";
 import type { ValueKind, Cadence } from "@/lib/decisions/valueFormat";
@@ -26,38 +24,43 @@ export type DecisionDomain =
 
 export interface DecisionEvidence {
   kind: "delta" | "sparkline" | "table";
-  /** For delta: [beforeLabel, before, afterLabel, after]. */
   delta?: { beforeLabel: string; before: number; afterLabel: string; after: number; unit?: string };
-  /** For sparkline: series of numbers, latest last. */
   sparkline?: { series: number[]; label: string };
-  /** For table: up to 4 rows × 3 cols. */
   table?: { headers: string[]; rows: string[][] };
 }
 
 export interface DecisionStep {
   label: string;
   etaSec: number;
+  /** Plain-language "why this step" shown in a tooltip in the expanded panel. */
+  why?: string;
 }
 
 export interface Decision {
   id: string;
   source: DecisionSource;
   sourceRef: { label: string; url?: string; ts: number };
-  valueCents: number; // signed magnitude in cents; 0 only for `info`
+  valueCents: number;
   valueKind: ValueKind;
   cadence?: Cadence;
-  valueBasis: string; // required — short "how we got this number"
-  insight: string; // ≤ 90 chars, one sentence
-  actionVerb: string; // "Reallocate", "Pause", "Reply"...
+  /** Short caption under the value pill: "monthly reclaimable spend", "one-time cost"... */
+  valueCaption: string;
+  /** 2–3 sentence explanation of how the number was calculated. */
+  valueBasis: string;
+  /** 3 short bullets showing the calculation inputs — "How I got here". */
+  valueInputs?: string[];
+  /** Insight headline (row) — ~100–140 chars, one sentence. */
+  insight: string;
+  /** Expanded insight — 2–3 sentences with baseline + comparison. */
+  insightDetail?: string;
+  actionVerb: string;
   domain: DecisionDomain;
   severity: "critical" | "opportunity" | "fyi";
   status: DecisionStatus;
   createdAt: number;
   updatedAt: number;
   snoozedUntil?: number;
-  /** Set when Aan started executing (for live ETA). */
   startedAt?: number;
-  /** Items that share a `dupeKey` within ~6h collapse into one row with a ×N chip. */
   dupeKey?: string;
   meetingRef?: { bundleId: string; title: string; excerpt: string };
   evidence?: DecisionEvidence;
@@ -70,6 +73,7 @@ const MIN = 60 * 1000;
 const now = Date.now();
 
 export const MOCK_DECISIONS: Decision[] = [
+  // ————— CRITICAL —————
   {
     id: "d-realloc-winter",
     source: "anarix",
@@ -77,22 +81,24 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 482_000,
     valueKind: "gain",
     cadence: "monthly",
-    valueBasis: "Reclaims 22% wasted spend at current ROAS ceiling on Launch S4.",
-    insight: "Winter Push is 41% over TACoS target; Launch S4 is under-pacing efficiency.",
+    valueCaption: "monthly reclaimable spend",
+    valueBasis:
+      "Winter Push is currently burning $2.4k/day at 25.4% TACoS against a 15% target. Reallocating that budget to Launch S4, which sits at 12.1% TACoS with ROAS headroom to 4.1×, reclaims roughly 22% of wasted spend at today's efficiency.",
+    valueInputs: ["Winter Push daily spend: $2,400", "TACoS delta: 25.4% → 12.1%", "Launch S4 headroom: $2.4k/day at 4.1× ROAS"],
+    insight: "Winter Push has run 41% over TACoS for 3 weeks while Launch S4 sits under its ROAS ceiling with $2.4k/day of headroom.",
+    insightDetail:
+      "For 21 consecutive days Winter Push has posted TACoS between 24% and 27%, well above the 15% target you set in October. Launch S4 has trended the opposite direction — 12.1% TACoS for 14 days with impression share still climbing. Moving budget mid-flight is the highest-confidence lever you have this week.",
     actionVerb: "Reallocate",
     domain: "campaign",
     severity: "critical",
     status: "open",
     createdAt: now - 45 * MIN,
     updatedAt: now - 45 * MIN,
-    evidence: {
-      kind: "delta",
-      delta: { beforeLabel: "Winter TACoS", before: 25.4, afterLabel: "Launch S4 TACoS", after: 12.1, unit: "%" },
-    },
+    evidence: { kind: "delta", delta: { beforeLabel: "Winter TACoS", before: 25.4, afterLabel: "Launch S4 TACoS", after: 12.1, unit: "%" } },
     steps: [
-      { label: "Pause Winter Push", etaSec: 4 },
-      { label: "Shift $2.4k/day to Launch S4", etaSec: 6 },
-      { label: "Set 72h watch alert", etaSec: 2 },
+      { label: "Pause Winter Push", etaSec: 4, why: "Stops the bleed before the budget shift lands." },
+      { label: "Shift $2.4k/day to Launch S4", etaSec: 6, why: "Matches the exact daily budget we freed up." },
+      { label: "Set 72h watch alert", etaSec: 2, why: "Catches regressions on Launch S4 within 3 days." },
     ],
     deepLink: { label: "Open in Campaign Manager", href: "/advertising/campaigns" },
   },
@@ -102,9 +108,14 @@ export const MOCK_DECISIONS: Decision[] = [
     sourceRef: { label: "Staples QBR · Q4 Planning", ts: now - 2 * HOUR },
     valueCents: 1_200_000,
     valueKind: "at_risk",
-    valueBasis: "SKU-X ran $12k/mo before suppression on Oct 12; buyer wants it back on shelf.",
-    insight: "SKU-X still suppressed on Staples portal — buyer flagged in QBR.",
-    actionVerb: "Relist",
+    valueCaption: "buyer commit at risk",
+    valueBasis:
+      "SKU-X was pulling $12k/mo on Staples before it was suppressed on Oct 12. The buyer confirmed in today's QBR they'll only hold the Q4 tier commitment if the listing is back on shelf before Friday.",
+    valueInputs: ["Historical run rate: $12k/mo", "Days suppressed: 26", "Buyer Q4 tier: $220k/mo"],
+    insight: "SKU-X still suppressed on Staples portal — buyer flagged it in QBR and set Friday as the hard deadline.",
+    insightDetail:
+      "Portal ticket #48291 has been open 26 days waiting on compliance docs from our side. Dorothy (buyer) escalated it in today's QBR and made clear the Q4 tier commit hinges on relisting before Friday close. Mike on Staples ops has the ticket open on his side and is waiting on the file drop.",
+    actionVerb: "Relist SKU-X",
     domain: "retail",
     severity: "critical",
     status: "open",
@@ -115,13 +126,10 @@ export const MOCK_DECISIONS: Decision[] = [
       title: "Staples QBR — Q4 Planning",
       excerpt: "Dorothy: Buyer wants SKU-X back on shelf before Friday. Mike: Portal ticket #48291 open — needs compliance docs.",
     },
-    evidence: {
-      kind: "delta",
-      delta: { beforeLabel: "Suppressed for", before: 26, afterLabel: "Days lost revenue", after: 26, unit: " days" },
-    },
+    evidence: { kind: "delta", delta: { beforeLabel: "Suppressed for", before: 26, afterLabel: "Days lost revenue", after: 26, unit: " days" } },
     steps: [
-      { label: "Attach compliance docs to ticket #48291", etaSec: 8 },
-      { label: "Confirm portal push with Mike", etaSec: 4 },
+      { label: "Attach compliance docs to ticket #48291", etaSec: 8, why: "Unblocks Mike's queue on the Staples side." },
+      { label: "Confirm portal push with Mike", etaSec: 4, why: "Ensures the listing is live before Friday sync." },
     ],
     deepLink: { label: "Open Staples portal", href: "#" },
   },
@@ -132,8 +140,13 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 124_000,
     valueKind: "cost",
     cadence: "one_time",
-    valueBasis: "3 refund claims from same batch; approve now or escalate to buyer complaint.",
-    insight: "Maria escalated 3 refund claims from batch #B-2214 in #cs-urgent.",
+    valueCaption: "one-time refund cost",
+    valueBasis:
+      "3 refund claims from the same shipping batch #B-2214 total $1,240. Approving now closes the loop with the customer; escalating turns each one into a buyer complaint that costs 8–10× more in remediation.",
+    valueInputs: ["3 orders in batch #B-2214", "Refund amounts: $412 + $389 + $439", "Escalation multiplier: ~9× if unresolved"],
+    insight: "Maria escalated 3 refund claims from batch #B-2214 in #cs-urgent — all damaged in transit, same carrier lane.",
+    insightDetail:
+      "All three orders were flagged with photo evidence of packaging damage from the same carrier lane out of the Reno DC. The refund total is $1,240 and Maria is holding the customer replies until we decide. Standard CS SLA is 4 hours from escalation.",
     actionVerb: "Approve refunds",
     domain: "cs",
     severity: "critical",
@@ -153,11 +166,10 @@ export const MOCK_DECISIONS: Decision[] = [
       },
     },
     steps: [
-      { label: "Refund 3 orders", etaSec: 6 },
-      { label: "Notify Maria in #cs-urgent", etaSec: 2 },
+      { label: "Refund 3 orders", etaSec: 6, why: "Closes each Amazon order at full refund." },
+      { label: "Notify Maria in #cs-urgent", etaSec: 2, why: "Lets Maria push the customer replies." },
     ],
   },
-  // Duplicate signal for the same batch — same dupeKey, arrives from anarix
   {
     id: "d-refund-cs-dup",
     source: "anarix",
@@ -165,8 +177,9 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 124_000,
     valueKind: "cost",
     cadence: "one_time",
-    valueBasis: "Anarix CS monitor flagged the same batch independently.",
-    insight: "CS monitor flagged batch #B-2214 (same as Slack escalation).",
+    valueCaption: "one-time refund cost",
+    valueBasis: "Anarix CS monitor picked up the same 3 orders independently via return-request signal.",
+    insight: "CS monitor flagged batch #B-2214 (same as the Slack escalation above).",
     actionVerb: "Approve refunds",
     domain: "cs",
     severity: "critical",
@@ -180,14 +193,200 @@ export const MOCK_DECISIONS: Decision[] = [
     ],
   },
   {
+    id: "d-inventory-riser",
+    source: "anarix",
+    sourceRef: { label: "Inventory monitor · SKU-B12", ts: now - 6 * HOUR },
+    valueCents: 340_000,
+    valueKind: "at_risk",
+    valueCaption: "stockout exposure",
+    valueBasis:
+      "SKU-B12 has 17 days of cover at current velocity but the PO lead time is 21 days. The 4-day gap projects a $3.4k/day revenue loss window during the stockout.",
+    valueInputs: ["Days cover: 17", "Lead time: 21", "Daily revenue at risk: $3,400"],
+    insight: "SKU-B12 will stock out in 17 days; the supplier lead time is 21 — we're 4 days short.",
+    insightDetail:
+      "Velocity has been climbing 8% week-over-week since the Q4 push started. Even with a fresh PO placed today, the earliest the goods can land is 21 days. That leaves a 4-day out-of-stock window projected at ~$13.6k lost revenue plus rank decay on the listing.",
+    actionVerb: "Reorder now",
+    domain: "inventory",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 6 * HOUR,
+    updatedAt: now - 6 * HOUR,
+    evidence: { kind: "delta", delta: { beforeLabel: "Days cover", before: 17, afterLabel: "Lead time", after: 21, unit: " days" } },
+    steps: [
+      { label: "Raise PO for 800 units", etaSec: 10, why: "Covers 45 days at current velocity." },
+      { label: "Notify supply chain", etaSec: 2, why: "Ensures the receiving dock is scheduled." },
+    ],
+  },
+  {
+    id: "d-buybox-loss",
+    source: "anarix",
+    sourceRef: { label: "Buy Box monitor · SKU-A01", ts: now - 25 * MIN },
+    valueCents: 890_000,
+    valueKind: "at_risk",
+    valueCaption: "hero SKU Buy Box",
+    valueBasis:
+      "SKU-A01 lost Buy Box 38 minutes ago to a 3P seller at $29.99 (we're at $31.49). Historical run rate on this SKU is $890/day; every hour off Buy Box costs ~$37 in direct revenue plus organic rank decay.",
+    valueInputs: ["Historical run rate: $890/day", "Competitor price: $29.99", "Our price: $31.49"],
+    insight: "Lost Buy Box on hero SKU-A01 to a 3P seller undercutting by $1.50 — 38 minutes and counting.",
+    insightDetail:
+      "The competing seller has 4.7 stars and 1,200 reviews so Amazon's Buy Box will not flip back on trust alone. Matching to $29.99 gives us the box back at a 74% gross margin (down from 78%). Waiting risks the organic rank losing 2–3 positions by end of day.",
+    actionVerb: "Match price",
+    domain: "retail",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 25 * MIN,
+    updatedAt: now - 25 * MIN,
+    evidence: { kind: "delta", delta: { beforeLabel: "Our price", before: 31.49, afterLabel: "Competitor", after: 29.99, unit: " $" } },
+    steps: [
+      { label: "Update SKU-A01 price to $29.99", etaSec: 4 },
+      { label: "Set 24h alert if we lose Buy Box again", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-walmart-bidcap",
+    source: "anarix",
+    sourceRef: { label: "Walmart PPC · bid cap breach", ts: now - 55 * MIN },
+    valueCents: 210_000,
+    valueKind: "at_risk",
+    valueCaption: "monthly Walmart spend at risk",
+    valueBasis:
+      "3 Walmart Sponsored Products campaigns are hitting bid cap $3.50 with impression share still under 35%. Lifting cap to $4.25 unlocks projected +18% impressions at held ACOS.",
+    valueInputs: ["Campaigns at cap: 3", "Current IS: 32–35%", "Projected IS at $4.25: 45–50%"],
+    insight: "3 Walmart campaigns pinned at bid cap $3.50 — impression share stuck under 35% with headroom for +18%.",
+    insightDetail:
+      "You set the cap at $3.50 in August when CPCs were softer. Auction pressure is up 22% since then and we've been throttled for 9 straight days. Lifting to $4.25 lands us at a projected 47% impression share while keeping ACOS under target.",
+    actionVerb: "Lift bid cap",
+    domain: "campaign",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 55 * MIN,
+    updatedAt: now - 55 * MIN,
+    steps: [
+      { label: "Update bid cap to $4.25 on 3 campaigns", etaSec: 5 },
+      { label: "Set 5-day watch on ACOS delta", etaSec: 2 },
+    ],
+    deepLink: { label: "Open Walmart Campaigns", href: "/advertising/campaigns" },
+  },
+  {
+    id: "d-listing-suppression",
+    source: "anarix",
+    sourceRef: { label: "Listing quality · SKU-D07", ts: now - 3 * HOUR },
+    valueCents: 165_000,
+    valueKind: "at_risk",
+    valueCaption: "monthly listing exposure",
+    valueBasis:
+      "SKU-D07 was auto-suppressed by Amazon this morning for a title-length policy breach (238 chars vs 200 cap). Historical run rate is $5.5k/mo.",
+    insight: "SKU-D07 auto-suppressed by Amazon for a title-length policy breach — needs a rewrite under 200 chars.",
+    insightDetail:
+      "The title was updated last week to include 3 extra long-tail keywords, pushing it past the 200-char cap. The listing is fully suppressed (not just search-hidden). Fix requires a title rewrite and a re-index which typically completes within 4 hours.",
+    actionVerb: "Rewrite title",
+    domain: "retail",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 3 * HOUR,
+    updatedAt: now - 3 * HOUR,
+    steps: [
+      { label: "Draft compliant title (under 200 chars)", etaSec: 12 },
+      { label: "Push to Seller Central", etaSec: 4 },
+    ],
+  },
+  {
+    id: "d-oos-variations",
+    source: "anarix",
+    sourceRef: { label: "Inventory monitor · variation family V-08", ts: now - 4 * HOUR },
+    valueCents: 275_000,
+    valueKind: "at_risk",
+    valueCaption: "monthly variation family",
+    valueBasis:
+      "3 of 5 variations in family V-08 (colors: charcoal, navy, sand) will hit zero cover this week. Losing 3/5 variations typically drags the parent listing rank by 4–6 positions.",
+    insight: "3 of 5 color variations in family V-08 hit zero cover this week; parent listing rank at risk.",
+    actionVerb: "Reorder variations",
+    domain: "inventory",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 4 * HOUR,
+    updatedAt: now - 4 * HOUR,
+    steps: [
+      { label: "Raise PO for charcoal + navy + sand", etaSec: 12 },
+      { label: "Notify supply chain", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-coupon-expiring",
+    source: "aan",
+    sourceRef: { label: "Aan — promo watch", ts: now - 90 * MIN },
+    valueCents: 78_000,
+    valueKind: "at_risk",
+    valueCaption: "one-time coupon uplift",
+    valueBasis:
+      "Prime-exclusive coupon on 6 hero SKUs expires in 6 hours. Historical extension of similar coupons has driven +12% conversion over the following 72h at negligible margin cost.",
+    insight: "Prime-exclusive coupon on 6 hero SKUs expires in 6h — historical extensions drove +12% CVR.",
+    actionVerb: "Extend coupon",
+    domain: "campaign",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 90 * MIN,
+    updatedAt: now - 90 * MIN,
+    steps: [
+      { label: "Extend coupon by 72h on 6 SKUs", etaSec: 6 },
+      { label: "Update budget cap +$1.5k", etaSec: 3 },
+    ],
+  },
+  {
+    id: "d-review-velocity",
+    source: "aan",
+    sourceRef: { label: "Aan — reviews sweep", ts: now - 5 * HOUR },
+    valueCents: 92_000,
+    valueKind: "at_risk",
+    valueCaption: "monthly halo revenue",
+    valueBasis:
+      "Weekly review velocity on the top-3 revenue SKUs dropped from 18 → 6 over the last 14 days. Reviews under 4.4★ typically shave 8–11% off conversion within a month.",
+    insight: "Review velocity dropped 66% on top-3 SKUs over 14 days — conversion halo starts eroding at this pace.",
+    actionVerb: "Trigger Vine",
+    domain: "retail",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 5 * HOUR,
+    updatedAt: now - 5 * HOUR,
+    steps: [
+      { label: "Enroll top-3 SKUs in Vine (10 units each)", etaSec: 10 },
+      { label: "Set 30-day review watch", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-competitor-undercut",
+    source: "anarix",
+    sourceRef: { label: "Competitor price · CP monitor", ts: now - 2 * HOUR },
+    valueCents: 156_000,
+    valueKind: "at_risk",
+    valueCaption: "monthly conversion exposure",
+    valueBasis:
+      "Competitor Acme dropped price on 2 direct-substitute SKUs by 12% overnight. Our conversion rate historically drops 6–9% when they undercut this hard for over 48h.",
+    insight: "Acme undercut us 12% on 2 direct-substitute SKUs overnight — history says CVR drops 6–9% if we wait 48h.",
+    actionVerb: "Match Acme",
+    domain: "retail",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 2 * HOUR,
+    updatedAt: now - 2 * HOUR,
+    steps: [{ label: "Match Acme pricing on 2 SKUs", etaSec: 4 }],
+  },
+
+  // ————— OPPORTUNITY —————
+  {
     id: "d-pause-kw",
     source: "aan",
     sourceRef: { label: "Aan — nightly keyword sweep", ts: now - 3 * HOUR },
     valueCents: 61_000,
     valueKind: "gain",
     cadence: "monthly",
-    valueBasis: "3 keywords bleeding ACOS > 90% with < 4 conversions over 21 days.",
-    insight: "3 keywords on Evergreen are bleeding ACOS > 90% with almost no conversions.",
+    valueCaption: "monthly reclaimable spend",
+    valueBasis:
+      "3 keywords on Evergreen are bleeding ACOS above 90% with fewer than 4 conversions across 21 days. Pausing them frees up ~$61/day in wasted spend at current CPC.",
+    valueInputs: ["Keywords flagged: 3", "Combined 21-day spend: $1,830", "Combined conversions: 6"],
+    insight: "3 Evergreen keywords bleeding ACOS > 90% with under 4 conversions in 21 days — clear pause candidates.",
+    insightDetail:
+      "'mount for tv', 'tv mount full motion', and 'corner tv mount' have been running for 21 days each. Their combined spend is $1,830 for 6 total conversions — an effective ACOS of 112%. Pausing these plus adding them as negatives across the Auto campaign captures the full recovery.",
     actionVerb: "Pause keywords",
     domain: "campaign",
     severity: "opportunity",
@@ -206,53 +405,10 @@ export const MOCK_DECISIONS: Decision[] = [
       },
     },
     steps: [
-      { label: "Add 3 negatives", etaSec: 4 },
+      { label: "Add 3 negatives across Auto", etaSec: 4 },
       { label: "Pause matching ad-group targets", etaSec: 3 },
     ],
     deepLink: { label: "Open Evergreen", href: "/advertising/campaigns" },
-  },
-  {
-    id: "d-buyer-memo",
-    source: "email",
-    sourceRef: { label: "buyer@staples.com · re: pricing", ts: now - 4 * HOUR },
-    valueCents: 0,
-    valueKind: "info",
-    valueBasis: "Buyer asked for a competitor pricing memo before Friday sync.",
-    insight: "Staples buyer wants a pricing memo across 20 hero SKUs before Friday.",
-    actionVerb: "Draft memo",
-    domain: "buyer",
-    severity: "opportunity",
-    status: "open",
-    createdAt: now - 4 * HOUR,
-    updatedAt: now - 4 * HOUR,
-    steps: [
-      { label: "Pull last-14-day competitor pricing", etaSec: 20 },
-      { label: "Compose memo (Aan drafts)", etaSec: 14 },
-      { label: "Send for your review", etaSec: 2 },
-    ],
-  },
-  {
-    id: "d-inventory-riser",
-    source: "anarix",
-    sourceRef: { label: "Inventory monitor · SKU-B12", ts: now - 6 * HOUR },
-    valueCents: 340_000,
-    valueKind: "at_risk",
-    valueBasis: "17 days of cover left at current velocity; lead time is 21 days.",
-    insight: "SKU-B12 will stock out in 17 days; lead time is 21.",
-    actionVerb: "Reorder now",
-    domain: "inventory",
-    severity: "critical",
-    status: "open",
-    createdAt: now - 6 * HOUR,
-    updatedAt: now - 6 * HOUR,
-    evidence: {
-      kind: "delta",
-      delta: { beforeLabel: "Days cover", before: 17, afterLabel: "Lead time", after: 21, unit: " days" },
-    },
-    steps: [
-      { label: "Raise PO for 800 units", etaSec: 10 },
-      { label: "Notify supply chain", etaSec: 2 },
-    ],
   },
   {
     id: "d-teams-forecast",
@@ -261,8 +417,12 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 220_000,
     valueKind: "gain",
     cadence: "monthly",
-    valueBasis: "Dorothy asked for a forecast refresh; unlocks buyer commit for 220k/mo tier.",
-    insight: "Dorothy needs a refreshed Q4 unit forecast to lock the buyer commit.",
+    valueCaption: "unlocked buyer tier",
+    valueBasis:
+      "Dorothy asked in the Teams thread for a refreshed Q4 forecast. Sending it unlocks the $220k/mo buyer commitment for the next tier.",
+    insight: "Dorothy needs a refreshed Q4 unit forecast to lock the $220k/mo buyer commit.",
+    insightDetail:
+      "Dorothy already signaled willingness to lock the tier — she's just waiting on the numeric refresh. Aan can pull units × price × velocity from the last 30 days and post directly to the Teams thread. Turnaround is under 3 minutes if you approve.",
     actionVerb: "Send forecast",
     domain: "profitability",
     severity: "opportunity",
@@ -270,11 +430,236 @@ export const MOCK_DECISIONS: Decision[] = [
     createdAt: now - 5 * HOUR,
     updatedAt: now - 5 * HOUR,
     steps: [
-      { label: "Aan pulls units × price × velocity", etaSec: 12 },
+      { label: "Pull units × price × velocity", etaSec: 12 },
       { label: "Post to Teams thread", etaSec: 2 },
     ],
   },
-  // In-flight (Aan is executing an approved item)
+  {
+    id: "d-ss-optin",
+    source: "aan",
+    sourceRef: { label: "Aan — S&S opt-in trend", ts: now - 7 * HOUR },
+    valueCents: 138_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly recurring LTV",
+    valueBasis:
+      "Subscribe & Save opt-in rate on 4 hero SKUs slipped from 21% → 14% over 30 days. Raising the discount from 5% → 10% typically recovers +6pp in opt-in based on our own past experiments.",
+    insight: "S&S opt-in on 4 hero SKUs slipped 21% → 14% in 30 days — bumping discount to 10% recovers most of it.",
+    actionVerb: "Bump S&S discount",
+    domain: "profitability",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 7 * HOUR,
+    updatedAt: now - 7 * HOUR,
+    steps: [
+      { label: "Set S&S 10% on 4 hero SKUs", etaSec: 6 },
+      { label: "Set 30-day opt-in watch", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-brand-defense",
+    source: "aan",
+    sourceRef: { label: "Aan — brand-defense sweep", ts: now - 8 * HOUR },
+    valueCents: 74_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly branded traffic",
+    valueBasis:
+      "Competitor bidding on our brand terms has pushed our impression share on 'anarix mount' and 'anarix bracket' from 92% → 78%. A defensive bid raise recovers 90%+ IS at ~$0.30 higher CPC.",
+    insight: "Competitor bidding on 2 branded terms — our impression share slipped from 92% to 78% in 10 days.",
+    actionVerb: "Raise brand bids",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 8 * HOUR,
+    updatedAt: now - 8 * HOUR,
+    steps: [{ label: "Raise bids +$0.30 on 2 brand terms", etaSec: 5 }],
+  },
+  {
+    id: "d-amc-incremental",
+    source: "aan",
+    sourceRef: { label: "Aan — AMC incrementality run", ts: now - 9 * HOUR },
+    valueCents: 105_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly incremental attribution",
+    valueBasis:
+      "AMC incrementality report shows Sponsored Display driving 34% incremental sales vs the 12% attribution model default. Reweighting attribution unlocks a fairer view of SD spend.",
+    insight: "AMC says Sponsored Display is 34% incremental — our attribution model is currently crediting it at 12%.",
+    actionVerb: "Reweight attribution",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 9 * HOUR,
+    updatedAt: now - 9 * HOUR,
+    steps: [
+      { label: "Update attribution weights in reporting", etaSec: 4 },
+      { label: "Notify Priya of the shift", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-weekend-daypart",
+    source: "anarix",
+    sourceRef: { label: "Day-parting monitor · weekend anomaly", ts: now - 11 * HOUR },
+    valueCents: 46_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly efficiency lift",
+    valueBasis:
+      "Saturday 2–5am spend on 6 evergreen campaigns produced $0 attributed sales for 4 consecutive weekends. Suppressing that window saves ~$46/mo without touching conversions.",
+    insight: "Sat 2–5am spend on 6 evergreen campaigns has produced $0 sales for 4 weekends running.",
+    actionVerb: "Suppress window",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 11 * HOUR,
+    updatedAt: now - 11 * HOUR,
+    steps: [{ label: "Add Sat 2–5am to day-parting suppression", etaSec: 4 }],
+  },
+  {
+    id: "d-slack-vendor",
+    source: "slack",
+    sourceRef: { label: "#vendor-ops · @kai", ts: now - 6 * HOUR },
+    valueCents: 58_000,
+    valueKind: "gain",
+    cadence: "one_time",
+    valueCaption: "one-time credit recovery",
+    valueBasis:
+      "Kai flagged 2 shortship credits from vendor XYZ that were never applied. Total credit owed is $580 at the confirmed line-item level.",
+    insight: "Kai found 2 unapplied shortship credits from vendor XYZ — $580 owed, evidence attached in Slack.",
+    actionVerb: "Claim credit",
+    domain: "profitability",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 6 * HOUR,
+    updatedAt: now - 6 * HOUR,
+    steps: [
+      { label: "Draft credit claim to vendor XYZ", etaSec: 10 },
+      { label: "Reply to Kai in #vendor-ops", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-email-agency",
+    source: "email",
+    sourceRef: { label: "agency@heraldpartners.com · re: retainer", ts: now - 12 * HOUR },
+    valueCents: 32_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly retainer savings",
+    valueBasis:
+      "Herald Partners proposed a $320/mo reduction in retainer if you commit to the annual plan. Break-even is 10 months; you have 8 months of history above target with them.",
+    insight: "Herald Partners offered $320/mo off the retainer for an annual commit — break-even is 10 months.",
+    actionVerb: "Accept annual",
+    domain: "profitability",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 12 * HOUR,
+    updatedAt: now - 12 * HOUR,
+    steps: [{ label: "Send accept reply", etaSec: 6 }],
+  },
+  {
+    id: "d-glance-view-dip",
+    source: "aan",
+    sourceRef: { label: "Aan — glance view watch", ts: now - 14 * HOUR },
+    valueCents: 89_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly organic exposure",
+    valueBasis:
+      "Glance views on 3 mid-tier SKUs dropped 22% week-over-week with no listing changes. Suggests A9 rank movement; a Sponsored Brand refresh usually recovers rank within 5–7 days.",
+    insight: "Glance views on 3 SKUs dropped 22% w/w with no listing changes — likely A9 rank movement.",
+    actionVerb: "Refresh SB creative",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 14 * HOUR,
+    updatedAt: now - 14 * HOUR,
+    steps: [
+      { label: "Rotate SB creative for 3 SKUs", etaSec: 8 },
+      { label: "Watch rank for 7 days", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-2pm-overpace",
+    source: "anarix",
+    sourceRef: { label: "Budget pacing · 2pm alert", ts: now - 30 * MIN },
+    valueCents: 41_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly pacing savings",
+    valueBasis:
+      "4 campaigns are already at 84% of daily budget at 2pm ET — pacing to run out by 4pm. Smoothing the delivery captures late-day conversions and lifts CVR ~7%.",
+    insight: "4 campaigns hit 84% of daily budget at 2pm — will run out by 4pm and miss the evening peak.",
+    actionVerb: "Smooth pacing",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 30 * MIN,
+    updatedAt: now - 30 * MIN,
+    steps: [{ label: "Enable smooth pacing on 4 campaigns", etaSec: 4 }],
+  },
+  {
+    id: "d-negative-sweep-auto",
+    source: "aan",
+    sourceRef: { label: "Aan — Auto negatives sweep", ts: now - 10 * HOUR },
+    valueCents: 52_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly wasted-spend cut",
+    valueBasis:
+      "Nightly sweep of Auto campaigns surfaced 12 search terms with combined 30-day spend of $520 and 1 conversion. Adding them as negatives eliminates the waste without touching intent traffic.",
+    insight: "12 wasteful search terms on Auto campaigns — $520 spent for 1 conversion over 30 days.",
+    actionVerb: "Add negatives",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "open",
+    createdAt: now - 10 * HOUR,
+    updatedAt: now - 10 * HOUR,
+    steps: [{ label: "Add 12 negatives to Auto", etaSec: 6 }],
+  },
+
+  // ————— FYI —————
+  {
+    id: "d-buyer-memo",
+    source: "email",
+    sourceRef: { label: "buyer@staples.com · re: pricing", ts: now - 4 * HOUR },
+    valueCents: 0,
+    valueKind: "info",
+    valueCaption: "informational — no dollar impact",
+    valueBasis:
+      "Staples buyer asked for a competitor pricing memo across 20 hero SKUs before Friday's sync. No direct dollar impact but blocks the buyer relationship.",
+    insight: "Staples buyer wants a competitor pricing memo across 20 hero SKUs before Friday's sync.",
+    actionVerb: "Draft memo",
+    domain: "buyer",
+    severity: "fyi",
+    status: "open",
+    createdAt: now - 4 * HOUR,
+    updatedAt: now - 4 * HOUR,
+    steps: [
+      { label: "Pull last-14-day competitor pricing", etaSec: 20 },
+      { label: "Compose memo (I draft)", etaSec: 14 },
+      { label: "Send for your review", etaSec: 2 },
+    ],
+  },
+  {
+    id: "d-adgroup-naming",
+    source: "aan",
+    sourceRef: { label: "Aan — ad-group naming drift", ts: now - 20 * HOUR },
+    valueCents: 0,
+    valueKind: "info",
+    valueCaption: "informational — hygiene",
+    valueBasis: "17 ad-groups drifted from your naming convention over the last quarter. Not urgent — but breaks reporting slices.",
+    insight: "17 ad-groups drifted from your naming convention — breaks reporting slices when queried.",
+    actionVerb: "Rename ad-groups",
+    domain: "campaign",
+    severity: "fyi",
+    status: "open",
+    createdAt: now - 20 * HOUR,
+    updatedAt: now - 20 * HOUR,
+    steps: [{ label: "Bulk rename 17 ad-groups", etaSec: 12 }],
+  },
+
+  // ————— IN-FLIGHT —————
   {
     id: "d-daypart-tighten",
     source: "aan",
@@ -282,7 +667,8 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 180_000,
     valueKind: "gain",
     cadence: "monthly",
-    valueBasis: "Cuts spend after 10pm on 8 campaigns; preserves 96% of conversions.",
+    valueCaption: "monthly efficiency lift",
+    valueBasis: "Cuts spend after 10pm on 8 campaigns; preserves 96% of conversions based on 90-day history.",
     insight: "Tightening day-parting after 10pm on 8 Amazon campaigns.",
     actionVerb: "In flight",
     domain: "campaign",
@@ -290,14 +676,37 @@ export const MOCK_DECISIONS: Decision[] = [
     status: "in_flight",
     createdAt: now - 90 * MIN,
     updatedAt: now - 4 * MIN,
-    startedAt: now - 8 * 1000, // 8s ago — puts us in the middle of step 2
+    startedAt: now - 8 * 1000,
     steps: [
       { label: "Snapshot current schedules", etaSec: 6 },
       { label: "Push new bid modifiers", etaSec: 14 },
       { label: "Verify 24h delta", etaSec: 8 },
     ],
   },
-  // Handled — completed
+  {
+    id: "d-inflight-neg-sweep",
+    source: "aan",
+    sourceRef: { label: "Aan — nightly negatives", ts: now - 40 * MIN },
+    valueCents: 34_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly wasted-spend cut",
+    valueBasis: "8 negatives across 3 campaigns; expected steady-state savings ~$34/mo.",
+    insight: "Adding 8 negatives across Auto + Manual campaigns.",
+    actionVerb: "In flight",
+    domain: "campaign",
+    severity: "fyi",
+    status: "in_flight",
+    createdAt: now - 40 * MIN,
+    updatedAt: now - 2 * MIN,
+    startedAt: now - 4 * 1000,
+    steps: [
+      { label: "Push negatives to Amazon API", etaSec: 8 },
+      { label: "Verify propagation", etaSec: 4 },
+    ],
+  },
+
+  // ————— HANDLED —————
   {
     id: "d-budget-auto",
     source: "aan",
@@ -305,6 +714,7 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 42_000,
     valueKind: "gain",
     cadence: "monthly",
+    valueCaption: "monthly pacing savings",
     valueBasis: "Auto-approved under budget policy p1.",
     insight: "Rebalanced 3 campaign budgets to hit daily pacing.",
     actionVerb: "Rebalance",
@@ -315,7 +725,60 @@ export const MOCK_DECISIONS: Decision[] = [
     updatedAt: now - 7 * HOUR,
     steps: [{ label: "Shift $600/day across 3 campaigns", etaSec: 4 }],
   },
-  // Handled — rejected
+  {
+    id: "d-completed-neg",
+    source: "aan",
+    sourceRef: { label: "Aan — negatives auto-approve", ts: now - 20 * HOUR },
+    valueCents: 18_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly wasted-spend cut",
+    valueBasis: "Auto-approved under negatives policy.",
+    insight: "Added 5 negatives across 2 campaigns.",
+    actionVerb: "Add negatives",
+    domain: "campaign",
+    severity: "fyi",
+    status: "completed",
+    createdAt: now - 20 * HOUR,
+    updatedAt: now - 19 * HOUR,
+    steps: [{ label: "Push negatives", etaSec: 4 }],
+  },
+  {
+    id: "d-completed-vendor",
+    source: "slack",
+    sourceRef: { label: "#vendor-ops", ts: now - 30 * HOUR },
+    valueCents: 24_000,
+    valueKind: "gain",
+    cadence: "one_time",
+    valueCaption: "one-time credit",
+    valueBasis: "Claim filed, approved same day.",
+    insight: "Filed and won $240 shortship credit from vendor ABC.",
+    actionVerb: "Claim credit",
+    domain: "profitability",
+    severity: "opportunity",
+    status: "completed",
+    createdAt: now - 30 * HOUR,
+    updatedAt: now - 26 * HOUR,
+    steps: [{ label: "File credit claim", etaSec: 6 }],
+  },
+  {
+    id: "d-completed-daypart",
+    source: "anarix",
+    sourceRef: { label: "Day-parting monitor", ts: now - 46 * HOUR },
+    valueCents: 21_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly efficiency lift",
+    valueBasis: "Suppression applied and verified.",
+    insight: "Suppressed Sun 3–6am on 4 evergreen campaigns.",
+    actionVerb: "Suppress",
+    domain: "campaign",
+    severity: "fyi",
+    status: "completed",
+    createdAt: now - 46 * HOUR,
+    updatedAt: now - 44 * HOUR,
+    steps: [{ label: "Add to suppression schedule", etaSec: 4 }],
+  },
   {
     id: "d-rejected-bid-lift",
     source: "aan",
@@ -323,6 +786,7 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 88_000,
     valueKind: "gain",
     cadence: "monthly",
+    valueCaption: "monthly reclaimable",
     valueBasis: "Would lift placement modifier +85% on 3 hero SKUs.",
     insight: "Proposed lifting bid ceiling on 3 hero SKUs — you passed.",
     actionVerb: "Lift ceiling",
@@ -333,7 +797,24 @@ export const MOCK_DECISIONS: Decision[] = [
     updatedAt: now - 9 * HOUR,
     steps: [{ label: "Apply +85% modifier", etaSec: 4 }],
   },
-  // Handled — expired
+  {
+    id: "d-rejected-vine",
+    source: "aan",
+    sourceRef: { label: "Aan — Vine proposal", ts: now - 32 * HOUR },
+    valueCents: 26_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly halo",
+    valueBasis: "Vine enrollment for 2 SKUs; you passed.",
+    insight: "Proposed Vine enrollment on 2 SKUs — you passed.",
+    actionVerb: "Enroll Vine",
+    domain: "retail",
+    severity: "fyi",
+    status: "rejected",
+    createdAt: now - 32 * HOUR,
+    updatedAt: now - 30 * HOUR,
+    steps: [{ label: "Enroll SKUs in Vine", etaSec: 8 }],
+  },
   {
     id: "d-expired-flash",
     source: "anarix",
@@ -341,6 +822,7 @@ export const MOCK_DECISIONS: Decision[] = [
     valueCents: 32_000,
     valueKind: "gain",
     cadence: "one_time",
+    valueCaption: "one-time promo",
     valueBasis: "24h flash promo window closed before you decided.",
     insight: "Flash promo window closed before you had a chance to weigh in.",
     actionVerb: "Enroll",
@@ -351,10 +833,66 @@ export const MOCK_DECISIONS: Decision[] = [
     updatedAt: now - 6 * HOUR,
     steps: [{ label: "Enroll in flash promo", etaSec: 4 }],
   },
+  {
+    id: "d-expired-coupon",
+    source: "aan",
+    sourceRef: { label: "Aan — coupon watch", ts: now - 50 * HOUR },
+    valueCents: 15_000,
+    valueKind: "gain",
+    cadence: "one_time",
+    valueCaption: "one-time coupon",
+    valueBasis: "Coupon window closed.",
+    insight: "Weekend coupon window closed before you decided.",
+    actionVerb: "Extend",
+    domain: "campaign",
+    severity: "fyi",
+    status: "expired",
+    createdAt: now - 55 * HOUR,
+    updatedAt: now - 30 * HOUR,
+    steps: [{ label: "Extend coupon", etaSec: 4 }],
+  },
+
+  // ————— STALE (snoozed past due) —————
+  {
+    id: "d-stale-listing",
+    source: "anarix",
+    sourceRef: { label: "Listing quality · SKU-C22", ts: now - 30 * HOUR },
+    valueCents: 68_000,
+    valueKind: "at_risk",
+    valueCaption: "monthly listing exposure",
+    valueBasis: "Listing needs a bullet-point refresh; A+ content has drifted.",
+    insight: "SKU-C22 listing needs a bullet refresh — A+ content drifted 6 weeks ago.",
+    actionVerb: "Refresh bullets",
+    domain: "retail",
+    severity: "opportunity",
+    status: "snoozed",
+    snoozedUntil: now - 2 * HOUR,
+    createdAt: now - 30 * HOUR,
+    updatedAt: now - 24 * HOUR,
+    steps: [{ label: "Rewrite bullets", etaSec: 10 }],
+  },
+  {
+    id: "d-stale-brand",
+    source: "aan",
+    sourceRef: { label: "Aan — brand sweep", ts: now - 28 * HOUR },
+    valueCents: 44_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueCaption: "monthly branded traffic",
+    valueBasis: "Brand-defense on secondary term slipping.",
+    insight: "Secondary brand term impression share slipped again — snooze returned stale.",
+    actionVerb: "Raise bids",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "snoozed",
+    snoozedUntil: now - 1 * HOUR,
+    createdAt: now - 28 * HOUR,
+    updatedAt: now - 20 * HOUR,
+    steps: [{ label: "Raise bid on secondary brand term", etaSec: 4 }],
+  },
 ];
 
-// A big pile of small stuff that goes into the Digest tab. Illustrates
-// the "1000 alerts/day" case: many items, each small, rolled up.
+// Small stuff for the Handled digest strip (rolled up under Decide).
 export interface DigestItem {
   id: string;
   source: DecisionSource;

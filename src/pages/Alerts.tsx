@@ -18,14 +18,13 @@ import { BulkActionBar } from "@/components/actions/BulkActionBar";
 import { KeyboardHelpOverlay } from "@/components/actions/KeyboardHelpOverlay";
 import { useDecideKeyboard } from "@/components/actions/useDecideKeyboard";
 import { OverloadBanner } from "@/components/actions/OverloadBanner";
-import { SourceStatusStrip } from "@/components/actions/SourceStatusStrip";
 import { HandledFilters, type HandledResolution } from "@/components/actions/HandledFilters";
+import { UndoToast } from "@/components/actions/UndoToast";
 import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
-import { Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Decision } from "@/data/mockDecisions";
 
-type TabKey = "decide" | "meetings" | "questions" | "in_flight" | "handled" | "digest";
+type TabKey = "decide" | "meetings" | "questions" | "in_flight" | "handled";
 
 const TAB_LABELS: Record<TabKey, string> = {
   decide: "Decide",
@@ -33,7 +32,6 @@ const TAB_LABELS: Record<TabKey, string> = {
   questions: "Questions",
   in_flight: "In flight",
   handled: "Handled",
-  digest: "Digest",
 };
 
 const DECIDE_CAP = 25;
@@ -63,7 +61,6 @@ function bucketLabel(ts: number): string {
   return "Earlier";
 }
 
-/** Collapse decisions sharing a `dupeKey` into a primary + `duplicates[]`. */
 interface GroupedDecision {
   primary: Decision;
   duplicates: Decision[];
@@ -82,7 +79,6 @@ function groupDuplicates(items: Decision[]): GroupedDecision[] {
       seen.set(d.dupeKey, g);
       out.push(g);
     } else {
-      // Keep the highest-value one as primary
       const cur = valueMagnitude(existing.primary.valueKind, existing.primary.valueCents);
       const inc = valueMagnitude(d.valueKind, d.valueCents);
       if (inc > cur) {
@@ -96,23 +92,37 @@ function groupDuplicates(items: Decision[]): GroupedDecision[] {
   return out;
 }
 
+/** Sort persistence per tab via sessionStorage. */
+function useSortForTab(tab: TabKey): [SortKey, (k: SortKey) => void] {
+  const [sort, setSort] = useState<SortKey>(() => {
+    if (typeof window === "undefined") return "value";
+    return (sessionStorage.getItem(`ai:sort:${tab}`) as SortKey) || "value";
+  });
+  useEffect(() => {
+    const v = sessionStorage.getItem(`ai:sort:${tab}`) as SortKey | null;
+    setSort(v ?? "value");
+  }, [tab]);
+  const persist = (k: SortKey) => {
+    setSort(k);
+    sessionStorage.setItem(`ai:sort:${tab}`, k);
+  };
+  return [sort, persist];
+}
+
 function AlertsInner() {
-  const { decisions, aboveThreshold, belowThreshold, digestItems, meetings, openQuestionsCount, questions } = useActionsStore();
+  const { decisions, aboveThreshold, belowThreshold, digestItems, meetings, openQuestionsCount } = useActionsStore();
   const { registerOrder, clear } = useSelection();
   const [tab, setTab] = useState<TabKey>("decide");
-  const [sort, setSort] = useState<SortKey>("value");
+  const [sort, setSort] = useSortForTab(tab);
   const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
-  const [openBundleId, setOpenBundleId] = useState<string | null>(meetings[0]?.id ?? null);
+  const [openBundleId, setOpenBundleId] = useState<string | null>(null);
   const [handledRes, setHandledRes] = useState<HandledResolution>("all");
   const [showAllOverflow, setShowAllOverflow] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   useDecideKeyboard(tab === "decide");
-
-  // Clear selection whenever we leave Decide.
   useEffect(() => { if (tab !== "decide") clear(); }, [tab, clear]);
 
-  // ---- source pool per tab ----
   const pool: Decision[] = useMemo(() => {
     if (tab === "decide")
       return aboveThreshold.filter((d) => d.status === "open" || d.status === "snoozed");
@@ -125,7 +135,6 @@ function AlertsInner() {
     return [];
   }, [tab, decisions, aboveThreshold, handledRes]);
 
-  // ---- filter ----
   const filtered = useMemo(() => pool.filter((d) => {
     if (filter.sources.size && !filter.sources.has(d.source)) return false;
     if (filter.domains.size && !filter.domains.has(d.domain)) return false;
@@ -133,7 +142,6 @@ function AlertsInner() {
     return true;
   }), [pool, filter]);
 
-  // ---- sort ----
   const sorted = useMemo(() => {
     const s = [...filtered];
     s.sort((a, b) => {
@@ -149,13 +157,11 @@ function AlertsInner() {
     return s;
   }, [filtered, sort]);
 
-  // ---- collapse duplicates (Decide only — Handled/InFlight keep raw list) ----
   const grouped: GroupedDecision[] = useMemo(
     () => (tab === "decide" ? groupDuplicates(sorted) : sorted.map((d) => ({ primary: d, duplicates: [] }))),
     [sorted, tab],
   );
 
-  // ---- overload cap ----
   const visibleGroups = useMemo(
     () => (tab === "decide" && !showAllOverflow ? grouped.slice(0, DECIDE_CAP) : grouped),
     [grouped, tab, showAllOverflow],
@@ -163,7 +169,6 @@ function AlertsInner() {
   const hiddenGroups = tab === "decide" && !showAllOverflow ? grouped.slice(DECIDE_CAP) : [];
   const hiddenValueCents = hiddenGroups.reduce((s, g) => s + valueMagnitude(g.primary.valueKind, g.primary.valueCents), 0);
 
-  // ---- day buckets ----
   const bucketed = useMemo(() => {
     const m = new Map<string, GroupedDecision[]>();
     for (const g of visibleGroups) {
@@ -174,21 +179,18 @@ function AlertsInner() {
     return Array.from(m.entries());
   }, [visibleGroups]);
 
-  // Register order for keyboard nav (Decide only)
   useEffect(() => {
     if (tab !== "decide") return;
     registerOrder(visibleGroups.map((g) => g.primary.id));
   }, [tab, visibleGroups, registerOrder]);
 
-  // ---- counts for tab badges ----
   const counts = useMemo(() => ({
     decide: aboveThreshold.filter((d) => d.status === "open").length,
     meetings: meetings.length,
     questions: openQuestionsCount,
     in_flight: decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan").length,
     handled: decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status)).length,
-    digest: digestItems.length + belowThreshold.length,
-  }), [aboveThreshold, decisions, digestItems, belowThreshold, meetings.length, openQuestionsCount]);
+  }), [aboveThreshold, decisions, meetings.length, openQuestionsCount]);
 
   const handledCounts = useMemo(() => {
     const base = decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
@@ -200,19 +202,24 @@ function AlertsInner() {
     };
   }, [decisions]);
 
-  // ---- greeting numbers ----
   const openTotalCents = aboveThreshold
     .filter((d) => d.status === "open")
     .reduce((sum, d) => sum + valueMagnitude(d.valueKind, d.valueCents), 0);
   const openCount = aboveThreshold.filter((d) => d.status === "open").length;
   const openTotalFmt = formatValue({ cents: openTotalCents, kind: "gain" }).text.replace("+ ", "");
+  const criticalCount = aboveThreshold.filter((d) => d.status === "open" && d.severity === "critical").length;
 
   const digestTotal = digestItems.reduce((s, i) => s + valueMagnitude(i.valueKind, i.valueCents), 0);
+
+  // Meetings navigation
+  const bundleIndex = openBundleId ? meetings.findIndex((m) => m.id === openBundleId) : -1;
+  const prevBundle = bundleIndex > 0 ? meetings[bundleIndex - 1].id : null;
+  const nextBundle = bundleIndex >= 0 && bundleIndex < meetings.length - 1 ? meetings[bundleIndex + 1].id : null;
 
   return (
     <AppLayout>
       <AppTaskbar breadcrumbItems={[{ label: "Action Items" }]} />
-      <div className="px-6 py-6 max-w-[1180px] mx-auto w-full">
+      <div className="px-6 py-6 max-w-[1360px] mx-auto w-full">
 
         {/* Greeting */}
         <header className="mb-6 flex items-start gap-3">
@@ -220,20 +227,19 @@ function AlertsInner() {
             <AanMascot size={30} state="idle" interactive={false} />
           </div>
           <div className="flex-1">
-            <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Aan · Action Items</div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Action Items</div>
             <h1 className="font-heading text-2xl font-semibold text-foreground leading-tight">
-              Hi Tushar — {openCount} decision{openCount === 1 ? "" : "s"} today worth <span className="text-primary">{openTotalFmt}</span>.
+              Hi Tushar — I have {openCount} decision{openCount === 1 ? "" : "s"} for you today worth <span className="text-primary">{openTotalFmt}</span>
+              {criticalCount > 0 && <span className="text-muted-foreground text-base font-normal">, {criticalCount} critical</span>}
+              .
             </h1>
-            <p className="text-[13px] text-muted-foreground mt-1 max-w-2xl">
-              I'm watching your marketplaces, meetings, and inboxes in the background. These need a call from you.
+            <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+              I'm watching your marketplaces, meetings, and inboxes in the background. These are the calls I need from you.
             </p>
-          </div>
-          <div className="hidden md:flex items-center gap-1 text-[10.5px] text-muted-foreground shrink-0 pt-1">
-            <Keyboard className="h-3 w-3" /> press <kbd className="rounded border border-border bg-muted/60 px-1 font-mono">?</kbd> for shortcuts
           </div>
         </header>
 
-        {/* Tabs + controls row */}
+        {/* Tabs + controls */}
         <div className="mb-4 flex items-center gap-2 flex-wrap">
           <nav className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
             {(Object.keys(TAB_LABELS) as TabKey[]).map((k) => {
@@ -244,7 +250,7 @@ function AlertsInner() {
                   key={k}
                   onClick={() => setTab(k)}
                   className={cn(
-                    "text-[12px] px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5",
+                    "text-[13px] px-3.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5",
                     active
                       ? "bg-primary text-primary-foreground font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -253,7 +259,7 @@ function AlertsInner() {
                   {TAB_LABELS[k]}
                   {c > 0 && (
                     <span className={cn(
-                      "text-[10px] font-semibold px-1.5 rounded-full leading-4",
+                      "text-[10.5px] font-semibold px-1.5 rounded-full leading-4",
                       active ? "bg-primary-foreground/20" : "bg-muted-foreground/15"
                     )}>
                       {c}
@@ -280,14 +286,12 @@ function AlertsInner() {
           </div>
         </div>
 
-        {/* Handled resolution chips */}
         {tab === "handled" && counts.handled > 0 && (
           <div className="mb-3">
             <HandledFilters value={handledRes} onChange={setHandledRes} counts={handledCounts} />
           </div>
         )}
 
-        {/* Body */}
         <ScrollArea className="h-[calc(100vh-280px)] pr-3">
           {tab === "decide" && (
             <DecideBody
@@ -306,7 +310,7 @@ function AlertsInner() {
             bucketed.length === 0 ? (
               <EmptyState
                 headline="Nothing running right now."
-                body="When you approve or hand something to me, it shows up here with live progress."
+                body="When you approve or hand me something, it shows up here with live progress."
               />
             ) : <FlatList bucketed={bucketed} />
           )}
@@ -317,19 +321,8 @@ function AlertsInner() {
             ) : <FlatList bucketed={bucketed} />
           )}
 
-          {tab === "digest" && (
-            <div className="space-y-3">
-              <DigestRow items={digestItems} totalCents={digestTotal} />
-              {belowThreshold.length > 0 && (
-                <div className="text-[11.5px] text-muted-foreground italic pt-2">
-                  Below-threshold decisions ({belowThreshold.length}) also roll into this digest.
-                </div>
-              )}
-            </div>
-          )}
-
           {tab === "meetings" && (
-            <MeetingsBody openBundleId={openBundleId} onOpen={setOpenBundleId} />
+            <MeetingsBody onOpen={setOpenBundleId} />
           )}
 
           {tab === "questions" && (
@@ -338,9 +331,19 @@ function AlertsInner() {
         </ScrollArea>
       </div>
 
-      {/* Floating bulk bar + keyboard help — global to Decide */}
+      {/* Meeting workspace sheet */}
+      <MeetingWorkspace
+        bundleId={openBundleId}
+        onClose={() => setOpenBundleId(null)}
+        onPrev={() => prevBundle && setOpenBundleId(prevBundle)}
+        onNext={() => nextBundle && setOpenBundleId(nextBundle)}
+        hasPrev={!!prevBundle}
+        hasNext={!!nextBundle}
+      />
+
       <BulkActionBar />
       <KeyboardHelpOverlay />
+      <UndoToast />
     </AppLayout>
   );
 }
@@ -364,15 +367,11 @@ function DecideBody({
   }
   return (
     <div className="space-y-6">
-      {/* Source status — only shows if anything degraded */}
-      <SourceStatusStrip />
-
       {bucketed.map(([bucket, list]) => (
         <section key={bucket}>
           <div className="mb-2 flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
             <span className="h-px flex-1 bg-border/60" />
-            <span className="text-[10.5px] text-muted-foreground">{list.length} decision{list.length === 1 ? "" : "s"}</span>
           </div>
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             {list.map((g) => (
@@ -434,24 +433,16 @@ function FlatList({ bucketed }: { bucketed: [string, GroupedDecision[]][] }) {
   );
 }
 
-function MeetingsBody({ openBundleId, onOpen }: { openBundleId: string | null; onOpen: (id: string) => void }) {
+function MeetingsBody({ onOpen }: { onOpen: (id: string) => void }) {
   const { meetings } = useActionsStore();
   if (meetings.length === 0) {
-    return <EmptyState headline="No meeting bundles yet." body="When a meeting wraps, I'll bundle its action items and drop them here." />;
+    return <EmptyState headline="No meeting bundles yet." body="When a meeting wraps, I bundle its action items and drop them here." />;
   }
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        {meetings.map((m) => (
-          <MeetingBundleRow
-            key={m.id}
-            bundleId={m.id}
-            expanded={openBundleId === m.id}
-            onOpen={(id) => onOpen(openBundleId === id ? "" : id)}
-          />
-        ))}
-      </div>
-      {openBundleId && <MeetingWorkspace bundleId={openBundleId} />}
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      {meetings.map((m) => (
+        <MeetingBundleRow key={m.id} bundleId={m.id} onOpen={onOpen} />
+      ))}
     </div>
   );
 }
@@ -470,7 +461,6 @@ function QuestionsBody() {
         <div className="mb-2 flex items-center gap-2">
           <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Waiting on you</span>
           <span className="h-px flex-1 bg-border/60" />
-          <span className="text-[10.5px] text-muted-foreground">{open.length} open</span>
         </div>
         {open.length === 0 ? (
           <div className="text-[12px] text-muted-foreground italic py-4 text-center">You're caught up. I'll only ask when it matters.</div>
