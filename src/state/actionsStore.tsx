@@ -161,26 +161,20 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
 
   const markTaskCompleted = useCallback((taskId: string) => {
     setTaskStatus(taskId, "completed");
-    toast.success("Marked completed.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollbackTask(taskId) },
-    });
+    toast.success("Marked completed.", { duration: UNDO_MS });
+    publishUndoable({ id: `task:${taskId}:done`, label: "Marked completed.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const markTaskNotCompleted = useCallback((taskId: string) => {
     setTaskStatus(taskId, "not_completed");
-    toast.message("Marked not completed.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollbackTask(taskId) },
-    });
+    toast.message("Marked not completed.", { duration: UNDO_MS });
+    publishUndoable({ id: `task:${taskId}:reject`, label: "Marked not completed.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const delegateTaskToAan = useCallback((taskId: string) => {
     setTaskStatus(taskId, "with_aan");
-    toast.success("On it. I'll take this from here.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollbackTask(taskId) },
-    });
+    toast.success("On it. I'll take this from here.", { duration: UNDO_MS });
+    publishUndoable({ id: `task:${taskId}:delegate`, label: "You handed it to me.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const bulkCompleteBundle = useCallback((bundleId: string) => {
