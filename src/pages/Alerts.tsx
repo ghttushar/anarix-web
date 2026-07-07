@@ -32,18 +32,17 @@ function hashString(s: string): number {
 }
 
 /**
- * Deterministic channel mix:
+ * Deterministic channel mix for e-commerce alerts (Flow A):
  *  - Overnight (morning brief): created before 8am OR older than ~10h ago.
- *  - Meeting: small stable subset (~1 in 7) of daytime events.
  *  - Live: everything else during the working day.
+ * Meeting-originated tasks (Flow B) are a separate stream — they never
+ * appear as "meeting" channel here.
  */
 function inferChannel(e: AanEvent): Channel {
   const created = new Date(e.createdAt);
   const hour = created.getHours();
   const ageHours = (Date.now() - e.createdAt) / 3_600_000;
   if (hour < 8 || ageHours > 10) return "overnight";
-  const h = hashString(e.eventId);
-  if (h % 7 === 0) return "meeting";
   return "live";
 }
 
