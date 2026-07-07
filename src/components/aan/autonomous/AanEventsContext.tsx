@@ -7,6 +7,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { SCENARIOS, ScenarioTemplate, getScenario } from "@/data/mockAanScenarios";
+import { MEETING_TASK_BUNDLES, MeetingTaskBundle, MeetingItemStatus } from "@/data/mockMeetingTasks";
 import { toast } from "sonner";
 
 export type Lifecycle =
