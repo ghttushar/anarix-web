@@ -7,6 +7,9 @@ import { AanMascot } from "@/components/aan/AanMascot";
 import { AanEventCard } from "@/components/aan/autonomous/AanInboxCard";
 import { ExecutionArtifact } from "@/components/aan/autonomous/ExecutionArtifact";
 import { useAanEvents, AanEvent } from "@/components/aan/autonomous/AanEventsContext";
+import { MeetingBundleCard } from "@/components/aan/autonomous/MeetingBundleCard";
+import { MeetingBundleArtifact } from "@/components/aan/autonomous/MeetingBundleArtifact";
+import { MeetingTaskBundle } from "@/data/mockMeetingTasks";
 import { cn } from "@/lib/utils";
 
 type FilterKey =
