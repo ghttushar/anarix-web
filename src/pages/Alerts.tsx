@@ -122,7 +122,7 @@ export default function AlertsPage() {
     { key: "all", label: "All", count: materialEvents.length },
     { key: "approval", label: "Needs approval", count: approvalCount, tone: "critical" },
     { key: "overnight", label: "Overnight", count: overnightCount },
-    { key: "meetings", label: "Meetings", count: meetingCount, tone: "meeting" },
+    { key: "meetings", label: "Meetings", count: meetingPendingCount, tone: "meeting" },
     { key: "live", label: "Live", count: liveCount },
     { key: "executing", label: "Executing", count: executingCount },
     { key: "done", label: "Done", count: doneCount },
