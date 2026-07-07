@@ -1,18 +1,12 @@
-import { useCallback, useEffect, useRef } from "react";
-import { ArrowRight, ExternalLink, MoreHorizontal, X } from "lucide-react";
+import { useCallback } from "react";
+import { ArrowRight, Check, X, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { ValuePill } from "./ValuePill";
-import { SourceGlyph } from "./SourceGlyph";
 import { ShareMenu } from "./ShareMenu";
 import { SnoozeMenu } from "./SnoozeMenu";
+import { SourceGlyph } from "./SourceGlyph";
 import type { Decision } from "@/data/mockDecisions";
 import { useActionsStore, type SnoozeChoice } from "@/state/actionsStore";
-import { useSelection } from "@/state/selectionStore";
 import { getSourceMeta } from "@/lib/decisions/sourceRegistry";
 import { formatValue } from "@/lib/decisions/valueFormat";
 
@@ -22,208 +16,202 @@ interface Props {
   interactive?: boolean;
 }
 
-const STATUS_TONE: Record<Decision["status"], { label: string; className: string }> = {
-  open:       { label: "Open",         className: "text-muted-foreground" },
-  with_aan:   { label: "With me",      className: "text-primary" },
-  in_flight:  { label: "In flight",    className: "text-primary" },
-  completed:  { label: "Completed",    className: "text-success" },
-  rejected:   { label: "Rejected",     className: "text-muted-foreground" },
-  snoozed:    { label: "Snoozed",      className: "text-muted-foreground" },
-  expired:    { label: "Expired",      className: "text-muted-foreground" },
+const STATUS_PILL: Record<Decision["status"], { label: string; className: string } | null> = {
+  open: null,
+  with_aan: { label: "WITH ME", className: "text-primary border-primary/40 bg-primary/5" },
+  in_flight: { label: "EXECUTING", className: "text-primary border-primary/40 bg-primary/5" },
+  completed: { label: "DONE", className: "text-success border-success/40 bg-success/5" },
+  rejected: { label: "REJECTED", className: "text-muted-foreground border-border bg-muted/50" },
+  snoozed: { label: "SNOOZED", className: "text-muted-foreground border-border bg-muted/50" },
+  expired: { label: "EXPIRED", className: "text-muted-foreground border-border bg-muted/50" },
 };
 
-const SEVERITY_DOT: Record<Decision["severity"], string> = {
-  critical:    "bg-destructive",
-  opportunity: "bg-primary",
-  fyi:         "bg-muted-foreground/40",
-};
-
-function timeAgo(ts: number): string {
-  const diff = Date.now() - ts;
-  const m = Math.round(diff / 60000);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.round(h / 24);
-  return `${d}d ago`;
+function railColor(d: Decision): string {
+  if (d.severity === "critical") return "bg-destructive";
+  if (d.status === "in_flight" || d.status === "with_aan") return "bg-primary";
+  if (d.severity === "opportunity") return "bg-success";
+  return "bg-muted-foreground/40";
 }
 
-export function DecisionCard({ decision: d, duplicates = [], interactive = false }: Props) {
-  const { approve, reject, delegateToAan, snooze } = useActionsStore();
-  let sel: ReturnType<typeof useSelection> | null = null;
-  try { sel = useSelection(); } catch { sel = null; }
-  const isSelected = interactive && sel ? sel.isSelected(d.id) : false;
-  const isFocused = interactive && sel ? sel.focusedId === d.id : false;
-  const cardRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (isFocused) cardRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [isFocused]);
+function statusEyebrow(d: Decision): string {
+  if (d.status === "in_flight") return "EXECUTING";
+  if (d.status === "with_aan") return "WITH ME";
+  if (d.status === "completed") return "DONE";
+  if (d.status === "rejected") return "REJECTED";
+  if (d.status === "expired") return "EXPIRED";
+  const hour = new Date(d.createdAt).getHours();
+  if (hour >= 22 || hour < 8) return "OVERNIGHT";
+  return "LIVE";
+}
 
-  const isActionable = d.status === "open";
-  const isTerminal = ["completed", "rejected", "expired"].includes(d.status);
-  const tone = STATUS_TONE[d.status];
+function statusDot(d: Decision): string {
+  if (d.severity === "critical") return "bg-destructive";
+  if (d.status === "in_flight" || d.status === "with_aan") return "bg-primary";
+  return "bg-success";
+}
+
+function buildChips(d: Decision): string[] {
+  const chips: string[] = [];
+  const domainLabel: Record<Decision["domain"], string> = {
+    campaign: "Campaign",
+    retail: "Retail",
+    profitability: "Margin",
+    inventory: "Inventory",
+    cs: "CS",
+    buyer: "Buyer",
+  };
+  chips.push(domainLabel[d.domain]);
+  // Pull one or two keywords from the sourceRef label (after the middle dot)
+  const refBits = d.sourceRef.label.split("·").map((s) => s.trim()).filter(Boolean);
+  const tail = refBits[refBits.length - 1];
+  if (tail && tail.length < 22) chips.push(tail);
+  if (d.cadence && d.cadence !== "one_time") chips.push({ daily: "Daily", weekly: "Weekly", monthly: "Monthly" }[d.cadence]);
+  if (d.severity === "critical") chips.push("Critical");
+  return chips.slice(0, 5);
+}
+
+export function DecisionCard({ decision: d, duplicates = [], interactive: _interactive = false }: Props) {
+  const { approve, reject, snooze, delegateToAan } = useActionsStore();
   const sourceMeta = getSourceMeta(d.source);
+  const value = formatValue({ cents: d.valueCents, kind: d.valueKind, cadence: d.cadence });
+  const isActionable = d.status === "open";
+  const pill = STATUS_PILL[d.status];
+  const chips = buildChips(d);
 
   const onSnooze = useCallback((c: SnoozeChoice) => snooze(d.id, c), [d.id, snooze]);
 
   return (
-    <div
-      ref={cardRef}
-      data-decision-id={d.id}
-      className={cn(
-        "group relative rounded-xl border bg-card transition-all",
-        isSelected ? "border-primary/60 bg-primary/[0.04]" : "border-border hover:border-border/80 hover:shadow-sm",
-        isFocused && "ring-1 ring-primary/50",
-      )}
-    >
-      {/* Header strip */}
-      <div className="flex items-center gap-2 px-4 pt-3.5">
-        <span className={cn("h-1.5 w-1.5 rounded-full", SEVERITY_DOT[d.severity])} title={d.severity} />
-        <SourceGlyph source={d.source} size={12} />
-        <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-          {sourceMeta.label}
-        </span>
-        <span className="text-muted-foreground/60 text-[11px]">·</span>
-        <span className="text-[11px] text-muted-foreground truncate">{d.sourceRef.label}</span>
-        <span className="text-muted-foreground/60 text-[11px]">·</span>
-        <span className="text-[11px] text-muted-foreground">{timeAgo(d.createdAt)}</span>
+    <div className="relative rounded-lg border border-border bg-card overflow-hidden hover:shadow-sm transition-shadow">
+      {/* Left rail */}
+      <div className={cn("absolute left-0 top-0 bottom-0 w-1", railColor(d))} />
 
-        <div className="ml-auto flex items-center gap-1.5">
+      <div className="pl-5 pr-5 py-4">
+        {/* Top row: status · source · pill */}
+        <div className="flex items-center gap-2 text-[11.5px]">
+          <span className={cn("h-1.5 w-1.5 rounded-full", statusDot(d))} />
+          <span className="uppercase tracking-wider font-semibold text-foreground">{statusEyebrow(d)}</span>
+          <span className="text-muted-foreground">·</span>
+          <SourceGlyph source={d.source} size={11} className="!w-4 !h-4 border-0 bg-transparent" />
+          <span className="uppercase tracking-wider font-semibold text-muted-foreground">{sourceMeta.label}</span>
           {duplicates.length > 0 && (
             <span className="text-[10px] rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">
               ×{duplicates.length + 1}
             </span>
           )}
-          {d.status === "in_flight" && (
-            <span className="text-[10.5px] text-primary uppercase tracking-wider font-semibold flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> I'm on it
-            </span>
-          )}
-          {isTerminal && (
-            <span className={cn("text-[10.5px] uppercase tracking-wider font-semibold", tone.className)}>
-              {tone.label}
-            </span>
-          )}
-          {interactive && sel && (
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={() => sel!.toggle(d.id)}
-              aria-label="Select decision"
-              className={cn("ml-1", isSelected || isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100")}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Value hero */}
-      <div className="px-4 pt-3 flex items-start gap-3">
-        <ValuePill cents={d.valueCents} kind={d.valueKind} cadence={d.cadence} size="md" />
-        <span className="text-[12.5px] text-muted-foreground pt-1.5">{d.valueCaption}</span>
-      </div>
-
-      {/* Insight */}
-      <div className="px-4 pt-3">
-        <div className="text-[14.5px] text-foreground leading-snug font-medium">{d.insight}</div>
-        {d.insightDetail && (
-          <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">{d.insightDetail}</p>
-        )}
-      </div>
-
-      {/* Rationale */}
-      {d.valueBasis && (
-        <div className="mx-4 mt-3 rounded-md border border-border/60 bg-muted/25 px-3 py-2">
-          <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1">
-            How I got the number
-          </div>
-          <p className="text-[12.5px] text-foreground/85 leading-relaxed">{d.valueBasis}</p>
-          {d.valueInputs && d.valueInputs.length > 0 && (
-            <ul className="mt-1.5 space-y-0.5">
-              {d.valueInputs.slice(0, 3).map((v, i) => (
-                <li key={i} className="text-[11.5px] text-foreground/75 flex items-start gap-1.5">
-                  <span className="text-primary mt-0.5">›</span>
-                  <span>{v}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {/* Meeting reference */}
-      {d.meetingRef && (
-        <div className="mx-4 mt-2 text-[11.5px] text-muted-foreground italic">
-          From meeting: {d.meetingRef.title}
-        </div>
-      )}
-
-      {/* Action footer */}
-      <div className="px-4 pt-4 pb-3.5 mt-2 flex items-center gap-1.5 flex-wrap border-t border-border/60">
-        {isActionable ? (
-          <>
-            <Button
-              size="sm"
-              onClick={() => approve(d.id)}
-              className="h-8 px-3 text-[12.5px] gap-1 font-medium"
-            >
-              {d.actionVerb}
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => delegateToAan(d.id)}
-              className="h-8 px-2.5 text-[12px]"
-              title="Hand this to me — I'll take care of it"
-            >
-              You take care of it
-            </Button>
-            <SnoozeMenu onSelect={onSnooze} />
-            <ShareMenu itemLabel={d.insight} />
-            <div className="ml-auto flex items-center gap-1">
-              {d.deepLink && (
-                <Button asChild size="sm" variant="ghost" className="h-8 text-[11.5px]">
-                  <a href={d.deepLink.href}>
-                    {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </Button>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="More">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem
-                    onSelect={() => { navigator.clipboard.writeText(`${formatValue({ cents: d.valueCents, kind: d.valueKind, cadence: d.cadence }).text} — ${d.valueBasis}`); }}
-                  >
-                    Copy $ rationale
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={() => reject(d.id)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <X className="h-3.5 w-3.5 mr-1.5" /> Reject
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-2 w-full">
-            <span className={cn("text-[11.5px] uppercase tracking-wider font-semibold", tone.className)}>
-              {tone.label}
-            </span>
-            {d.deepLink && (
-              <Button asChild size="sm" variant="ghost" className="h-8 text-[11.5px] ml-auto">
-                <a href={d.deepLink.href}>
-                  {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
-              </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {pill && (
+              <span className={cn("text-[10.5px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded border", pill.className)}>
+                {pill.label}
+              </span>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Main body: left content + right VALUE box */}
+        <div className="mt-3 flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[15.5px] font-semibold text-foreground leading-snug">{d.insight}</h3>
+            {d.insightDetail && (
+              <p className="mt-1 text-[13px] text-muted-foreground leading-relaxed line-clamp-2">
+                {d.insightDetail}
+              </p>
+            )}
+
+            {chips.length > 0 && (
+              <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+                {chips.map((c) => (
+                  <span
+                    key={c}
+                    className="text-[11px] px-2 py-0.5 rounded border border-border text-muted-foreground bg-muted/30"
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {d.meetingRef && (
+              <div className="mt-3 flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  From: <span className="text-foreground/80 font-medium">{d.meetingRef.title}</span>
+                </span>
+              </div>
+            )}
+
+            <div className="mt-3">
+              <span className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground mr-2">Action</span>
+              <span className="text-[13.5px] text-foreground/90 leading-relaxed">
+                {d.actionVerb}. {d.valueBasis.split(".")[0]}.
+              </span>
+            </div>
+          </div>
+
+          {/* VALUE box */}
+          {d.valueKind !== "info" && (
+            <div className="shrink-0 w-[190px] rounded-md border border-border bg-muted/25 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Value</div>
+              <div className={cn(
+                "text-[15px] font-semibold mt-0.5 leading-tight",
+                d.valueKind === "gain" ? "text-success" : d.valueKind === "cost" ? "text-destructive" : "text-primary",
+              )}>
+                {value.text}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{d.valueCaption}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-4 flex items-center gap-2">
+          {isActionable ? (
+            <>
+              <Button
+                size="sm"
+                onClick={() => approve(d.id)}
+                className="h-8 text-[12.5px] gap-1.5 font-medium"
+              >
+                <Check className="h-3.5 w-3.5" />
+                Approve {d.actionVerb.toLowerCase()}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => reject(d.id)}
+                className="h-8 text-[12.5px] gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+                Reject
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => delegateToAan(d.id)}
+                className="h-8 text-[12px] text-muted-foreground hover:text-primary"
+              >
+                You take it
+              </Button>
+              <SnoozeMenu onSelect={onSnooze} />
+              <ShareMenu itemLabel={d.insight} />
+              <a
+                href={d.deepLink?.href ?? "#"}
+                className="ml-auto text-[12.5px] text-primary font-medium hover:underline inline-flex items-center gap-1"
+              >
+                View more <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </>
+          ) : (
+            <>
+              <ShareMenu itemLabel={d.insight} />
+              <a
+                href={d.deepLink?.href ?? "#"}
+                className="ml-auto text-[12.5px] text-primary font-medium hover:underline inline-flex items-center gap-1"
+              >
+                View more <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
