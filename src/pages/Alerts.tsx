@@ -10,6 +10,9 @@ import { DigestRow } from "@/components/actions/DigestRow";
 import { EmptyState } from "@/components/actions/EmptyState";
 import { SortMenu, type SortKey } from "@/components/actions/SortMenu";
 import { FilterSheet, EMPTY_FILTER, countActiveFilters, type FilterState } from "@/components/actions/FilterSheet";
+import { MeetingBundleRow } from "@/components/actions/MeetingBundleRow";
+import { MeetingWorkspace } from "@/components/actions/MeetingWorkspace";
+import { QuestionRow } from "@/components/actions/QuestionRow";
 import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
 import type { Decision } from "@/data/mockDecisions";
 
@@ -50,10 +53,11 @@ function bucketLabel(ts: number): string {
 }
 
 function AlertsInner() {
-  const { decisions, aboveThreshold, belowThreshold, digestItems } = useActionsStore();
+  const { decisions, aboveThreshold, belowThreshold, digestItems, meetings, openQuestionsCount, questions } = useActionsStore();
   const [tab, setTab] = useState<TabKey>("decide");
   const [sort, setSort] = useState<SortKey>("value");
   const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
+  const [openBundleId, setOpenBundleId] = useState<string | null>(meetings[0]?.id ?? null);
 
   // ---- source pool per tab ----
   const pool: Decision[] = useMemo(() => {
@@ -104,12 +108,12 @@ function AlertsInner() {
   // ---- counts for tab badges ----
   const counts = useMemo(() => ({
     decide: aboveThreshold.filter((d) => d.status === "open").length,
-    meetings: 0, // Phase 2
-    questions: 0, // Phase 2
+    meetings: meetings.length,
+    questions: openQuestionsCount,
     in_flight: decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan").length,
     handled: decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status)).length,
     digest: digestItems.length + belowThreshold.length,
-  }), [aboveThreshold, decisions, digestItems, belowThreshold]);
+  }), [aboveThreshold, decisions, digestItems, belowThreshold, meetings.length, openQuestionsCount]);
 
   // ---- greeting numbers ----
   const openTotalCents = aboveThreshold
@@ -214,15 +218,12 @@ function AlertsInner() {
             </div>
           )}
 
-          {(tab === "meetings" || tab === "questions") && (
-            <EmptyState
-              headline={tab === "meetings" ? "Meeting workspace lands in Phase 2." : "Questions lands in Phase 2."}
-              body={
-                tab === "meetings"
-                  ? "This tab will host meeting-derived task bundles with completion-language actions."
-                  : "This tab will host things I'd rather ask you about than guess."
-              }
-            />
+          {tab === "meetings" && (
+            <MeetingsBody openBundleId={openBundleId} onOpen={setOpenBundleId} />
+          )}
+
+          {tab === "questions" && (
+            <QuestionsBody />
           )}
         </ScrollArea>
       </div>
@@ -282,6 +283,68 @@ function FlatList({ grouped }: { grouped: [string, Decision[]][] }) {
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+function MeetingsBody({ openBundleId, onOpen }: { openBundleId: string | null; onOpen: (id: string) => void }) {
+  const { meetings } = useActionsStore();
+  if (meetings.length === 0) {
+    return <EmptyState headline="No meeting bundles yet." body="When a meeting wraps, I'll bundle its action items and drop them here." />;
+  }
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
+        {meetings.map((m) => (
+          <MeetingBundleRow
+            key={m.id}
+            bundleId={m.id}
+            expanded={openBundleId === m.id}
+            onOpen={(id) => onOpen(openBundleId === id ? "" : id)}
+          />
+        ))}
+      </div>
+      {openBundleId && <MeetingWorkspace bundleId={openBundleId} />}
+    </div>
+  );
+}
+
+function QuestionsBody() {
+  const { questions } = useActionsStore();
+  const open = questions.filter((q) => q.status === "open");
+  const closed = questions.filter((q) => q.status !== "open");
+
+  if (questions.length === 0) {
+    return <EmptyState headline="No open questions." body="When I hit something I'd rather ask than guess, it lands here." />;
+  }
+  return (
+    <div className="space-y-6">
+      <section>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Waiting on you</span>
+          <span className="h-px flex-1 bg-border/60" />
+          <span className="text-[10.5px] text-muted-foreground">{open.length} open</span>
+        </div>
+        {open.length === 0 ? (
+          <div className="text-[12px] text-muted-foreground italic py-4 text-center">You're caught up. I'll only ask when it matters.</div>
+        ) : (
+          <div className="space-y-2.5">
+            {open.map((q) => <QuestionRow key={q.id} question={q} />)}
+          </div>
+        )}
+      </section>
+
+      {closed.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Recently answered</span>
+            <span className="h-px flex-1 bg-border/60" />
+          </div>
+          <div className="space-y-2.5">
+            {closed.map((q) => <QuestionRow key={q.id} question={q} />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
