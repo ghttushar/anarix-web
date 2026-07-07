@@ -367,10 +367,29 @@ function AlertsInner() {
   );
 }
 
+function DecisionList({ list, interactive, viewMode }: { list: GroupedDecision[]; interactive?: boolean; viewMode: ViewMode }) {
+  if (viewMode === "card") {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {list.map((g) => (
+          <DecisionCard key={g.primary.id} decision={g.primary} duplicates={g.duplicates} interactive={interactive} />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      {list.map((g) => (
+        <DecisionRow key={g.primary.id} decision={g.primary} duplicates={g.duplicates} interactive={interactive} />
+      ))}
+    </div>
+  );
+}
+
 function DecideBody({
   bucketed, hiddenCount, hiddenValueCents,
   onShowAll, onSortByValue, onOpenFilter,
-  digestItems, digestTotal,
+  digestItems, digestTotal, viewMode,
 }: {
   bucketed: [string, GroupedDecision[]][];
   hiddenCount: number;
@@ -380,6 +399,7 @@ function DecideBody({
   onOpenFilter: () => void;
   digestItems: ReturnType<typeof useActionsStore>["digestItems"];
   digestTotal: number;
+  viewMode: ViewMode;
 }) {
   if (bucketed.length === 0 && digestItems.length === 0) {
     return <EmptyState headline="You're clear." body="I'll surface something the moment it matters." />;
@@ -392,16 +412,7 @@ function DecideBody({
             <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
             <span className="h-px flex-1 bg-border/60" />
           </div>
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            {list.map((g) => (
-              <DecisionRow
-                key={g.primary.id}
-                decision={g.primary}
-                duplicates={g.duplicates}
-                interactive
-              />
-            ))}
-          </div>
+          <DecisionList list={list} interactive viewMode={viewMode} />
         </section>
       ))}
 
@@ -434,7 +445,7 @@ function DecideBody({
   );
 }
 
-function FlatList({ bucketed }: { bucketed: [string, GroupedDecision[]][] }) {
+function FlatList({ bucketed, viewMode }: { bucketed: [string, GroupedDecision[]][]; viewMode: ViewMode }) {
   return (
     <div className="space-y-8">
       {bucketed.map(([bucket, list]) => (
@@ -443,19 +454,26 @@ function FlatList({ bucketed }: { bucketed: [string, GroupedDecision[]][] }) {
             <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
             <span className="h-px flex-1 bg-border/60" />
           </div>
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            {list.map((g) => <DecisionRow key={g.primary.id} decision={g.primary} duplicates={g.duplicates} />)}
-          </div>
+          <DecisionList list={list} viewMode={viewMode} />
         </section>
       ))}
     </div>
   );
 }
 
-function MeetingsBody({ onOpen }: { onOpen: (id: string) => void }) {
+function MeetingsBody({ onOpen, viewMode }: { onOpen: (id: string) => void; viewMode: ViewMode }) {
   const { meetings } = useActionsStore();
   if (meetings.length === 0) {
     return <EmptyState headline="No meeting bundles yet." body="When a meeting wraps, I bundle its action items and drop them here." />;
+  }
+  if (viewMode === "card") {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {meetings.map((m) => (
+          <MeetingBundleCard key={m.id} bundleId={m.id} onOpen={onOpen} />
+        ))}
+      </div>
+    );
   }
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -466,7 +484,7 @@ function MeetingsBody({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
-function QuestionsBody() {
+function QuestionsBody({ viewMode }: { viewMode: ViewMode }) {
   const { questions } = useActionsStore();
   const open = questions.filter((q) => q.status === "open");
   const closed = questions.filter((q) => q.status !== "open");
@@ -474,6 +492,17 @@ function QuestionsBody() {
   if (questions.length === 0) {
     return <EmptyState headline="No open questions." body="When I hit something I'd rather ask than guess, it lands here." />;
   }
+  const renderList = (items: typeof questions) =>
+    viewMode === "card" ? (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {items.map((q) => <QuestionCard key={q.id} question={q} />)}
+      </div>
+    ) : (
+      <div className="space-y-2.5">
+        {items.map((q) => <QuestionRow key={q.id} question={q} />)}
+      </div>
+    );
+
   return (
     <div className="space-y-6">
       <section>
@@ -484,9 +513,7 @@ function QuestionsBody() {
         {open.length === 0 ? (
           <div className="text-[12px] text-muted-foreground italic py-4 text-center">You're caught up. I'll only ask when it matters.</div>
         ) : (
-          <div className="space-y-2.5">
-            {open.map((q) => <QuestionRow key={q.id} question={q} />)}
-          </div>
+          renderList(open)
         )}
       </section>
 
@@ -496,9 +523,7 @@ function QuestionsBody() {
             <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Recently answered</span>
             <span className="h-px flex-1 bg-border/60" />
           </div>
-          <div className="space-y-2.5">
-            {closed.map((q) => <QuestionRow key={q.id} question={q} />)}
-          </div>
+          {renderList(closed)}
         </section>
       )}
     </div>
