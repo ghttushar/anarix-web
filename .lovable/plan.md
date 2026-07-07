@@ -1,86 +1,92 @@
-## Goal
+# Action Items — Cosmetic & UX Overhaul
 
-Establish a two-way sync model:
-- **Flow A (existing):** An Anarix event fires an alert; the alert may also reference a meeting where it was discussed. These belong under **All / Live / Overnight** (never filtered as "Meetings").
-- **Flow B (new):** A meeting happens, decisions are made, and a set of action items must be executed inside Anarix. These are the *only* cards that appear under **Meetings**.
+Rename, re-voice, and redesign the Alerts surface. No new modules. All client-only.
 
-## Changes
+## 1. Rename & re-voice (Aan speaks in first person as an employee)
 
-### 1. Reclassify existing "meeting" seeded events
-File: `src/components/aan/autonomous/AanEventsContext.tsx`
+- Route + nav label: `Alerts` → `Action Items` (update `src/pages/Alerts.tsx` header, `AppTaskbar` breadcrumb, sidebar entry, any nav registry). Keep route path `/alerts` to avoid breaking links — only labels change.
+- Header rewrite:
+  - Replace `"What Aan noticed for you"` + the `7 awaiting approval · 3 critical · 2 completed` line with a **personal greeting from Aan**:
+    - Line 1 (small caps eyebrow): `AAN · ACTION ITEMS`
+    - Line 2 (H1): `"Hi Tushar — here's what I'm watching."`
+    - Line 3 (muted, one sentence, first person): `"I'm keeping an eye on your marketplaces and meetings in the background. These need a decision from you."`
+  - Remove the raw pending/critical/completed count line entirely.
+- Convert all Aan-authored copy across cards, artifacts, toasts, and chat replies to first person: `I noticed…`, `I recommend…`, `I paused this…`, `I'll report back once done.` (Sweep: `AanInboxCard.tsx`, `ExecutionArtifact.tsx`, `MeetingBundleCard.tsx`, `MeetingBundleArtifact.tsx`, `AanEventsContext` toast strings.)
 
-- Remove the deterministic `-mtgN` event IDs from the four seeded scenarios (`launch-coverage`, `event-campaign`, `reviews`, `loss-making`) so `hashString(eventId) % 7 === 0` no longer routes them to the "meeting" channel.
-- Keep their `meetingRef` intact — the cards still show the "From meeting" chip, but they live under **All / Live / Overnight** based on time.
+## 2. Tab renames
 
-File: `src/pages/Alerts.tsx`
+Keep the concepts, change the words:
 
-- Change `inferChannel` so the **meeting channel** is no longer derived from a hash. Instead, a card is `"meeting"` **only** when it is a meeting-originated task (see new event type below).
-- No visual/design changes to existing cards. They remain exactly as designed.
+| Old | New |
+|---|---|
+| All | Everything |
+| Needs approval | Waiting on you |
+| Overnight | Morning brief |
+| Meetings | From meetings |
+| Live | As it happens |
+| Executing | I'm on it |
+| Done | Wrapped up |
 
-### 2. New event type: meeting-originated action bundle
-File: `src/data/mockMeetingTasks.ts` (new)
+## 3. Sorting
 
-Define a `MeetingTaskBundle` shape:
-```ts
-{
-  bundleId, meetingTitle, meetingWhen, participants[],
-  transcriptExcerpt, summary,
-  actionItems: [{ id, title, owner, due, detail, status: 'pending'|'approved'|'rejected' }]
-}
-```
+Add a small sort control (segmented buttons, right-aligned above the timeline) with three options: **Latest**, **High value**, **Critical**.
+- Latest = current `updatedAt desc`.
+- High value = sort by projected impact — parse the numeric magnitude from `scenario.impact` (regex `/([\d,.]+)/`) as a rough proxy; fall back to `updatedAt`.
+- Critical = severity `critical` first, then `warning`, then rest; break ties by `updatedAt`.
 
-Seed **3 bundles** covering different situations:
-- "Staples QBR — 10:00 AM" (5 action items: relist SKU, adjust Prime Day bids, pull competitor pricing memo, prepare inventory forecast, update creative)
-- "Weekly Ads Sync — Yesterday 4:00 PM" (3 items)
-- "Founder + Agency Review — 2 days ago" (4 items)
+## 4. Approve / Reject with 30-second Undo
 
-File: `src/components/aan/autonomous/AanEventsContext.tsx`
+- In `AanEventsContext`, wrap `approve` and `reject` so the state change is applied immediately (optimistic) but a 30s window allows revert. Show a Sonner toast with an `Undo` action button and a visual countdown (using toast `duration: 30000`).
+- Track a `pendingActionTimer` map keyed by `eventId`; on undo → restore previous lifecycle; on timeout → commit (for `approve`, actually kick off `runExecution` at commit time so a reverted approval doesn't burn execution).
+- Same pattern for `approveMeetingItem` / `rejectMeetingItem`.
 
-- Add `meetingBundles: MeetingTaskBundle[]` state + `approveMeetingItem`, `rejectMeetingItem`, `approveAllMeetingItems`, `rejectAllMeetingItems` handlers.
-- Seed with the 3 bundles above.
-- Bundles do NOT enter the `events` array; they are a parallel stream surfaced only in the Meetings tab.
+## 5. Card cleanups (`AanInboxCard.tsx`)
 
-### 3. Meetings tab renders bundle cards
-File: `src/pages/Alerts.tsx`
+- Remove the tag chip row.
+- Insight and Value shown **side-by-side** in a two-column grid at the top of the card body (Insight left, Value right, `md:grid-cols-2 gap-3`), collapsing to stacked on narrow widths.
 
-- When `filter === "meetings"`, render `<MeetingBundleCard />` list instead of `AanEventCard`.
-- Meeting bundle count = sum of bundles with at least one `pending` item.
-- The Meetings tab pill count reflects pending bundles only.
-- "All" tab does **not** include bundles (keeps existing card semantics clean); bundles live under Meetings only. (Confirmed: this matches the "solely coming from a meeting" phrasing.)
+## 6. `ExecutionArtifact` — state-of-the-art redesign
 
-### 4. New card: `MeetingBundleCard` (overview)
-File: `src/components/aan/autonomous/MeetingBundleCard.tsx` (new)
+Widen and restructure the panel so it stops feeling like a data dump.
 
-Overview card layout (consistent with existing `AanInboxCard` visual language):
-- Header row: meeting icon + **meeting title** + timestamp chip
-- Sub-row: participant avatars (initials chips, max 4 + "+N") + duration
-- Body: 2-3 line **summary** (italic muted)
-- Meta strip: `N action items · M pending`
-- Footer buttons: **Approve all** (primary), **Reject all** (ghost), **View more** (link)
-- Uses same border/spacing tokens as `AanInboxCard`.
+### Layout
+- Panel width: `640px` → `760px` (max `94vw`).
+- Two-zone vertical split, both zones visually distinct:
+  - **Zone A — Details (scrollable)**: content sections.
+  - **Zone B — Talk to Aan (fixed bottom)**: chat, visually separated with heavier top border, background `bg-card`, extra padding (`p-4`), taller input (`h-10`), rounded input with soft shadow, send button as filled primary icon-button. Add subtle "typing…" state. This removes the cramped feel.
 
-### 5. Meeting bundle detail: reuse artifact template
-File: `src/components/aan/autonomous/MeetingBundleArtifact.tsx` (new, mirrors `ExecutionArtifact` structure)
+### Section redesign
+- Snapshot: keep, but replace the flat value line with a **radial progress ring** or a **thin progress bar** for confidence % (visual), plus the projected value as the hero number.
+- Insight & Evidence: convert evidence rows into a **mini bar visualization** — each metric row gets a horizontal bar showing delta magnitude relative to baseline (using existing chart color tokens for positive/negative). Long lists collapse after 3 rows with `Show all (N)`.
+- Reasoning: collapsible (`<Collapsible>` from shadcn) with first item visible, rest hidden behind `Show my full reasoning`.
+- **From meeting**: collapsed by default (`<Collapsible defaultOpen={false}>`), header shows meeting title + date + attendee-count chip; body reveals the full attendees / decisions / action items / callouts / notes tree.
+- Recommendation: unchanged structure, but move controls into a sticky footer bar so they're always reachable.
+- Execution: replace the step list with a **vertical stepper with connecting line** and a top progress bar (`progress / steps.length`).
+- Verification (visible after approve/reject, not only fulfilled):
+  - Show a verification block with: what I did, timestamp, actor, policy id, and diff.
+  - Add a proper **Share** button group (Slack / Teams / Email / Copy link) rendered as a segmented control after action, not as tiny text buttons.
+  - For rejected state, verification block confirms `"I've stood down on this. I won't repeat it for 24h."`.
 
-Right-side panel sections (using the existing `SectionHeader` primitive for consistency):
-- **Meeting** — title, when, duration, participants (full list with roles)
-- **Summary** — 4-6 sentence brief
-- **Transcript excerpt** — scrollable monospace-ish block (mock 15-20 lines)
-- **Action items** — each rendered as an independent row with:
-  - Title + owner + due chip
-  - 2-line detail
-  - Per-item **Approve** / **Reject** buttons (disabled once acted)
-  - Status pill once resolved
-- Sticky footer: **Approve all pending** / **Reject all pending** / Close
+### Header
+- Remove tag chips from header (matches card cleanup).
+- Add an inline first-person status pill next to the title (e.g. `I'm waiting on you`, `I'm on it`, `I wrapped this up`).
 
-### 6. Wiring
-- `Alerts.tsx` imports the new card + artifact, opens artifact via `setDetailFor` equivalent for bundles (separate state `bundleDetailFor`).
-- All state is client-only, in `AanEventsContext`. No backend, no schema changes.
+## 7. `MeetingBundleArtifact` — same design language
 
-## Out of scope
-- No changes to existing `AanInboxCard` design, `ExecutionArtifact` design, Preferences, or any e-commerce alert data.
-- No changes to routing, contexts other than `AanEventsContext`, or backend.
+Apply the same widened layout, collapsible transcript, per-item stepper visuals, sticky action bar, and redesigned chat zone so both artifacts feel consistent.
 
 ## Files touched
-- New: `src/data/mockMeetingTasks.ts`, `src/components/aan/autonomous/MeetingBundleCard.tsx`, `src/components/aan/autonomous/MeetingBundleArtifact.tsx`
-- Edited: `src/components/aan/autonomous/AanEventsContext.tsx`, `src/pages/Alerts.tsx`
+
+- `src/pages/Alerts.tsx` — title, greeting, remove count line, tab labels, sort control, remove stale filter constants.
+- `src/components/aan/autonomous/AanInboxCard.tsx` — remove tags, side-by-side insight/value, first-person copy.
+- `src/components/aan/autonomous/ExecutionArtifact.tsx` — full redesign per §6.
+- `src/components/aan/autonomous/MeetingBundleArtifact.tsx` — mirror redesign per §7.
+- `src/components/aan/autonomous/MeetingBundleCard.tsx` — first-person copy tweaks.
+- `src/components/aan/autonomous/AanEventsContext.tsx` — 30s undo for approve/reject (events + meeting items), first-person toasts.
+- Sidebar/nav registry file(s) — rename "Alerts" label to "Action Items".
+
+## Out of scope
+
+- No backend, schema, or route path changes.
+- No changes to Preferences edit-alert flow (already shipped).
+- No changes to which events surface where (Flow A / Flow B split stays).
