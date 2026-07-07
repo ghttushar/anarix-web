@@ -104,36 +104,28 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
 
   const approve = useCallback((id: string) => {
     setStatus(id, "in_flight");
-    toast.success("Approved. I'll get to work in 30 seconds.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollback(id) },
-    });
+    toast.success("Approved. I'll get to work in 30 seconds.", { duration: UNDO_MS });
+    publishUndoable({ id: `dec:${id}:approve`, label: "Approved. I'll execute in 30s.", onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const reject = useCallback((id: string) => {
     setStatus(id, "rejected");
-    toast.message("Rejected. I'll stand down for 24h.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollback(id) },
-    });
+    toast.message("Rejected. I'll stand down for 24h.", { duration: UNDO_MS });
+    publishUndoable({ id: `dec:${id}:reject`, label: "Rejected. I'll stand down for 24h.", onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const delegateToAan = useCallback((id: string) => {
     setStatus(id, "with_aan");
-    toast.success("On it. I'll draft, execute, and report back.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollback(id) },
-    });
+    toast.success("On it. I'll draft, execute, and report back.", { duration: UNDO_MS });
+    publishUndoable({ id: `dec:${id}:delegate`, label: "You handed it to me. I'll take it from here.", onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const snooze = useCallback((id: string, choice: SnoozeChoice) => {
     const until = Date.now() + SNOOZE_MS[choice];
     setStatus(id, "snoozed", { snoozedUntil: until });
     const label = choice === "1h" ? "1 hour" : choice === "tomorrow" ? "tomorrow" : "next week";
-    toast.message(`Snoozed until ${label}.`, {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollback(id) },
-    });
+    toast.message(`Snoozed until ${label}.`, { duration: UNDO_MS });
+    publishUndoable({ id: `dec:${id}:snooze`, label: `Snoozed until ${label}.`, onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const bulkApprove = useCallback((ids: string[]) => {
