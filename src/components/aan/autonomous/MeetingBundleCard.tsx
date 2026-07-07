@@ -103,16 +103,6 @@ export function MeetingBundleCard({ bundle, onOpenDetails }: Props) {
         </span>
       </div>
 
-      {/* Tags */}
-      {bundle.tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1">
-          {bundle.tags.map((t) => (
-            <span key={t} className="text-[10px] rounded bg-muted px-1.5 py-0.5 text-foreground/70">
-              {t}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Footer */}
       <div className="mt-3.5 flex items-center justify-between gap-2 pt-2.5 border-t border-border/40">
