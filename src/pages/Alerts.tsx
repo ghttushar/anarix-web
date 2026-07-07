@@ -68,8 +68,9 @@ function timeLabel(ts: number): string {
 }
 
 export default function AlertsPage() {
-  const { events, pendingCount, criticalCount, liveMode, clearFulfilled } = useAanEvents();
+  const { events, pendingCount, criticalCount, liveMode, clearFulfilled, meetingBundles, meetingPendingCount } = useAanEvents();
   const [detailFor, setDetailFor] = useState<AanEvent | null>(null);
+  const [bundleDetailFor, setBundleDetailFor] = useState<MeetingTaskBundle | null>(null);
   const [filter, setFilter] = useState<FilterKey>("all");
 
   const materialEvents = useMemo(
