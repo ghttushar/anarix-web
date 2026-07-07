@@ -108,6 +108,7 @@ const PRESENCE_MESSAGES = [
 
 export function AanEventsProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<AanEvent[]>(() => seedEvents());
+  const [meetingBundles, setMeetingBundles] = useState<MeetingTaskBundle[]>(() => MEETING_TASK_BUNDLES);
   const [liveMode, setLiveMode] = useState(false);
   const [presenceIndex, setPresenceIndex] = useState(0);
   const liveTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
