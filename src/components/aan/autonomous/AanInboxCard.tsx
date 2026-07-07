@@ -51,7 +51,7 @@ export function AanEventCard({ event, onOpenDetails, channelLabel, channel }: Pr
   const valueText = isFulfilled
     ? s.fulfillmentNote
     : isRejected
-    ? "Declined. Aan won't repeat this for 24h."
+    ? "I stood down. I won't repeat this for 24h."
     : s.impact;
 
   return (
