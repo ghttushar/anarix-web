@@ -271,8 +271,11 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
 
   const pendingCount = useMemo(() => events.filter((e) => e.lifecycle === "awaiting_approval" || e.lifecycle === "detected" || e.lifecycle === "analyzing").length, [events]);
   const criticalCount = useMemo(() => events.filter((e) => (e.lifecycle === "awaiting_approval" || e.lifecycle === "detected") && e.scenario.severity === "critical").length, [events]);
+  const meetingPendingCount = useMemo(
+    () => meetingBundles.filter((b) => b.actionItems.some((it) => it.status === "pending")).length,
+    [meetingBundles]
+  );
   const autonomyLevel: "advisory" | "assisted" | "autonomous" = useMemo(() => {
-    // Static for mockup; will be driven by real policy count in the future.
     return "assisted";
   }, []);
 
@@ -289,6 +292,12 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
     presenceIndex,
     autonomyLevel,
     clearFulfilled,
+    meetingBundles,
+    meetingPendingCount,
+    approveMeetingItem,
+    rejectMeetingItem,
+    approveAllMeetingItems,
+    rejectAllMeetingItems,
   };
 
   return <AanEventsContext.Provider value={value}>{children}</AanEventsContext.Provider>;
