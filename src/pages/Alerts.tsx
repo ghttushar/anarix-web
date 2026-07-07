@@ -288,6 +288,7 @@ function AlertsInner() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
             {(tab === "decide" || tab === "handled" || tab === "in_flight") && (
               <>
                 <FilterSheet
