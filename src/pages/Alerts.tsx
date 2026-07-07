@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { ActionsProvider, useActionsStore } from "@/state/actionsStore";
+import { SelectionProvider, useSelection } from "@/state/selectionStore";
 import { DecisionRow } from "@/components/actions/DecisionRow";
 import { DigestRow } from "@/components/actions/DigestRow";
 import { EmptyState } from "@/components/actions/EmptyState";
@@ -13,7 +14,15 @@ import { FilterSheet, EMPTY_FILTER, countActiveFilters, type FilterState } from 
 import { MeetingBundleRow } from "@/components/actions/MeetingBundleRow";
 import { MeetingWorkspace } from "@/components/actions/MeetingWorkspace";
 import { QuestionRow } from "@/components/actions/QuestionRow";
+import { BulkActionBar } from "@/components/actions/BulkActionBar";
+import { KeyboardHelpOverlay } from "@/components/actions/KeyboardHelpOverlay";
+import { useDecideKeyboard } from "@/components/actions/useDecideKeyboard";
+import { OverloadBanner } from "@/components/actions/OverloadBanner";
+import { SourceStatusStrip } from "@/components/actions/SourceStatusStrip";
+import { HandledFilters, type HandledResolution } from "@/components/actions/HandledFilters";
 import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
+import { Keyboard } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Decision } from "@/data/mockDecisions";
 
 type TabKey = "decide" | "meetings" | "questions" | "in_flight" | "handled" | "digest";
@@ -26,6 +35,8 @@ const TAB_LABELS: Record<TabKey, string> = {
   handled: "Handled",
   digest: "Digest",
 };
+
+const DECIDE_CAP = 25;
 
 const severityRank: Record<Decision["severity"], number> = { critical: 0, opportunity: 1, fyi: 2 };
 const sourceRank: Record<Decision["source"], number> = { meeting: 0, email: 1, slack: 2, teams: 3, anarix: 4, aan: 5 };
@@ -52,12 +63,54 @@ function bucketLabel(ts: number): string {
   return "Earlier";
 }
 
+/** Collapse decisions sharing a `dupeKey` into a primary + `duplicates[]`. */
+interface GroupedDecision {
+  primary: Decision;
+  duplicates: Decision[];
+}
+function groupDuplicates(items: Decision[]): GroupedDecision[] {
+  const seen = new Map<string, GroupedDecision>();
+  const out: GroupedDecision[] = [];
+  for (const d of items) {
+    if (!d.dupeKey) {
+      out.push({ primary: d, duplicates: [] });
+      continue;
+    }
+    const existing = seen.get(d.dupeKey);
+    if (!existing) {
+      const g: GroupedDecision = { primary: d, duplicates: [] };
+      seen.set(d.dupeKey, g);
+      out.push(g);
+    } else {
+      // Keep the highest-value one as primary
+      const cur = valueMagnitude(existing.primary.valueKind, existing.primary.valueCents);
+      const inc = valueMagnitude(d.valueKind, d.valueCents);
+      if (inc > cur) {
+        existing.duplicates.push(existing.primary);
+        existing.primary = d;
+      } else {
+        existing.duplicates.push(d);
+      }
+    }
+  }
+  return out;
+}
+
 function AlertsInner() {
   const { decisions, aboveThreshold, belowThreshold, digestItems, meetings, openQuestionsCount, questions } = useActionsStore();
+  const { registerOrder, clear } = useSelection();
   const [tab, setTab] = useState<TabKey>("decide");
   const [sort, setSort] = useState<SortKey>("value");
   const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
   const [openBundleId, setOpenBundleId] = useState<string | null>(meetings[0]?.id ?? null);
+  const [handledRes, setHandledRes] = useState<HandledResolution>("all");
+  const [showAllOverflow, setShowAllOverflow] = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+
+  useDecideKeyboard(tab === "decide");
+
+  // Clear selection whenever we leave Decide.
+  useEffect(() => { if (tab !== "decide") clear(); }, [tab, clear]);
 
   // ---- source pool per tab ----
   const pool: Decision[] = useMemo(() => {
@@ -65,10 +118,12 @@ function AlertsInner() {
       return aboveThreshold.filter((d) => d.status === "open" || d.status === "snoozed");
     if (tab === "in_flight")
       return decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan");
-    if (tab === "handled")
-      return decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
+    if (tab === "handled") {
+      const base = decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
+      return handledRes === "all" ? base : base.filter((d) => d.status === handledRes);
+    }
     return [];
-  }, [tab, decisions, aboveThreshold]);
+  }, [tab, decisions, aboveThreshold, handledRes]);
 
   // ---- filter ----
   const filtered = useMemo(() => pool.filter((d) => {
@@ -94,16 +149,36 @@ function AlertsInner() {
     return s;
   }, [filtered, sort]);
 
-  // ---- group by day ----
-  const grouped = useMemo(() => {
-    const m = new Map<string, Decision[]>();
-    for (const d of sorted) {
-      const b = bucketLabel(d.createdAt);
+  // ---- collapse duplicates (Decide only — Handled/InFlight keep raw list) ----
+  const grouped: GroupedDecision[] = useMemo(
+    () => (tab === "decide" ? groupDuplicates(sorted) : sorted.map((d) => ({ primary: d, duplicates: [] }))),
+    [sorted, tab],
+  );
+
+  // ---- overload cap ----
+  const visibleGroups = useMemo(
+    () => (tab === "decide" && !showAllOverflow ? grouped.slice(0, DECIDE_CAP) : grouped),
+    [grouped, tab, showAllOverflow],
+  );
+  const hiddenGroups = tab === "decide" && !showAllOverflow ? grouped.slice(DECIDE_CAP) : [];
+  const hiddenValueCents = hiddenGroups.reduce((s, g) => s + valueMagnitude(g.primary.valueKind, g.primary.valueCents), 0);
+
+  // ---- day buckets ----
+  const bucketed = useMemo(() => {
+    const m = new Map<string, GroupedDecision[]>();
+    for (const g of visibleGroups) {
+      const b = bucketLabel(g.primary.createdAt);
       if (!m.has(b)) m.set(b, []);
-      m.get(b)!.push(d);
+      m.get(b)!.push(g);
     }
     return Array.from(m.entries());
-  }, [sorted]);
+  }, [visibleGroups]);
+
+  // Register order for keyboard nav (Decide only)
+  useEffect(() => {
+    if (tab !== "decide") return;
+    registerOrder(visibleGroups.map((g) => g.primary.id));
+  }, [tab, visibleGroups, registerOrder]);
 
   // ---- counts for tab badges ----
   const counts = useMemo(() => ({
@@ -114,6 +189,16 @@ function AlertsInner() {
     handled: decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status)).length,
     digest: digestItems.length + belowThreshold.length,
   }), [aboveThreshold, decisions, digestItems, belowThreshold, meetings.length, openQuestionsCount]);
+
+  const handledCounts = useMemo(() => {
+    const base = decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
+    return {
+      all: base.length,
+      completed: base.filter((d) => d.status === "completed").length,
+      rejected: base.filter((d) => d.status === "rejected").length,
+      expired: base.filter((d) => d.status === "expired").length,
+    };
+  }, [decisions]);
 
   // ---- greeting numbers ----
   const openTotalCents = aboveThreshold
@@ -134,7 +219,7 @@ function AlertsInner() {
           <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
             <AanMascot size={30} state="idle" interactive={false} />
           </div>
-          <div>
+          <div className="flex-1">
             <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Aan · Action Items</div>
             <h1 className="font-heading text-2xl font-semibold text-foreground leading-tight">
               Hi Tushar — {openCount} decision{openCount === 1 ? "" : "s"} today worth <span className="text-primary">{openTotalFmt}</span>.
@@ -142,6 +227,9 @@ function AlertsInner() {
             <p className="text-[13px] text-muted-foreground mt-1 max-w-2xl">
               I'm watching your marketplaces, meetings, and inboxes in the background. These need a call from you.
             </p>
+          </div>
+          <div className="hidden md:flex items-center gap-1 text-[10.5px] text-muted-foreground shrink-0 pt-1">
+            <Keyboard className="h-3 w-3" /> press <kbd className="rounded border border-border bg-muted/60 px-1 font-mono">?</kbd> for shortcuts
           </div>
         </header>
 
@@ -179,32 +267,54 @@ function AlertsInner() {
           <div className="ml-auto flex items-center gap-2">
             {(tab === "decide" || tab === "handled" || tab === "in_flight") && (
               <>
-                <FilterSheet value={filter} onChange={setFilter} activeCount={countActiveFilters(filter)} />
+                <FilterSheet
+                  value={filter}
+                  onChange={setFilter}
+                  activeCount={countActiveFilters(filter)}
+                  externalOpen={filterSheetOpen}
+                  onExternalOpenChange={setFilterSheetOpen}
+                />
                 <SortMenu value={sort} onChange={setSort} />
               </>
             )}
           </div>
         </div>
 
+        {/* Handled resolution chips */}
+        {tab === "handled" && counts.handled > 0 && (
+          <div className="mb-3">
+            <HandledFilters value={handledRes} onChange={setHandledRes} counts={handledCounts} />
+          </div>
+        )}
+
         {/* Body */}
         <ScrollArea className="h-[calc(100vh-280px)] pr-3">
           {tab === "decide" && (
-            <DecideBody grouped={grouped} digestItems={digestItems} digestTotal={digestTotal} />
+            <DecideBody
+              bucketed={bucketed}
+              hiddenCount={hiddenGroups.length}
+              hiddenValueCents={hiddenValueCents}
+              onShowAll={() => setShowAllOverflow(true)}
+              onSortByValue={() => setSort("value")}
+              onOpenFilter={() => setFilterSheetOpen(true)}
+              digestItems={digestItems}
+              digestTotal={digestTotal}
+            />
           )}
 
           {tab === "in_flight" && (
-            grouped.length === 0 ? (
+            bucketed.length === 0 ? (
               <EmptyState
                 headline="Nothing running right now."
                 body="When you approve or hand something to me, it shows up here with live progress."
               />
-            ) : <FlatList grouped={grouped} />
+            ) : <FlatList bucketed={bucketed} />
           )}
 
           {tab === "handled" && (
-            grouped.length === 0 ? (
+            bucketed.length === 0 ? (
               <EmptyState headline="Your handled ledger is empty." body="Everything you close in the last 14 days lives here." />
-            ) : <FlatList grouped={grouped} />
+            ) : <FlatList bucketed={bucketed} />
           )}
 
           {tab === "digest" && (
@@ -227,34 +337,71 @@ function AlertsInner() {
           )}
         </ScrollArea>
       </div>
+
+      {/* Floating bulk bar + keyboard help — global to Decide */}
+      <BulkActionBar />
+      <KeyboardHelpOverlay />
     </AppLayout>
   );
 }
 
 function DecideBody({
-  grouped, digestItems, digestTotal,
+  bucketed, hiddenCount, hiddenValueCents,
+  onShowAll, onSortByValue, onOpenFilter,
+  digestItems, digestTotal,
 }: {
-  grouped: [string, Decision[]][];
+  bucketed: [string, GroupedDecision[]][];
+  hiddenCount: number;
+  hiddenValueCents: number;
+  onShowAll: () => void;
+  onSortByValue: () => void;
+  onOpenFilter: () => void;
   digestItems: ReturnType<typeof useActionsStore>["digestItems"];
   digestTotal: number;
 }) {
-  if (grouped.length === 0 && digestItems.length === 0) {
+  if (bucketed.length === 0 && digestItems.length === 0) {
     return <EmptyState headline="You're clear." body="I'll surface something the moment it matters." />;
   }
   return (
-    <div className="space-y-8">
-      {grouped.map(([bucket, list]) => (
+    <div className="space-y-6">
+      {/* Source status — only shows if anything degraded */}
+      <SourceStatusStrip />
+
+      {bucketed.map(([bucket, list]) => (
         <section key={bucket}>
           <div className="mb-2 flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
             <span className="h-px flex-1 bg-border/60" />
-            <span className="text-[10.5px] text-muted-foreground">{list.length} item{list.length === 1 ? "" : "s"}</span>
+            <span className="text-[10.5px] text-muted-foreground">{list.length} decision{list.length === 1 ? "" : "s"}</span>
           </div>
           <div className="rounded-lg border border-border bg-card overflow-hidden">
-            {list.map((d) => <DecisionRow key={d.id} decision={d} />)}
+            {list.map((g) => (
+              <DecisionRow
+                key={g.primary.id}
+                decision={g.primary}
+                duplicates={g.duplicates}
+                interactive
+              />
+            ))}
           </div>
         </section>
       ))}
+
+      {hiddenCount > 0 && (
+        <div className="space-y-1.5">
+          <OverloadBanner
+            hiddenCount={hiddenCount}
+            hiddenValueCents={hiddenValueCents}
+            onSortByValue={onSortByValue}
+            onOpenFilter={onOpenFilter}
+          />
+          <div className="text-center">
+            <Button variant="ghost" size="sm" onClick={onShowAll} className="text-[11.5px] text-muted-foreground">
+              Show all {hiddenCount} anyway
+            </Button>
+          </div>
+        </div>
+      )}
 
       {digestItems.length > 0 && (
         <section>
@@ -269,17 +416,17 @@ function DecideBody({
   );
 }
 
-function FlatList({ grouped }: { grouped: [string, Decision[]][] }) {
+function FlatList({ bucketed }: { bucketed: [string, GroupedDecision[]][] }) {
   return (
     <div className="space-y-8">
-      {grouped.map(([bucket, list]) => (
+      {bucketed.map(([bucket, list]) => (
         <section key={bucket}>
           <div className="mb-2 flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
             <span className="h-px flex-1 bg-border/60" />
           </div>
           <div className="rounded-lg border border-border bg-card overflow-hidden">
-            {list.map((d) => <DecisionRow key={d.id} decision={d} />)}
+            {list.map((g) => <DecisionRow key={g.primary.id} decision={g.primary} duplicates={g.duplicates} />)}
           </div>
         </section>
       ))}
@@ -352,7 +499,9 @@ function QuestionsBody() {
 export default function AlertsPage() {
   return (
     <ActionsProvider>
-      <AlertsInner />
+      <SelectionProvider>
+        <AlertsInner />
+      </SelectionProvider>
     </ActionsProvider>
   );
 }

@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
-import { ChevronDown, ChevronRight, ExternalLink, MoreHorizontal, X, Play, ArrowRight } from "lucide-react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { ChevronDown, ChevronRight, ExternalLink, MoreHorizontal, X, Play, ArrowRight, Copy, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -11,15 +12,17 @@ import { ValuePill } from "./ValuePill";
 import { SourceGlyph } from "./SourceGlyph";
 import { ShareMenu } from "./ShareMenu";
 import { SnoozeMenu } from "./SnoozeMenu";
-import { AttendeePill } from "./AttendeePill";
 import type { Decision } from "@/data/mockDecisions";
 import { useActionsStore, type SnoozeChoice } from "@/state/actionsStore";
 import { formatValue } from "@/lib/decisions/valueFormat";
+import { useSelection } from "@/state/selectionStore";
 
 interface Props {
   decision: Decision;
-  selected?: boolean;
-  onToggleSelect?: () => void;
+  /** Other decisions merged into this row via `dupeKey`. */
+  duplicates?: Decision[];
+  /** If true, this row participates in Decide selection/keyboard nav. */
+  interactive?: boolean;
 }
 
 const STATUS_TONE: Record<Decision["status"], { label: string; className: string }> = {
@@ -32,25 +35,84 @@ const STATUS_TONE: Record<Decision["status"], { label: string; className: string
   expired:    { label: "Expired",      className: "text-muted-foreground" },
 };
 
-export function DecisionRow({ decision: d, selected, onToggleSelect }: Props) {
+/** Live progress for in-flight items: currentStep index + % done. */
+function useLiveProgress(startedAt: number | undefined, steps: Decision["steps"]) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!startedAt) return;
+    const id = setInterval(() => tick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  return useMemo(() => {
+    if (!startedAt || steps.length === 0) return { currentStep: 0, pct: 0, elapsed: 0, total: 0 };
+    const total = steps.reduce((s, x) => s + x.etaSec, 0);
+    const elapsed = Math.max(0, (Date.now() - startedAt) / 1000);
+    let acc = 0;
+    let currentStep = steps.length;
+    for (let i = 0; i < steps.length; i++) {
+      acc += steps[i].etaSec;
+      if (elapsed < acc) { currentStep = i; break; }
+    }
+    return { currentStep, pct: Math.min(100, (elapsed / total) * 100), elapsed, total };
+  }, [startedAt, steps]);
+}
+
+export function DecisionRow({ decision: d, duplicates = [], interactive = false }: Props) {
   const [open, setOpen] = useState(false);
   const { approve, reject, delegateToAan, snooze } = useActionsStore();
+  // Selection context is optional — safely no-op when the row isn't inside a SelectionProvider.
+  let sel: ReturnType<typeof useSelection> | null = null;
+  try { sel = useSelection(); } catch { sel = null; }
+  const isSelected = interactive && sel ? sel.isSelected(d.id) : false;
+  const isFocused = interactive && sel ? sel.focusedId === d.id : false;
+  const rowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isFocused) rowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [isFocused]);
+
   const isActionable = d.status === "open";
   const isTerminal = ["completed", "rejected", "expired"].includes(d.status);
   const tone = STATUS_TONE[d.status];
+  const isStale = d.status === "snoozed" && d.snoozedUntil !== undefined && d.snoozedUntil < Date.now();
 
   const onSnooze = useCallback((c: SnoozeChoice) => snooze(d.id, c), [d.id, snooze]);
+  const live = useLiveProgress(d.startedAt, d.steps);
 
   return (
     <div
+      ref={rowRef}
+      data-decision-id={d.id}
       className={cn(
         "group border-b border-border/50 transition-colors",
-        selected && "bg-primary/[0.04]",
+        isSelected && "bg-primary/[0.06]",
+        isFocused && "ring-1 ring-primary/50 ring-inset bg-primary/[0.04]",
         !open && "hover:bg-muted/30",
       )}
     >
       {/* Row — 56px */}
       <div className="flex items-center gap-3 px-3 h-14">
+        {/* Selection checkbox (interactive rows only) */}
+        {interactive && sel && (
+          <div
+            className={cn(
+              "shrink-0 transition-opacity",
+              isSelected || isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            )}
+          >
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => sel!.toggle(d.id)}
+              onClick={(e) => {
+                if ((e as unknown as MouseEvent).shiftKey) {
+                  e.preventDefault();
+                  sel!.toggle(d.id, true);
+                }
+              }}
+              aria-label="Select decision"
+            />
+          </div>
+        )}
+
         {/* Expand toggle */}
         <button
           aria-label={open ? "Collapse" : "Expand"}
@@ -60,8 +122,17 @@ export function DecisionRow({ decision: d, selected, onToggleSelect }: Props) {
           {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         </button>
 
-        {/* Source glyph */}
-        <SourceGlyph source={d.source} refLabel={d.sourceRef.label} />
+        {/* Source glyph — stacked cluster if duplicates from other sources */}
+        {duplicates.length > 0 && duplicates.some((x) => x.source !== d.source) ? (
+          <div className="flex items-center -space-x-1">
+            <SourceGlyph source={d.source} refLabel={d.sourceRef.label} />
+            {Array.from(new Set(duplicates.map((x) => x.source).filter((s) => s !== d.source))).slice(0, 2).map((s) => (
+              <SourceGlyph key={s} source={s} size={11} />
+            ))}
+          </div>
+        ) : (
+          <SourceGlyph source={d.source} refLabel={d.sourceRef.label} />
+        )}
 
         {/* Value pill */}
         <ValuePill cents={d.valueCents} kind={d.valueKind} cadence={d.cadence} />
@@ -71,6 +142,22 @@ export function DecisionRow({ decision: d, selected, onToggleSelect }: Props) {
           <span className="text-[13.5px] text-foreground truncate" title={d.insight}>
             {d.insight}
           </span>
+          {duplicates.length > 0 && (
+            <span
+              className="text-[10.5px] font-mono font-semibold text-primary shrink-0 inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5"
+              title={`Merged with ${duplicates.length} duplicate signal${duplicates.length === 1 ? "" : "s"}`}
+            >
+              <Copy className="h-2.5 w-2.5" /> ×{duplicates.length + 1}
+            </span>
+          )}
+          {isStale && (
+            <span
+              className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 shrink-0 inline-flex items-center gap-1 rounded bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 uppercase tracking-wider"
+              title="Data may be stale — this item returned from snooze"
+            >
+              <AlertCircle className="h-2.5 w-2.5" /> Stale
+            </span>
+          )}
           {d.meetingRef && (
             <span className="text-[10.5px] text-muted-foreground shrink-0">
               from meeting
@@ -165,14 +252,35 @@ export function DecisionRow({ decision: d, selected, onToggleSelect }: Props) {
             {/* Evidence */}
             {d.evidence && <EvidenceBlock evidence={d.evidence} />}
 
-            {/* What I'll do */}
+            {/* What I'll do — live-ticking ETAs when in flight */}
             {d.steps.length > 0 && (
               <section>
                 <div className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground mb-1.5">
-                  What I'll do
+                  {d.status === "in_flight" ? "What I'm doing now" : "What I'll do"}
                 </div>
-                <StepList steps={d.steps} currentStep={d.status === "in_flight" ? 1 : 0} />
+                <StepList steps={d.steps} currentStep={d.status === "in_flight" ? live.currentStep : 0} />
               </section>
+            )}
+
+            {/* Duplicates — collapsed compact list of merged signals */}
+            {duplicates.length > 0 && (
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-[11.5px] text-primary hover:underline">
+                  <ChevronRight className="h-3 w-3 transition-transform data-[state=open]:rotate-90" />
+                  {duplicates.length} duplicate signal{duplicates.length === 1 ? "" : "s"} merged
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-1.5 rounded-md border border-border/60 bg-card divide-y divide-border/50">
+                  {duplicates.map((dup) => (
+                    <div key={dup.id} className="flex items-center gap-2 px-2.5 py-1.5 text-[11.5px]">
+                      <SourceGlyph source={dup.source} size={10} />
+                      <span className="text-foreground/80 flex-1 truncate" title={dup.insight}>{dup.insight}</span>
+                      <span className="text-[10.5px] text-muted-foreground font-mono shrink-0">
+                        {new Date(dup.sourceRef.ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                      </span>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
             )}
 
             {/* From meeting — collapsed by default */}
@@ -224,14 +332,19 @@ export function DecisionRow({ decision: d, selected, onToggleSelect }: Props) {
               </div>
             )}
 
-            {/* In-flight progress */}
+            {/* In-flight progress — live */}
             {d.status === "in_flight" && (
               <div className="pt-2 border-t border-border/40">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10.5px] uppercase tracking-wider font-semibold text-primary">Running</span>
-                  <span className="text-[10.5px] text-muted-foreground">1 of {d.steps.length}</span>
+                  <span className="text-[10.5px] uppercase tracking-wider font-semibold text-primary flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    Running · step {Math.min(live.currentStep + 1, d.steps.length)} of {d.steps.length}
+                  </span>
+                  <span className="text-[10.5px] text-muted-foreground font-mono tabular-nums">
+                    {Math.round(live.elapsed)}s / ~{live.total}s
+                  </span>
                 </div>
-                <Progress value={(1 / Math.max(1, d.steps.length)) * 100} className="h-1" />
+                <Progress value={live.pct} className="h-1" />
               </div>
             )}
           </div>

@@ -39,11 +39,19 @@ interface Props {
   value: FilterState;
   onChange: (f: FilterState) => void;
   activeCount: number;
+  /** Optional controlled-open override, so a banner elsewhere can force the sheet open. */
+  externalOpen?: boolean;
+  onExternalOpenChange?: (o: boolean) => void;
 }
 
-export function FilterSheet({ value, onChange, activeCount }: Props) {
+export function FilterSheet({ value, onChange, activeCount, externalOpen, onExternalOpenChange }: Props) {
   const [draft, setDraft] = useState<FilterState>(value);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (o: boolean) => {
+    if (externalOpen !== undefined) onExternalOpenChange?.(o);
+    else setInternalOpen(o);
+  };
 
   const toggle = <T,>(set: Set<T>, k: T): Set<T> => {
     const n = new Set(set);

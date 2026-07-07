@@ -55,6 +55,10 @@ export interface Decision {
   createdAt: number;
   updatedAt: number;
   snoozedUntil?: number;
+  /** Set when Aan started executing (for live ETA). */
+  startedAt?: number;
+  /** Items that share a `dupeKey` within ~6h collapse into one row with a ×N chip. */
+  dupeKey?: string;
   meetingRef?: { bundleId: string; title: string; excerpt: string };
   evidence?: DecisionEvidence;
   steps: DecisionStep[];
@@ -136,6 +140,7 @@ export const MOCK_DECISIONS: Decision[] = [
     status: "open",
     createdAt: now - 18 * MIN,
     updatedAt: now - 18 * MIN,
+    dupeKey: "cs-refund-batch-B2214",
     evidence: {
       kind: "table",
       table: {
@@ -147,6 +152,28 @@ export const MOCK_DECISIONS: Decision[] = [
         ],
       },
     },
+    steps: [
+      { label: "Refund 3 orders", etaSec: 6 },
+      { label: "Notify Maria in #cs-urgent", etaSec: 2 },
+    ],
+  },
+  // Duplicate signal for the same batch — same dupeKey, arrives from anarix
+  {
+    id: "d-refund-cs-dup",
+    source: "anarix",
+    sourceRef: { label: "CS monitor · batch #B-2214", ts: now - 14 * MIN },
+    valueCents: 124_000,
+    valueKind: "cost",
+    cadence: "one_time",
+    valueBasis: "Anarix CS monitor flagged the same batch independently.",
+    insight: "CS monitor flagged batch #B-2214 (same as Slack escalation).",
+    actionVerb: "Approve refunds",
+    domain: "cs",
+    severity: "critical",
+    status: "open",
+    createdAt: now - 14 * MIN,
+    updatedAt: now - 14 * MIN,
+    dupeKey: "cs-refund-batch-B2214",
     steps: [
       { label: "Refund 3 orders", etaSec: 6 },
       { label: "Notify Maria in #cs-urgent", etaSec: 2 },
@@ -263,13 +290,14 @@ export const MOCK_DECISIONS: Decision[] = [
     status: "in_flight",
     createdAt: now - 90 * MIN,
     updatedAt: now - 4 * MIN,
+    startedAt: now - 8 * 1000, // 8s ago — puts us in the middle of step 2
     steps: [
       { label: "Snapshot current schedules", etaSec: 6 },
       { label: "Push new bid modifiers", etaSec: 14 },
       { label: "Verify 24h delta", etaSec: 8 },
     ],
   },
-  // Handled — already completed
+  // Handled — completed
   {
     id: "d-budget-auto",
     source: "aan",
@@ -286,6 +314,42 @@ export const MOCK_DECISIONS: Decision[] = [
     createdAt: now - 8 * HOUR,
     updatedAt: now - 7 * HOUR,
     steps: [{ label: "Shift $600/day across 3 campaigns", etaSec: 4 }],
+  },
+  // Handled — rejected
+  {
+    id: "d-rejected-bid-lift",
+    source: "aan",
+    sourceRef: { label: "Aan — bid ceiling proposal", ts: now - 10 * HOUR },
+    valueCents: 88_000,
+    valueKind: "gain",
+    cadence: "monthly",
+    valueBasis: "Would lift placement modifier +85% on 3 hero SKUs.",
+    insight: "Proposed lifting bid ceiling on 3 hero SKUs — you passed.",
+    actionVerb: "Lift ceiling",
+    domain: "campaign",
+    severity: "opportunity",
+    status: "rejected",
+    createdAt: now - 10 * HOUR,
+    updatedAt: now - 9 * HOUR,
+    steps: [{ label: "Apply +85% modifier", etaSec: 4 }],
+  },
+  // Handled — expired
+  {
+    id: "d-expired-flash",
+    source: "anarix",
+    sourceRef: { label: "Flash promo · window closed", ts: now - 26 * HOUR },
+    valueCents: 32_000,
+    valueKind: "gain",
+    cadence: "one_time",
+    valueBasis: "24h flash promo window closed before you decided.",
+    insight: "Flash promo window closed before you had a chance to weigh in.",
+    actionVerb: "Enroll",
+    domain: "campaign",
+    severity: "fyi",
+    status: "expired",
+    createdAt: now - 30 * HOUR,
+    updatedAt: now - 6 * HOUR,
+    steps: [{ label: "Enroll in flash promo", etaSec: 4 }],
   },
 ];
 
