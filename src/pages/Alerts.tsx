@@ -2,325 +2,293 @@ import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { AanMascot } from "@/components/aan/AanMascot";
-import { AanEventCard } from "@/components/aan/autonomous/AanInboxCard";
-import { ExecutionArtifact } from "@/components/aan/autonomous/ExecutionArtifact";
-import { useAanEvents, AanEvent } from "@/components/aan/autonomous/AanEventsContext";
-import { MeetingBundleCard } from "@/components/aan/autonomous/MeetingBundleCard";
-import { MeetingBundleArtifact } from "@/components/aan/autonomous/MeetingBundleArtifact";
-import { MeetingTaskBundle } from "@/data/mockMeetingTasks";
 import { cn } from "@/lib/utils";
+import { AanMascot } from "@/components/aan/AanMascot";
+import { ActionsProvider, useActionsStore } from "@/state/actionsStore";
+import { DecisionRow } from "@/components/actions/DecisionRow";
+import { DigestRow } from "@/components/actions/DigestRow";
+import { EmptyState } from "@/components/actions/EmptyState";
+import { SortMenu, type SortKey } from "@/components/actions/SortMenu";
+import { FilterSheet, EMPTY_FILTER, countActiveFilters, type FilterState } from "@/components/actions/FilterSheet";
+import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
+import type { Decision } from "@/data/mockDecisions";
 
-type FilterKey =
-  | "all"
-  | "approval"
-  | "overnight"
-  | "meetings"
-  | "live"
-  | "executing"
-  | "done";
+type TabKey = "decide" | "meetings" | "questions" | "in_flight" | "handled" | "digest";
 
-type SortKey = "latest" | "value" | "critical";
-
-function impactMagnitude(impact: string): number {
-  const m = impact.match(/([\d.,]+)/);
-  if (!m) return 0;
-  const n = parseFloat(m[1].replace(/,/g, ""));
-  if (Number.isNaN(n)) return 0;
-  if (/k/i.test(impact)) return n * 1_000;
-  if (/m/i.test(impact)) return n * 1_000_000;
-  return n;
-}
-const severityRank: Record<string, number> = { critical: 0, opportunity: 1, fyi: 2 };
-
-
-const KEPT_DOMAINS = new Set(["campaign", "retail", "profitability", "inventory"]);
-
-type Channel = "overnight" | "meeting" | "live";
-
-function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-/**
- * Deterministic channel mix for e-commerce alerts (Flow A):
- *  - Overnight (morning brief): created before 8am OR older than ~10h ago.
- *  - Live: everything else during the working day.
- * Meeting-originated tasks (Flow B) are a separate stream — they never
- * appear as "meeting" channel here.
- */
-function inferChannel(e: AanEvent): Channel {
-  const created = new Date(e.createdAt);
-  const hour = created.getHours();
-  const ageHours = (Date.now() - e.createdAt) / 3_600_000;
-  if (hour < 8 || ageHours > 10) return "overnight";
-  return "live";
-}
-
-const CHANNEL_LABEL: Record<Channel, string> = {
-  overnight: "Overnight",
-  meeting: "From meeting",
-  live: "Live",
+const TAB_LABELS: Record<TabKey, string> = {
+  decide: "Decide",
+  meetings: "From meetings",
+  questions: "Questions",
+  in_flight: "In flight",
+  handled: "Handled",
+  digest: "Digest",
 };
+
+const severityRank: Record<Decision["severity"], number> = { critical: 0, opportunity: 1, fyi: 2 };
+const sourceRank: Record<Decision["source"], number> = { meeting: 0, email: 1, slack: 2, teams: 3, anarix: 4, aan: 5 };
+
+function inWindow(ts: number, win: FilterState["window"]): boolean {
+  if (win === "any") return true;
+  const now = new Date();
+  const d = new Date(ts);
+  if (win === "today") return d.toDateString() === now.toDateString();
+  if (win === "yesterday") {
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    return d.toDateString() === y.toDateString();
+  }
+  if (win === "week") return Date.now() - ts < 7 * 24 * 3600 * 1000;
+  return true;
+}
 
 function bucketLabel(ts: number): string {
   const d = new Date(ts);
   const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
-  if (sameDay) return "Today";
-  const y = new Date(now);
-  y.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const y = new Date(now); y.setDate(now.getDate() - 1);
   if (d.toDateString() === y.toDateString()) return "Yesterday";
   return "Earlier";
 }
 
-function timeLabel(ts: number): string {
-  return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
+function AlertsInner() {
+  const { decisions, aboveThreshold, belowThreshold, digestItems } = useActionsStore();
+  const [tab, setTab] = useState<TabKey>("decide");
+  const [sort, setSort] = useState<SortKey>("value");
+  const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
 
-export default function AlertsPage() {
-  const { events, pendingCount, criticalCount, liveMode, clearFulfilled, meetingBundles, meetingPendingCount } = useAanEvents();
-  const [detailFor, setDetailFor] = useState<AanEvent | null>(null);
-  const [bundleDetailFor, setBundleDetailFor] = useState<MeetingTaskBundle | null>(null);
-  const [filter, setFilter] = useState<FilterKey>("all");
-  const [sort, setSort] = useState<SortKey>("latest");
+  // ---- source pool per tab ----
+  const pool: Decision[] = useMemo(() => {
+    if (tab === "decide")
+      return aboveThreshold.filter((d) => d.status === "open" || d.status === "snoozed");
+    if (tab === "in_flight")
+      return decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan");
+    if (tab === "handled")
+      return decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
+    return [];
+  }, [tab, decisions, aboveThreshold]);
 
-  const materialEvents = useMemo(
-    () => events.filter((e) => KEPT_DOMAINS.has(e.scenario.domain)),
-    [events]
-  );
+  // ---- filter ----
+  const filtered = useMemo(() => pool.filter((d) => {
+    if (filter.sources.size && !filter.sources.has(d.source)) return false;
+    if (filter.domains.size && !filter.domains.has(d.domain)) return false;
+    if (!inWindow(d.createdAt, filter.window)) return false;
+    return true;
+  }), [pool, filter]);
 
-  const withChannel = useMemo(
-    () => materialEvents.map((e) => ({ event: e, channel: inferChannel(e) })),
-    [materialEvents]
-  );
-
-  const approvalCount = materialEvents.filter((e) =>
-    ["awaiting_approval", "detected", "analyzing"].includes(e.lifecycle)
-  ).length;
-  const overnightCount = withChannel.filter((r) => r.channel === "overnight").length;
-  const liveCount = withChannel.filter((r) => r.channel === "live").length;
-  const executingCount = materialEvents.filter((e) => e.lifecycle === "executing").length;
-  const doneCount = materialEvents.filter(
-    (e) => e.lifecycle === "fulfilled" || e.lifecycle === "rejected"
-  ).length;
-
-  const filtered = useMemo(() => {
-    return withChannel.filter(({ event: e, channel }) => {
-      if (filter === "all") return true;
-      if (filter === "approval")
-        return ["awaiting_approval", "detected", "analyzing"].includes(e.lifecycle);
-      if (filter === "overnight") return channel === "overnight";
-      if (filter === "meetings") return channel === "meeting";
-      if (filter === "live") return channel === "live";
-      if (filter === "executing") return e.lifecycle === "executing";
-      if (filter === "done") return e.lifecycle === "fulfilled" || e.lifecycle === "rejected";
-      return true;
-    });
-  }, [withChannel, filter]);
-
-  const grouped = useMemo(() => {
-    const sorted = [...filtered].sort((a, b) => {
-      if (sort === "value") {
-        return impactMagnitude(b.event.scenario.impact) - impactMagnitude(a.event.scenario.impact);
-      }
+  // ---- sort ----
+  const sorted = useMemo(() => {
+    const s = [...filtered];
+    s.sort((a, b) => {
+      if (sort === "value") return valueMagnitude(b.valueKind, b.valueCents) - valueMagnitude(a.valueKind, a.valueCents);
       if (sort === "critical") {
-        const ra = severityRank[a.event.scenario.severity] ?? 3;
-        const rb = severityRank[b.event.scenario.severity] ?? 3;
-        if (ra !== rb) return ra - rb;
-        return b.event.updatedAt - a.event.updatedAt;
+        const r = severityRank[a.severity] - severityRank[b.severity];
+        if (r !== 0) return r;
+        return b.updatedAt - a.updatedAt;
       }
-      return b.event.updatedAt - a.event.updatedAt;
+      if (sort === "source") return sourceRank[a.source] - sourceRank[b.source];
+      return b.updatedAt - a.updatedAt;
     });
-    const map = new Map<string, typeof sorted>();
-    for (const r of sorted) {
-      const b = bucketLabel(r.event.createdAt);
-      if (!map.has(b)) map.set(b, []);
-      map.get(b)!.push(r);
-    }
-    return Array.from(map.entries());
+    return s;
   }, [filtered, sort]);
 
-  const tabs: { key: FilterKey; label: string; count: number; tone?: "critical" | "meeting" }[] = [
-    { key: "all", label: "Everything", count: materialEvents.length },
-    { key: "approval", label: "Waiting on you", count: approvalCount, tone: "critical" },
-    { key: "overnight", label: "Morning brief", count: overnightCount },
-    { key: "meetings", label: "From meetings", count: meetingPendingCount, tone: "meeting" },
-    { key: "live", label: "As it happens", count: liveCount },
-    { key: "executing", label: "I'm on it", count: executingCount },
-    { key: "done", label: "Wrapped up", count: doneCount },
-  ];
+  // ---- group by day ----
+  const grouped = useMemo(() => {
+    const m = new Map<string, Decision[]>();
+    for (const d of sorted) {
+      const b = bucketLabel(d.createdAt);
+      if (!m.has(b)) m.set(b, []);
+      m.get(b)!.push(d);
+    }
+    return Array.from(m.entries());
+  }, [sorted]);
 
-  const sortOptions: { key: SortKey; label: string }[] = [
-    { key: "latest", label: "Latest" },
-    { key: "value", label: "High value" },
-    { key: "critical", label: "Critical" },
-  ];
+  // ---- counts for tab badges ----
+  const counts = useMemo(() => ({
+    decide: aboveThreshold.filter((d) => d.status === "open").length,
+    meetings: 0, // Phase 2
+    questions: 0, // Phase 2
+    in_flight: decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan").length,
+    handled: decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status)).length,
+    digest: digestItems.length + belowThreshold.length,
+  }), [aboveThreshold, decisions, digestItems, belowThreshold]);
 
+  // ---- greeting numbers ----
+  const openTotalCents = aboveThreshold
+    .filter((d) => d.status === "open")
+    .reduce((sum, d) => sum + valueMagnitude(d.valueKind, d.valueCents), 0);
+  const openCount = aboveThreshold.filter((d) => d.status === "open").length;
+  const openTotalFmt = formatValue({ cents: openTotalCents, kind: "gain" }).text.replace("+ ", "");
+
+  const digestTotal = digestItems.reduce((s, i) => s + valueMagnitude(i.valueKind, i.valueCents), 0);
 
   return (
     <AppLayout>
       <AppTaskbar breadcrumbItems={[{ label: "Action Items" }]} />
-      <div className="px-6 py-6 max-w-[1100px] mx-auto w-full">
-        {/* Header */}
-        <header className="mb-6 flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
-              <AanMascot size={30} state={liveMode ? "listening" : "idle"} interactive={false} />
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Aan · Action Items</div>
-              <h1 className="font-heading text-2xl font-semibold text-foreground">Hi Tushar — here's what I'm watching.</h1>
-              <p className="text-[13px] text-muted-foreground mt-1 max-w-2xl">
-                I'm keeping an eye on your marketplaces and meetings in the background.
-                These need a decision from you.
-                {liveMode && <span className="text-success"> · Live</span>}
-              </p>
-            </div>
+      <div className="px-6 py-6 max-w-[1180px] mx-auto w-full">
+
+        {/* Greeting */}
+        <header className="mb-6 flex items-start gap-3">
+          <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
+            <AanMascot size={30} state="idle" interactive={false} />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Aan · Action Items</div>
+            <h1 className="font-heading text-2xl font-semibold text-foreground leading-tight">
+              Hi Tushar — {openCount} decision{openCount === 1 ? "" : "s"} today worth <span className="text-primary">{openTotalFmt}</span>.
+            </h1>
+            <p className="text-[13px] text-muted-foreground mt-1 max-w-2xl">
+              I'm watching your marketplaces, meetings, and inboxes in the background. These need a call from you.
+            </p>
           </div>
         </header>
 
-        {/* Tabs */}
-        <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setFilter(t.key)}
-              className={cn(
-                "text-[12px] px-3 py-1.5 rounded-md border transition-colors",
-                filter === t.key
-                  ? "bg-primary/10 border-primary/30 text-primary font-medium"
-                  : "bg-card border-border text-foreground hover:bg-muted"
-              )}
-            >
-              {t.label}
-              {t.count > 0 && (
-                <span
+        {/* Tabs + controls row */}
+        <div className="mb-4 flex items-center gap-2 flex-wrap">
+          <nav className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+            {(Object.keys(TAB_LABELS) as TabKey[]).map((k) => {
+              const active = tab === k;
+              const c = counts[k];
+              return (
+                <button
+                  key={k}
+                  onClick={() => setTab(k)}
                   className={cn(
-                    "ml-1.5 text-[10px] font-semibold",
-                    filter === t.key
-                      ? "text-primary"
-                      : t.tone === "critical"
-                      ? "text-destructive"
-                      : t.tone === "meeting"
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                    "text-[12px] px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5",
+                    active
+                      ? "bg-primary text-primary-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
-                  {t.count}
-                </span>
-              )}
-            </button>
-          ))}
-          {doneCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto h-7 text-[10.5px] text-muted-foreground"
-              onClick={clearFulfilled}
-            >
-              Clear completed
-            </Button>
-          )}
+                  {TAB_LABELS[k]}
+                  {c > 0 && (
+                    <span className={cn(
+                      "text-[10px] font-semibold px-1.5 rounded-full leading-4",
+                      active ? "bg-primary-foreground/20" : "bg-muted-foreground/15"
+                    )}>
+                      {c}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2">
+            {(tab === "decide" || tab === "handled" || tab === "in_flight") && (
+              <>
+                <FilterSheet value={filter} onChange={setFilter} activeCount={countActiveFilters(filter)} />
+                <SortMenu value={sort} onChange={setSort} />
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Sort */}
-        {filter !== "meetings" && (
-          <div className="mb-5 flex items-center justify-end gap-1.5">
-            <span className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground mr-1">
-              Sort
-            </span>
-            {sortOptions.map((o) => (
-              <button
-                key={o.key}
-                onClick={() => setSort(o.key)}
-                className={cn(
-                  "text-[11px] px-2.5 py-1 rounded-md border transition-colors",
-                  sort === o.key
-                    ? "bg-primary/10 border-primary/30 text-primary font-medium"
-                    : "bg-card border-border text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Body */}
+        <ScrollArea className="h-[calc(100vh-280px)] pr-3">
+          {tab === "decide" && (
+            <DecideBody grouped={grouped} digestItems={digestItems} digestTotal={digestTotal} />
+          )}
 
+          {tab === "in_flight" && (
+            grouped.length === 0 ? (
+              <EmptyState
+                headline="Nothing running right now."
+                body="When you approve or hand something to me, it shows up here with live progress."
+              />
+            ) : <FlatList grouped={grouped} />
+          )}
 
-        {/* Timeline */}
-        <ScrollArea className="h-[calc(100vh-260px)] pr-4">
-          {filter === "meetings" ? (
-            meetingBundles.length === 0 ? (
-              <div className="py-16 text-center text-[13px] text-muted-foreground/70 italic">
-                No meeting-derived tasks right now.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {meetingBundles
-                  .slice()
-                  .sort((a, b) => b.createdAt - a.createdAt)
-                  .map((b) => (
-                    <MeetingBundleCard
-                      key={b.bundleId}
-                      bundle={b}
-                      onOpenDetails={() => setBundleDetailFor(b)}
-                    />
-                  ))}
-              </div>
-            )
-          ) : grouped.length === 0 ? (
-            <div className="py-16 text-center text-[13px] text-muted-foreground/70 italic">
-              Nothing to show right now. Aan is watching.
+          {tab === "handled" && (
+            grouped.length === 0 ? (
+              <EmptyState headline="Your handled ledger is empty." body="Everything you close in the last 14 days lives here." />
+            ) : <FlatList grouped={grouped} />
+          )}
+
+          {tab === "digest" && (
+            <div className="space-y-3">
+              <DigestRow items={digestItems} totalCents={digestTotal} />
+              {belowThreshold.length > 0 && (
+                <div className="text-[11.5px] text-muted-foreground italic pt-2">
+                  Below-threshold decisions ({belowThreshold.length}) also roll into this digest.
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="space-y-10">
-              {grouped.map(([bucket, list]) => (
-                <section key={bucket}>
-                  <div className="mb-4 flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
-                      {bucket}
-                    </span>
-                    <span className="h-px flex-1 bg-border/60" />
-                  </div>
-                  <ol className="relative space-y-4 pl-6">
-                    <span className="absolute left-[7px] top-1 bottom-1 w-px bg-border/60" aria-hidden />
-                    {list.map(({ event: e, channel }) => (
-                      <li key={e.eventId} className="relative">
-                        <span
-                          className={cn(
-                            "absolute -left-[22px] top-4 h-2 w-2 rounded-full border border-border",
-                            channel === "meeting" ? "bg-primary" : "bg-card"
-                          )}
-                        />
-                        <div className="flex items-baseline gap-2 mb-1.5">
-                          <span className="text-[10px] font-mono text-muted-foreground">
-                            {timeLabel(e.createdAt)}
-                          </span>
-                        </div>
-                        <AanEventCard
-                          event={e}
-                          channel={channel}
-                          channelLabel={CHANNEL_LABEL[channel]}
-                          onOpenDetails={() => setDetailFor(e)}
-                        />
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              ))}
-            </div>
+          )}
+
+          {(tab === "meetings" || tab === "questions") && (
+            <EmptyState
+              headline={tab === "meetings" ? "Meeting workspace lands in Phase 2." : "Questions lands in Phase 2."}
+              body="This tab will host " +
+                (tab === "meetings"
+                  ? "meeting-derived task bundles with completion-language actions."
+                  : "things I'd rather ask you about than guess.") as any
+            />
           )}
         </ScrollArea>
       </div>
-
-      {detailFor && <ExecutionArtifact event={detailFor} onClose={() => setDetailFor(null)} />}
-      {bundleDetailFor && (
-        <MeetingBundleArtifact bundle={bundleDetailFor} onClose={() => setBundleDetailFor(null)} />
-      )}
     </AppLayout>
+  );
+}
+
+function DecideBody({
+  grouped, digestItems, digestTotal,
+}: {
+  grouped: [string, Decision[]][];
+  digestItems: ReturnType<typeof useActionsStore>["digestItems"];
+  digestTotal: number;
+}) {
+  if (grouped.length === 0 && digestItems.length === 0) {
+    return <EmptyState headline="You're clear." body="I'll surface something the moment it matters." />;
+  }
+  return (
+    <div className="space-y-8">
+      {grouped.map(([bucket, list]) => (
+        <section key={bucket}>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
+            <span className="h-px flex-1 bg-border/60" />
+            <span className="text-[10.5px] text-muted-foreground">{list.length} item{list.length === 1 ? "" : "s"}</span>
+          </div>
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            {list.map((d) => <DecisionRow key={d.id} decision={d} />)}
+          </div>
+        </section>
+      ))}
+
+      {digestItems.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Handled by me</span>
+            <span className="h-px flex-1 bg-border/60" />
+          </div>
+          <DigestRow items={digestItems} totalCents={digestTotal} />
+        </section>
+      )}
+    </div>
+  );
+}
+
+function FlatList({ grouped }: { grouped: [string, Decision[]][] }) {
+  return (
+    <div className="space-y-8">
+      {grouped.map(([bucket, list]) => (
+        <section key={bucket}>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
+            <span className="h-px flex-1 bg-border/60" />
+          </div>
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            {list.map((d) => <DecisionRow key={d.id} decision={d} />)}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export default function AlertsPage() {
+  return (
+    <ActionsProvider>
+      <AlertsInner />
+    </ActionsProvider>
   );
 }
