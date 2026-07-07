@@ -141,8 +141,8 @@ export function FloatingActionIsland() {
 
   const inboxBadge = aanPendingCount;
   const alertsLabel = aanCriticalCount > 0
-    ? `Alerts (${aanPendingCount} · ${aanCriticalCount} critical)`
-    : aanPendingCount > 0 ? `Alerts (${aanPendingCount})` : "Alerts";
+    ? `Action Items (${aanPendingCount} · ${aanCriticalCount} critical)`
+    : aanPendingCount > 0 ? `Action Items (${aanPendingCount})` : "Action Items";
 
   const appActions: ActionItem[] = [
     { icon: Bell, label: alertsLabel, onClick: () => navigate("/alerts"), highlight: aanCriticalCount > 0, badge: inboxBadge > 0 ? inboxBadge : undefined },
