@@ -217,10 +217,11 @@ function AlertsInner() {
           {(tab === "meetings" || tab === "questions") && (
             <EmptyState
               headline={tab === "meetings" ? "Meeting workspace lands in Phase 2." : "Questions lands in Phase 2."}
-              body="This tab will host " +
-                (tab === "meetings"
-                  ? "meeting-derived task bundles with completion-language actions."
-                  : "things I'd rather ask you about than guess.") as any
+              body={
+                tab === "meetings"
+                  ? "This tab will host meeting-derived task bundles with completion-language actions."
+                  : "This tab will host things I'd rather ask you about than guess."
+              }
             />
           )}
         </ScrollArea>
