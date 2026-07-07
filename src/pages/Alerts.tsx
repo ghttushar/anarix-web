@@ -135,6 +135,7 @@ function AlertsInner() {
   const [handledRes, setHandledRes] = useState<HandledResolution>("all");
   const [showAllOverflow, setShowAllOverflow] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [viewMode, setViewMode] = useViewMode();
 
   useDecideKeyboard(tab === "decide");
   useEffect(() => { if (tab !== "decide") clear(); }, [tab, clear]);
