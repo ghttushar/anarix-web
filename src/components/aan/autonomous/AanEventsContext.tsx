@@ -202,6 +202,45 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
     setEvents((prev) => prev.filter((e) => e.lifecycle !== "fulfilled" && e.lifecycle !== "rejected"));
   }, []);
 
+  // --- Meeting bundle handlers ---
+  const setItemStatus = useCallback((bundleId: string, itemId: string, status: MeetingItemStatus) => {
+    setMeetingBundles((prev) =>
+      prev.map((b) =>
+        b.bundleId !== bundleId
+          ? b
+          : { ...b, actionItems: b.actionItems.map((it) => (it.id === itemId ? { ...it, status } : it)) }
+      )
+    );
+  }, []);
+  const approveMeetingItem = useCallback((bundleId: string, itemId: string) => {
+    setItemStatus(bundleId, itemId, "approved");
+    toast.success("Action approved. Aan will execute and report back.");
+  }, [setItemStatus]);
+  const rejectMeetingItem = useCallback((bundleId: string, itemId: string) => {
+    setItemStatus(bundleId, itemId, "rejected");
+    toast.info("Action rejected.");
+  }, [setItemStatus]);
+  const approveAllMeetingItems = useCallback((bundleId: string) => {
+    setMeetingBundles((prev) =>
+      prev.map((b) =>
+        b.bundleId !== bundleId
+          ? b
+          : { ...b, actionItems: b.actionItems.map((it) => (it.status === "pending" ? { ...it, status: "approved" } : it)) }
+      )
+    );
+    toast.success("All pending actions approved.");
+  }, []);
+  const rejectAllMeetingItems = useCallback((bundleId: string) => {
+    setMeetingBundles((prev) =>
+      prev.map((b) =>
+        b.bundleId !== bundleId
+          ? b
+          : { ...b, actionItems: b.actionItems.map((it) => (it.status === "pending" ? { ...it, status: "rejected" } : it)) }
+      )
+    );
+    toast.info("All pending actions rejected.");
+  }, []);
+
   // Live-mode timer — fires a random unused scenario every ~30s
   useEffect(() => {
     if (!liveMode) {
