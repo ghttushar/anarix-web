@@ -34,13 +34,6 @@ function impactMagnitude(impact: string): number {
 }
 const severityRank: Record<string, number> = { critical: 0, opportunity: 1, fyi: 2 };
 
-  | "all"
-  | "approval"
-  | "overnight"
-  | "meetings"
-  | "live"
-  | "executing"
-  | "done";
 
 const KEPT_DOMAINS = new Set(["campaign", "retail", "profitability", "inventory"]);
 
