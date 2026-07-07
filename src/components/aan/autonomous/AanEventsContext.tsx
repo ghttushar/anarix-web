@@ -134,11 +134,10 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
       executionProgress: 0,
     };
     setEvents((prev) => [newEvent, ...prev]);
-    toast.info(`Aan detected: ${s.title}`, {
-      description: auto ? "Auto-approved under policy. Executing now." : "Awaiting your approval in the Aan Inbox.",
+    toast.info(`I spotted something: ${s.title}`, {
+      description: auto ? "I auto-approved this under your policy. Executing now." : "I've added it to your Action Items — waiting on you.",
     });
 
-    // Advance to analyzing → awaiting_approval (or execute if auto)
     if (!auto) {
       setTimeout(() => {
         setEvents((prev) => prev.map((e) => (e.eventId === eventId ? { ...e, lifecycle: "analyzing", updatedAt: Date.now() } : e)));
@@ -147,7 +146,6 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
         setEvents((prev) => prev.map((e) => (e.eventId === eventId ? { ...e, lifecycle: "awaiting_approval", updatedAt: Date.now() } : e)));
       }, 1600);
     } else {
-      // Run through execution timeline immediately
       runExecution(eventId, s);
     }
   }, []);
@@ -170,15 +168,40 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
           e.eventId === eventId ? { ...e, lifecycle: "fulfilled", updatedAt: Date.now() } : e
         )
       );
-      toast.success(`Aan completed: ${s.title}`, { description: s.fulfillmentNote });
+      toast.success(`I finished: ${s.title}`, { description: s.fulfillmentNote });
     }, cumulativeDelay + 300);
+  }, []);
+
+  // 30s undo tracker for event approve/reject
+  const undoTimersRef = useRef<Map<string, { timer: ReturnType<typeof setTimeout>; prev: Lifecycle }>>(new Map());
+
+  const undoEventAction = useCallback((eventId: string) => {
+    const entry = undoTimersRef.current.get(eventId);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    undoTimersRef.current.delete(eventId);
+    setEvents((prev) => prev.map((e) => (e.eventId === eventId ? { ...e, lifecycle: entry.prev, updatedAt: Date.now() } : e)));
+    toast.info("Undone. I'll wait for your call.");
   }, []);
 
   const approve = useCallback(
     (eventId: string, overrides?: Record<string, string>) => {
       setEvents((prev) => {
         const target = prev.find((e) => e.eventId === eventId);
-        if (target) runExecution(eventId, target.scenario);
+        const prevLifecycle: Lifecycle = target?.lifecycle ?? "awaiting_approval";
+        const timer = setTimeout(() => {
+          undoTimersRef.current.delete(eventId);
+          setEvents((prev2) => {
+            const t = prev2.find((e) => e.eventId === eventId);
+            if (t) runExecution(eventId, t.scenario);
+            return prev2;
+          });
+        }, 30_000);
+        undoTimersRef.current.set(eventId, { timer, prev: prevLifecycle });
+        toast.success("Approved. I'll get to work in 30s.", {
+          duration: 30_000,
+          action: { label: "Undo", onClick: () => undoEventAction(eventId) },
+        });
         return prev.map((e) =>
           e.eventId === eventId
             ? { ...e, lifecycle: "executing", executionProgress: 0, overrides: { ...(e.overrides || {}), ...(overrides || {}) }, updatedAt: Date.now() }
@@ -186,13 +209,24 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
         );
       });
     },
-    [runExecution]
+    [runExecution, undoEventAction]
   );
 
   const reject = useCallback((eventId: string) => {
-    setEvents((prev) => prev.map((e) => (e.eventId === eventId ? { ...e, lifecycle: "rejected", updatedAt: Date.now() } : e)));
-    toast.info("Rejected. Aan will not repeat this recommendation for 24h.");
-  }, []);
+    setEvents((prev) => {
+      const target = prev.find((e) => e.eventId === eventId);
+      const prevLifecycle: Lifecycle = target?.lifecycle ?? "awaiting_approval";
+      const timer = setTimeout(() => {
+        undoTimersRef.current.delete(eventId);
+      }, 30_000);
+      undoTimersRef.current.set(eventId, { timer, prev: prevLifecycle });
+      toast.info("Rejected. I won't repeat this for 24h.", {
+        duration: 30_000,
+        action: { label: "Undo", onClick: () => undoEventAction(eventId) },
+      });
+      return prev.map((e) => (e.eventId === eventId ? { ...e, lifecycle: "rejected", updatedAt: Date.now() } : e));
+    });
+  }, [undoEventAction]);
 
   const modifyValue = useCallback((eventId: string, field: string, value: string) => {
     setEvents((prev) => prev.map((e) => (e.eventId === eventId ? { ...e, overrides: { ...(e.overrides || {}), [field]: value } } : e)));
