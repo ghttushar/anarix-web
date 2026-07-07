@@ -246,14 +246,40 @@ export function AanEventsProvider({ children }: { children: ReactNode }) {
       )
     );
   }, []);
+  const meetingUndoRef = useRef<Map<string, { timer: ReturnType<typeof setTimeout>; prev: MeetingItemStatus }>>(new Map());
+  const undoMeetingItem = useCallback((bundleId: string, itemId: string) => {
+    const key = `${bundleId}::${itemId}`;
+    const entry = meetingUndoRef.current.get(key);
+    if (!entry) return;
+    clearTimeout(entry.timer);
+    meetingUndoRef.current.delete(key);
+    setItemStatus(bundleId, itemId, entry.prev);
+    toast.info("Undone.");
+  }, [setItemStatus]);
   const approveMeetingItem = useCallback((bundleId: string, itemId: string) => {
+    const key = `${bundleId}::${itemId}`;
+    const bundle = meetingBundles.find((b) => b.bundleId === bundleId);
+    const prev = bundle?.actionItems.find((it) => it.id === itemId)?.status ?? "pending";
     setItemStatus(bundleId, itemId, "approved");
-    toast.success("Action approved. Aan will execute and report back.");
-  }, [setItemStatus]);
+    const timer = setTimeout(() => meetingUndoRef.current.delete(key), 30_000);
+    meetingUndoRef.current.set(key, { timer, prev });
+    toast.success("Approved. I'll execute and report back.", {
+      duration: 30_000,
+      action: { label: "Undo", onClick: () => undoMeetingItem(bundleId, itemId) },
+    });
+  }, [setItemStatus, meetingBundles, undoMeetingItem]);
   const rejectMeetingItem = useCallback((bundleId: string, itemId: string) => {
+    const key = `${bundleId}::${itemId}`;
+    const bundle = meetingBundles.find((b) => b.bundleId === bundleId);
+    const prev = bundle?.actionItems.find((it) => it.id === itemId)?.status ?? "pending";
     setItemStatus(bundleId, itemId, "rejected");
-    toast.info("Action rejected.");
-  }, [setItemStatus]);
+    const timer = setTimeout(() => meetingUndoRef.current.delete(key), 30_000);
+    meetingUndoRef.current.set(key, { timer, prev });
+    toast.info("Rejected.", {
+      duration: 30_000,
+      action: { label: "Undo", onClick: () => undoMeetingItem(bundleId, itemId) },
+    });
+  }, [setItemStatus, meetingBundles, undoMeetingItem]);
   const approveAllMeetingItems = useCallback((bundleId: string) => {
     setMeetingBundles((prev) =>
       prev.map((b) =>
