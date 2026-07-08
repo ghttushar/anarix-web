@@ -1,56 +1,58 @@
-import { useMemo, useState, useEffect } from "react";
+// /alerts — final rebuild. Stack + Grid views share tabs, filters, sort,
+// selection, bulk bar, and a single right-side detail panel.
+//
+// Store/data unchanged; multi-action options are synthesized per row.
+
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { ActionsProvider, useActionsStore } from "@/state/actionsStore";
-import { SelectionProvider, useSelection } from "@/state/selectionStore";
-import { DecisionRow } from "@/components/actions/DecisionRow";
-import { DigestRow } from "@/components/actions/DigestRow";
+import { SelectionProvider } from "@/state/selectionStore";
 import { EmptyState } from "@/components/actions/EmptyState";
-import { SortMenu, type SortKey } from "@/components/actions/SortMenu";
-import { FilterSheet, EMPTY_FILTER, countActiveFilters, type FilterState } from "@/components/actions/FilterSheet";
-import { MeetingBundleRow } from "@/components/actions/MeetingBundleRow";
-import { MeetingWorkspace } from "@/components/actions/MeetingWorkspace";
-import { QuestionRow } from "@/components/actions/QuestionRow";
-import { BulkActionBar } from "@/components/actions/BulkActionBar";
+import { EMPTY_FILTER, type FilterState } from "@/components/actions/FilterSheet";
+import { type SortKey } from "@/components/actions/SortMenu";
 import { KeyboardHelpOverlay } from "@/components/actions/KeyboardHelpOverlay";
-import { useDecideKeyboard } from "@/components/actions/useDecideKeyboard";
-import { OverloadBanner } from "@/components/actions/OverloadBanner";
-import { HandledFilters, type HandledResolution } from "@/components/actions/HandledFilters";
 import { UndoToast } from "@/components/actions/UndoToast";
-import { ViewModeToggle, type ViewMode } from "@/components/actions/ViewModeToggle";
-import { DecisionCard } from "@/components/actions/DecisionCard";
-import { MeetingBundleCard } from "@/components/actions/MeetingBundleCard";
-import { QuestionCard } from "@/components/actions/QuestionCard";
+import { AlertsToolbar } from "@/components/actions/AlertsToolbar";
+import { BulkBar } from "@/components/actions/BulkBar";
+import { StackRow } from "@/components/actions/StackRow";
+import { GridCard } from "@/components/actions/GridCard";
+import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from "@/components/actions/AlertDetailPanel";
+import type { ViewMode } from "@/components/actions/ViewSwitcher";
+import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
 import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
-import { Button } from "@/components/ui/button";
 import type { Decision } from "@/data/mockDecisions";
+
+/* ---------- persistence hooks ---------- */
 
 function useViewMode(): [ViewMode, (m: ViewMode) => void] {
   const [mode, setMode] = useState<ViewMode>(() => {
     if (typeof window === "undefined") return "stack";
-    return (sessionStorage.getItem("action-items:view-mode") as ViewMode) || "stack";
+    return (sessionStorage.getItem("alerts:view-mode") as ViewMode) || "stack";
   });
-  const persist = (m: ViewMode) => {
-    setMode(m);
-    sessionStorage.setItem("action-items:view-mode", m);
-  };
-  return [mode, persist];
+  return [mode, (m) => { setMode(m); sessionStorage.setItem("alerts:view-mode", m); }];
 }
 
-type TabKey = "decide" | "meetings" | "questions" | "in_flight" | "handled";
+function useTab(): [AlertTabKey, (t: AlertTabKey) => void] {
+  const [tab, setTab] = useState<AlertTabKey>(() => {
+    if (typeof window === "undefined") return "all";
+    return (sessionStorage.getItem("alerts:tab") as AlertTabKey) || "all";
+  });
+  return [tab, (t) => { setTab(t); sessionStorage.setItem("alerts:tab", t); }];
+}
 
-const TAB_LABELS: Record<TabKey, string> = {
-  decide: "Decide",
-  meetings: "From meetings",
-  questions: "Questions",
-  in_flight: "In flight",
-  handled: "Handled",
-};
+/* ---------- date bucketing ---------- */
 
-const DECIDE_CAP = 25;
+function bucketLabel(ts: number): string {
+  const d = new Date(ts);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return "Earlier";
+}
 
 const severityRank: Record<Decision["severity"], number> = { critical: 0, opportunity: 1, fyi: 2 };
 const sourceRank: Record<Decision["source"], number> = { meeting: 0, email: 1, slack: 2, teams: 3, anarix: 4, aan: 5 };
@@ -68,89 +70,31 @@ function inWindow(ts: number, win: FilterState["window"]): boolean {
   return true;
 }
 
-function bucketLabel(ts: number): string {
-  const d = new Date(ts);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "Today";
-  const y = new Date(now); y.setDate(now.getDate() - 1);
-  if (d.toDateString() === y.toDateString()) return "Yesterday";
-  return "Earlier";
-}
-
-interface GroupedDecision {
-  primary: Decision;
-  duplicates: Decision[];
-}
-function groupDuplicates(items: Decision[]): GroupedDecision[] {
-  const seen = new Map<string, GroupedDecision>();
-  const out: GroupedDecision[] = [];
-  for (const d of items) {
-    if (!d.dupeKey) {
-      out.push({ primary: d, duplicates: [] });
-      continue;
-    }
-    const existing = seen.get(d.dupeKey);
-    if (!existing) {
-      const g: GroupedDecision = { primary: d, duplicates: [] };
-      seen.set(d.dupeKey, g);
-      out.push(g);
-    } else {
-      const cur = valueMagnitude(existing.primary.valueKind, existing.primary.valueCents);
-      const inc = valueMagnitude(d.valueKind, d.valueCents);
-      if (inc > cur) {
-        existing.duplicates.push(existing.primary);
-        existing.primary = d;
-      } else {
-        existing.duplicates.push(d);
-      }
-    }
-  }
-  return out;
-}
-
-/** Sort persistence per tab via sessionStorage. */
-function useSortForTab(tab: TabKey): [SortKey, (k: SortKey) => void] {
-  const [sort, setSort] = useState<SortKey>(() => {
-    if (typeof window === "undefined") return "value";
-    return (sessionStorage.getItem(`ai:sort:${tab}`) as SortKey) || "value";
-  });
-  useEffect(() => {
-    const v = sessionStorage.getItem(`ai:sort:${tab}`) as SortKey | null;
-    setSort(v ?? "value");
-  }, [tab]);
-  const persist = (k: SortKey) => {
-    setSort(k);
-    sessionStorage.setItem(`ai:sort:${tab}`, k);
-  };
-  return [sort, persist];
-}
+/* ============================================================ */
 
 function AlertsInner() {
-  const { decisions, aboveThreshold, digestItems, meetings, openQuestionsCount } = useActionsStore();
-  const { registerOrder, clear } = useSelection();
-  const [tab, setTab] = useState<TabKey>("decide");
-  const [sort, setSort] = useSortForTab(tab);
-  const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
-  const [openBundleId, setOpenBundleId] = useState<string | null>(null);
-  const [handledRes, setHandledRes] = useState<HandledResolution>("all");
-  const [showAllOverflow, setShowAllOverflow] = useState(false);
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const { decisions } = useActionsStore();
+
   const [viewMode, setViewMode] = useViewMode();
+  const [tab, setTab] = useTab();
+  const [sort, setSort] = useState<SortKey>("value");
+  const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [panel, setPanel] = useState<PanelState>(CLOSED_PANEL);
 
-  useDecideKeyboard(tab === "decide" && viewMode === "stack");
-  useEffect(() => { if (tab !== "decide") clear(); }, [tab, clear]);
+  // Grid state — expanded card ids + optional focused id
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [focusedId, setFocusedId] = useState<string | null>(null);
 
-  const pool: Decision[] = useMemo(() => {
-    if (tab === "decide")
-      return aboveThreshold.filter((d) => d.status === "open" || d.status === "snoozed");
-    if (tab === "in_flight")
-      return decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan");
-    if (tab === "handled") {
-      const base = decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
-      return handledRes === "all" ? base : base.filter((d) => d.status === handledRes);
-    }
-    return [];
-  }, [tab, decisions, aboveThreshold, handledRes]);
+  const openDetail = useCallback((id: string, mode: PanelMode = "detail") => {
+    setPanel({ decisionId: id, mode });
+  }, []);
+
+  const closePanel = useCallback(() => setPanel(CLOSED_PANEL), []);
+
+  const counts = useMemo(() => computeTabCounts(decisions), [decisions]);
+
+  const pool = useMemo(() => filterByTab(decisions, tab), [decisions, tab]);
 
   const filtered = useMemo(() => pool.filter((d) => {
     if (filter.sources.size && !filter.sources.has(d.source)) return false;
@@ -174,529 +118,252 @@ function AlertsInner() {
     return s;
   }, [filtered, sort]);
 
-  const grouped: GroupedDecision[] = useMemo(
-    () => (tab === "decide" ? groupDuplicates(sorted) : sorted.map((d) => ({ primary: d, duplicates: [] }))),
-    [sorted, tab],
-  );
-
-  const visibleGroups = useMemo(
-    () => (tab === "decide" && !showAllOverflow ? grouped.slice(0, DECIDE_CAP) : grouped),
-    [grouped, tab, showAllOverflow],
-  );
-  const hiddenGroups = tab === "decide" && !showAllOverflow ? grouped.slice(DECIDE_CAP) : [];
-  const hiddenValueCents = hiddenGroups.reduce((s, g) => s + valueMagnitude(g.primary.valueKind, g.primary.valueCents), 0);
-
   const bucketed = useMemo(() => {
-    const m = new Map<string, GroupedDecision[]>();
-    for (const g of visibleGroups) {
-      const b = bucketLabel(g.primary.createdAt);
+    const m = new Map<string, Decision[]>();
+    for (const d of sorted) {
+      const b = bucketLabel(d.createdAt);
       if (!m.has(b)) m.set(b, []);
-      m.get(b)!.push(g);
+      m.get(b)!.push(d);
     }
     return Array.from(m.entries());
-  }, [visibleGroups]);
+  }, [sorted]);
 
-  useEffect(() => {
-    if (tab !== "decide") return;
-    registerOrder(visibleGroups.map((g) => g.primary.id));
-  }, [tab, visibleGroups, registerOrder]);
-
-  const counts = useMemo(() => ({
-    decide: aboveThreshold.filter((d) => d.status === "open").length,
-    meetings: meetings.length,
-    questions: openQuestionsCount,
-    in_flight: decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan").length,
-    handled: decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status)).length,
-  }), [aboveThreshold, decisions, meetings.length, openQuestionsCount]);
-
-  const handledCounts = useMemo(() => {
-    const base = decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
-    return {
-      all: base.length,
-      completed: base.filter((d) => d.status === "completed").length,
-      rejected: base.filter((d) => d.status === "rejected").length,
-      expired: base.filter((d) => d.status === "expired").length,
-    };
-  }, [decisions]);
-
-  const openTotalCents = aboveThreshold
+  // Hero summary counts
+  const openCount = decisions.filter((d) => d.status === "open").length;
+  const criticalCount = decisions.filter((d) => d.status === "open" && d.severity === "critical").length;
+  const openValueCents = decisions
     .filter((d) => d.status === "open")
-    .reduce((sum, d) => sum + valueMagnitude(d.valueKind, d.valueCents), 0);
-  const openCount = aboveThreshold.filter((d) => d.status === "open").length;
-  const openTotalFmt = formatValue({ cents: openTotalCents, kind: "gain" }).text.replace("+ ", "");
-  const criticalCount = aboveThreshold.filter((d) => d.status === "open" && d.severity === "critical").length;
+    .reduce((s, d) => s + valueMagnitude(d.valueKind, d.valueCents), 0);
+  const totalValueFmt = openValueCents > 0
+    ? formatValue({ cents: openValueCents, kind: "gain" }).text.replace("+ ", "")
+    : null;
 
-  const digestTotal = digestItems.reduce((s, i) => s + valueMagnitude(i.valueKind, i.valueCents), 0);
+  const [helpOpen, setHelpOpen] = useState(false);
 
-  // Meetings navigation
-  const bundleIndex = openBundleId ? meetings.findIndex((m) => m.id === openBundleId) : -1;
-  const prevBundle = bundleIndex > 0 ? meetings[bundleIndex - 1].id : null;
-  const nextBundle = bundleIndex >= 0 && bundleIndex < meetings.length - 1 ? meetings[bundleIndex + 1].id : null;
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    if (focusedId && focusedId !== id) setFocusedId(null);
+  }, [focusedId]);
+
+  const toggleFocus = useCallback((id: string) => {
+    setFocusedId((prev) => (prev === id ? null : id));
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  // ESC closes panel + focus
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (panel.decisionId) closePanel();
+        else if (focusedId) setFocusedId(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [panel.decisionId, focusedId, closePanel]);
 
   return (
     <AppLayout>
-      <AppTaskbar breadcrumbItems={[{ label: "Action Items" }]} />
-      <div className="px-6 py-6 max-w-[1360px] mx-auto w-full">
+      <AppTaskbar breadcrumbItems={[{ label: "Alerts" }]} />
+      <div className="px-4 py-4 max-w-[1480px] mx-auto w-full">
 
-        <div className="mb-4 flex items-center justify-end">
-          <ViewModeToggle value={viewMode} onChange={setViewMode} />
-        </div>
-
-        {viewMode === "card" ? (
-          <CardView onOpenBundle={setOpenBundleId} />
-        ) : (
-          <>
-            {/* Greeting */}
-            <header className="mb-6 flex items-start gap-3">
-              <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
-                <AanMascot size={30} state="idle" interactive={false} />
-              </div>
-              <div className="flex-1">
-                <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">Action Items</div>
-                <h1 className="font-heading text-2xl font-semibold text-foreground leading-tight">
-                  Hi Tushar — I have {openCount} decision{openCount === 1 ? "" : "s"} for you today worth <span className="text-primary">{openTotalFmt}</span>
-                  {criticalCount > 0 && <span className="text-muted-foreground text-base font-normal">, {criticalCount} critical</span>}
-                  .
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                  I'm watching your marketplaces, meetings, and inboxes in the background. These are the calls I need from you.
-                </p>
-              </div>
-            </header>
-
-            {/* Tabs + controls */}
-            <div className="mb-4 flex items-center gap-2 flex-wrap">
-              <nav className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
-                {(Object.keys(TAB_LABELS) as TabKey[]).map((k) => {
-                  const active = tab === k;
-                  const c = counts[k];
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => setTab(k)}
-                      className={cn(
-                        "text-[13px] px-3.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5",
-                        active
-                          ? "bg-primary text-primary-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {TAB_LABELS[k]}
-                      {c > 0 && (
-                        <span className={cn(
-                          "text-[10.5px] font-semibold px-1.5 rounded-full leading-4",
-                          active ? "bg-primary-foreground/20" : "bg-muted-foreground/15"
-                        )}>
-                          {c}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
-
-              <div className="ml-auto flex items-center gap-2">
-                {(tab === "decide" || tab === "handled" || tab === "in_flight") && (
-                  <>
-                    <FilterSheet
-                      value={filter}
-                      onChange={setFilter}
-                      activeCount={countActiveFilters(filter)}
-                      externalOpen={filterSheetOpen}
-                      onExternalOpenChange={setFilterSheetOpen}
-                    />
-                    <SortMenu value={sort} onChange={setSort} />
-                  </>
-                )}
-              </div>
+        {/* Hero — compact, single line */}
+        <header className="mb-4 flex items-center gap-3">
+          <div className="h-9 w-9 rounded-md bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
+            <AanMascot size={24} state="idle" interactive={false} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground">
+              Anarix · Aan
             </div>
-
-            {tab === "handled" && counts.handled > 0 && (
-              <div className="mb-3">
-                <HandledFilters value={handledRes} onChange={setHandledRes} counts={handledCounts} />
+            <h1 className="font-heading text-[20px] font-semibold text-foreground leading-tight">
+              Alerts
+            </h1>
+          </div>
+          <div className="text-[12.5px] text-muted-foreground text-right leading-tight">
+            <div>
+              <span className="font-medium text-foreground tabular-nums">{openCount}</span> open
+              {totalValueFmt && (
+                <>
+                  {" · "}
+                  <span className="font-mono text-success tabular-nums">{totalValueFmt}</span> at stake
+                </>
+              )}
+            </div>
+            {criticalCount > 0 && (
+              <div>
+                <span className="font-medium text-destructive tabular-nums">{criticalCount}</span> critical
               </div>
             )}
+          </div>
+        </header>
 
-            <ScrollArea className="h-[calc(100vh-280px)] pr-3">
-              {tab === "decide" && (
-                <DecideBody
-                  bucketed={bucketed}
-                  hiddenCount={hiddenGroups.length}
-                  hiddenValueCents={hiddenValueCents}
-                  onShowAll={() => setShowAllOverflow(true)}
-                  onSortByValue={() => setSort("value")}
-                  onOpenFilter={() => setFilterSheetOpen(true)}
-                  digestItems={digestItems}
-                  digestTotal={digestTotal}
-                />
-              )}
+        {/* Toolbar */}
+        <AlertsToolbar
+          tab={tab}
+          onTabChange={setTab}
+          counts={counts}
+          viewMode={viewMode}
+          onViewChange={setViewMode}
+          filter={filter}
+          onFilterChange={setFilter}
+          sort={sort}
+          onSortChange={setSort}
+          filterSheetOpen={filterSheetOpen}
+          onFilterSheetOpenChange={setFilterSheetOpen}
+          onOpenShortcuts={() => setHelpOpen(true)}
+          onClearCompleted={counts.done > 0 ? () => setTab("done") : undefined}
+        />
 
-              {tab === "in_flight" && (
-                bucketed.length === 0 ? (
-                  <EmptyState
-                    headline="Nothing running right now."
-                    body="When you approve or hand me something, it shows up here with live progress."
-                  />
-                ) : <FlatList bucketed={bucketed} />
-              )}
+        {/* Bulk bar */}
+        <BulkBar />
 
-              {tab === "handled" && (
-                bucketed.length === 0 ? (
-                  <EmptyState headline="Your handled ledger is empty." body="Everything you close in the last 14 days lives here." />
-                ) : <FlatList bucketed={bucketed} />
-              )}
-
-              {tab === "meetings" && <MeetingsBody onOpen={setOpenBundleId} />}
-
-              {tab === "questions" && <QuestionsBody />}
-            </ScrollArea>
-          </>
-        )}
+        {/* Body */}
+        <ScrollArea className="h-[calc(100vh-240px)] pr-2">
+          {sorted.length === 0 ? (
+            <EmptyState
+              headline={tab === "all" ? "You're clear." : "Nothing in this view."}
+              body={tab === "all"
+                ? "Aan will surface something the moment it matters."
+                : "Try a different tab — Aan is still watching."}
+            />
+          ) : viewMode === "stack" ? (
+            <StackBody bucketed={bucketed} onOpenDetail={openDetail} />
+          ) : (
+            <GridBody
+              bucketed={bucketed}
+              expandedIds={expandedIds}
+              focusedId={focusedId}
+              onToggleExpand={toggleExpand}
+              onToggleFocus={toggleFocus}
+              onOpenDetail={openDetail}
+            />
+          )}
+        </ScrollArea>
       </div>
 
-      {/* Meeting workspace sheet */}
-      <MeetingWorkspace
-        bundleId={openBundleId}
-        onClose={() => setOpenBundleId(null)}
-        onPrev={() => prevBundle && setOpenBundleId(prevBundle)}
-        onNext={() => nextBundle && setOpenBundleId(nextBundle)}
-        hasPrev={!!prevBundle}
-        hasNext={!!nextBundle}
+      <AlertDetailPanel
+        state={panel}
+        onOpenChange={(o) => { if (!o) closePanel(); }}
+        onModeChange={(m) => setPanel((p) => ({ ...p, mode: m }))}
       />
 
-      <BulkActionBar />
       <KeyboardHelpOverlay />
       <UndoToast />
     </AppLayout>
   );
 }
 
-/* ============================================================
-   STACK-view helpers (unchanged behavior)
-   ============================================================ */
+/* ============================================================ */
 
-function DecisionList({ list, interactive }: { list: GroupedDecision[]; interactive?: boolean }) {
+function BucketHeader({ label }: { label: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      {list.map((g) => (
-        <DecisionRow key={g.primary.id} decision={g.primary} duplicates={g.duplicates} interactive={interactive} />
-      ))}
+    <div className="mb-2 mt-1 flex items-center gap-2">
+      <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+        {label}
+      </span>
+      <span className="h-px flex-1 bg-border/60" />
     </div>
   );
 }
 
-function DecideBody({
-  bucketed, hiddenCount, hiddenValueCents,
-  onShowAll, onSortByValue, onOpenFilter,
-  digestItems, digestTotal,
+function StackBody({
+  bucketed, onOpenDetail,
 }: {
-  bucketed: [string, GroupedDecision[]][];
-  hiddenCount: number;
-  hiddenValueCents: number;
-  onShowAll: () => void;
-  onSortByValue: () => void;
-  onOpenFilter: () => void;
-  digestItems: ReturnType<typeof useActionsStore>["digestItems"];
-  digestTotal: number;
+  bucketed: [string, Decision[]][];
+  onOpenDetail: (id: string, mode?: PanelMode) => void;
 }) {
-  if (bucketed.length === 0 && digestItems.length === 0) {
-    return <EmptyState headline="You're clear." body="I'll surface something the moment it matters." />;
-  }
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {bucketed.map(([bucket, list]) => (
         <section key={bucket}>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
-            <span className="h-px flex-1 bg-border/60" />
-          </div>
-          <DecisionList list={list} interactive />
-        </section>
-      ))}
-
-      {hiddenCount > 0 && (
-        <div className="space-y-1.5">
-          <OverloadBanner
-            hiddenCount={hiddenCount}
-            hiddenValueCents={hiddenValueCents}
-            onSortByValue={onSortByValue}
-            onOpenFilter={onOpenFilter}
-          />
-          <div className="text-center">
-            <Button variant="ghost" size="sm" onClick={onShowAll} className="text-[11.5px] text-muted-foreground">
-              Show all {hiddenCount} anyway
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {digestItems.length > 0 && (
-        <section>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Handled by me</span>
-            <span className="h-px flex-1 bg-border/60" />
-          </div>
-          <DigestRow items={digestItems} totalCents={digestTotal} />
-        </section>
-      )}
-    </div>
-  );
-}
-
-function FlatList({ bucketed }: { bucketed: [string, GroupedDecision[]][] }) {
-  return (
-    <div className="space-y-8">
-      {bucketed.map(([bucket, list]) => (
-        <section key={bucket}>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
-            <span className="h-px flex-1 bg-border/60" />
-          </div>
-          <DecisionList list={list} />
-        </section>
-      ))}
-    </div>
-  );
-}
-
-function MeetingsBody({ onOpen }: { onOpen: (id: string) => void }) {
-  const { meetings } = useActionsStore();
-  if (meetings.length === 0) {
-    return <EmptyState headline="No meeting bundles yet." body="When a meeting wraps, I bundle its action items and drop them here." />;
-  }
-  return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      {meetings.map((m) => (
-        <MeetingBundleRow key={m.id} bundleId={m.id} onOpen={onOpen} />
-      ))}
-    </div>
-  );
-}
-
-function QuestionsBody() {
-  const { questions } = useActionsStore();
-  const open = questions.filter((q) => q.status === "open");
-  const closed = questions.filter((q) => q.status !== "open");
-
-  if (questions.length === 0) {
-    return <EmptyState headline="No open questions." body="When I hit something I'd rather ask than guess, it lands here." />;
-  }
-  const renderList = (items: typeof questions) => (
-    <div className="space-y-2.5">
-      {items.map((q) => <QuestionRow key={q.id} question={q} />)}
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      <section>
-        <div className="mb-2 flex items-center gap-2">
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Waiting on you</span>
-          <span className="h-px flex-1 bg-border/60" />
-        </div>
-        {open.length === 0 ? (
-          <div className="text-[12px] text-muted-foreground italic py-4 text-center">You're caught up. I'll only ask when it matters.</div>
-        ) : (
-          renderList(open)
-        )}
-      </section>
-
-      {closed.length > 0 && (
-        <section>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Recently answered</span>
-            <span className="h-px flex-1 bg-border/60" />
-          </div>
-          {renderList(closed)}
-        </section>
-      )}
-    </div>
-  );
-}
-
-/* ============================================================
-   CARD VIEW — matches attached screenshot exactly.
-   ============================================================ */
-
-type CardTabKey = "all" | "needs_approval" | "overnight" | "meetings" | "live" | "executing" | "done";
-const CARD_TAB_LABEL: Record<CardTabKey, string> = {
-  all: "All",
-  needs_approval: "Needs approval",
-  overnight: "Overnight",
-  meetings: "Meetings",
-  live: "Live",
-  executing: "Executing",
-  done: "Done",
-};
-
-function isOvernight(ts: number): boolean {
-  const h = new Date(ts).getHours();
-  return h >= 22 || h < 8;
-}
-
-function fmtTime(ts: number): string {
-  return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
-
-function CardView({ onOpenBundle }: { onOpenBundle: (id: string) => void }) {
-  const { decisions, meetings } = useActionsStore();
-  const [tab, setTab] = useState<CardTabKey>("all");
-  const [hiddenDone, setHiddenDone] = useState<Set<string>>(new Set());
-
-  const openCount = decisions.filter((d) => d.status === "open").length;
-  const criticalCount = decisions.filter((d) => d.status === "open" && d.severity === "critical").length;
-  const doneCount = decisions.filter((d) => d.status === "completed").length;
-
-  const counts = useMemo<Record<CardTabKey, number>>(() => {
-    const overnight = decisions.filter((d) => d.status === "open" && isOvernight(d.createdAt)).length;
-    const live = decisions.filter((d) => d.status === "open" && !isOvernight(d.createdAt) && d.source !== "meeting").length;
-    const needs = decisions.filter((d) => d.status === "open").length;
-    const executing = decisions.filter((d) => d.status === "in_flight" || d.status === "with_aan").length;
-    const done = decisions.filter((d) => ["completed", "rejected", "expired"].includes(d.status) && !hiddenDone.has(d.id)).length;
-    const meetingsC = meetings.length;
-    const all = needs + executing + done + meetingsC;
-    return { all, needs_approval: needs, overnight, meetings: meetingsC, live, executing, done };
-  }, [decisions, meetings, hiddenDone]);
-
-  // Build a heterogeneous timeline: decisions + meetings (as bundles) sorted by ts desc.
-  type Item =
-    | { kind: "decision"; ts: number; d: Decision }
-    | { kind: "meeting"; ts: number; id: string };
-
-  const items: Item[] = useMemo(() => {
-    let ds: Decision[] = decisions.filter((d) => !hiddenDone.has(d.id));
-    if (tab === "needs_approval") ds = ds.filter((d) => d.status === "open");
-    else if (tab === "overnight") ds = ds.filter((d) => d.status === "open" && isOvernight(d.createdAt));
-    else if (tab === "live") ds = ds.filter((d) => d.status === "open" && !isOvernight(d.createdAt) && d.source !== "meeting");
-    else if (tab === "executing") ds = ds.filter((d) => d.status === "in_flight" || d.status === "with_aan");
-    else if (tab === "done") ds = ds.filter((d) => ["completed", "rejected", "expired"].includes(d.status));
-    else if (tab === "meetings") ds = [];
-    // all: keep as is
-
-    const decisionItems: Item[] = ds.map((d) => ({ kind: "decision" as const, ts: d.createdAt, d }));
-    const meetingItems: Item[] =
-      tab === "all" || tab === "meetings"
-        ? meetings.map((m) => ({ kind: "meeting" as const, ts: m.ts, id: m.id }))
-        : [];
-    return [...decisionItems, ...meetingItems].sort((a, b) => b.ts - a.ts);
-  }, [tab, decisions, meetings, hiddenDone]);
-
-  // Group by bucket label (Today/Yesterday/Earlier)
-  const bucketed = useMemo(() => {
-    const m = new Map<string, Item[]>();
-    for (const it of items) {
-      const b = bucketLabel(it.ts);
-      if (!m.has(b)) m.set(b, []);
-      m.get(b)!.push(it);
-    }
-    return Array.from(m.entries());
-  }, [items]);
-
-  const clearCompleted = () => {
-    const doneIds = decisions.filter((d) => d.status === "completed").map((d) => d.id);
-    setHiddenDone((prev) => {
-      const n = new Set(prev);
-      doneIds.forEach((id) => n.add(id));
-      return n;
-    });
-  };
-
-  return (
-    <div>
-      {/* Header */}
-      <header className="mb-5 flex items-start gap-3">
-        <div className="h-11 w-11 rounded-lg bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
-          <AanMascot size={28} state="idle" interactive={false} />
-        </div>
-        <div className="flex-1">
-          <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Alerts</div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground leading-tight">
-            What Aan noticed for you
-          </h1>
-          <p className="text-[12.5px] text-muted-foreground mt-1">
-            {openCount} awaiting approval
-            {criticalCount > 0 && <> · <span className="text-destructive font-medium">{criticalCount} critical</span></>}
-            {doneCount > 0 && <> · {doneCount} completed</>}
-          </p>
-        </div>
-      </header>
-
-      {/* Tabs */}
-      <div className="mb-4 flex items-center gap-2 flex-wrap">
-        <nav className="flex items-center gap-1 flex-wrap">
-          {(Object.keys(CARD_TAB_LABEL) as CardTabKey[]).map((k) => {
-            const active = tab === k;
-            const c = counts[k];
-            return (
-              <button
-                key={k}
-                onClick={() => setTab(k)}
-                className={cn(
-                  "text-[12.5px] px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5",
-                  active
-                    ? "border-primary/50 bg-primary/10 text-primary font-medium"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                {CARD_TAB_LABEL[k]}
-                {c > 0 && (
-                  <span className={cn(
-                    "text-[10.5px] font-semibold px-1.5 rounded-full leading-4",
-                    active ? "bg-primary/20 text-primary" : "bg-muted-foreground/15 text-muted-foreground"
-                  )}>
-                    {c}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-        {counts.done > 0 && (
-          <button
-            type="button"
-            onClick={clearCompleted}
-            className="ml-auto text-[12.5px] text-muted-foreground hover:text-foreground hover:underline"
-          >
-            Clear completed
-          </button>
-        )}
-      </div>
-
-      <ScrollArea className="h-[calc(100vh-320px)] pr-3">
-        {tab === "questions" as string && null}
-        {items.length === 0 ? (
-          <EmptyState headline="Nothing here yet." body="Aan will surface things the moment they matter." />
-        ) : (
-          <div className="space-y-6">
-            {bucketed.map(([bucket, list]) => (
-              <section key={bucket}>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{bucket}</span>
-                  <span className="h-px flex-1 bg-border/60" />
-                </div>
-                <div className="space-y-3">
-                  {list.map((it) => (
-                    <div key={it.kind === "decision" ? it.d.id : it.id} className="flex items-start gap-3">
-                      <div className="w-14 shrink-0 pt-3 text-[11px] text-muted-foreground tabular-nums text-right">
-                        {fmtTime(it.ts)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        {it.kind === "decision"
-                          ? <DecisionCard decision={it.d} />
-                          : <MeetingBundleCard bundleId={it.id} onOpen={onOpenBundle} />
-                        }
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+          <BucketHeader label={bucket} />
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            {list.map((d) => (
+              <StackRow key={d.id} decision={d} onOpenDetail={onOpenDetail} />
             ))}
           </div>
-        )}
-      </ScrollArea>
+        </section>
+      ))}
     </div>
   );
 }
+
+function GridBody({
+  bucketed, expandedIds, focusedId, onToggleExpand, onToggleFocus, onOpenDetail,
+}: {
+  bucketed: [string, Decision[]][];
+  expandedIds: Set<string>;
+  focusedId: string | null;
+  onToggleExpand: (id: string) => void;
+  onToggleFocus: (id: string) => void;
+  onOpenDetail: (id: string, mode?: PanelMode) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      {bucketed.map(([bucket, list]) => {
+        const focusedInBucket = focusedId && list.some((d) => d.id === focusedId);
+        return (
+          <section key={bucket}>
+            <BucketHeader label={bucket} />
+            <div
+              className={
+                focusedInBucket
+                  ? "grid grid-cols-1 gap-3"
+                  : "grid grid-cols-1 lg:grid-cols-2 gap-3"
+              }
+            >
+              {list.map((d) => {
+                const isFocused = focusedId === d.id;
+                if (focusedInBucket && !isFocused) {
+                  // Render dimmed compact placeholder for siblings when one is focused
+                  return (
+                    <div
+                      key={d.id}
+                      onClick={() => onToggleFocus(d.id)}
+                      className="cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      <GridCard
+                        decision={d}
+                        expanded={false}
+                        focused={false}
+                        onToggleExpand={() => onToggleExpand(d.id)}
+                        onToggleFocus={() => onToggleFocus(d.id)}
+                        onOpenDetail={onOpenDetail}
+                      />
+                    </div>
+                  );
+                }
+                return (
+                  <GridCard
+                    key={d.id}
+                    decision={d}
+                    expanded={expandedIds.has(d.id) || isFocused}
+                    focused={isFocused}
+                    onToggleExpand={() => onToggleExpand(d.id)}
+                    onToggleFocus={() => onToggleFocus(d.id)}
+                    onOpenDetail={onOpenDetail}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================================================ */
 
 export default function AlertsPage() {
   return (
