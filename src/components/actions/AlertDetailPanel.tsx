@@ -106,12 +106,12 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
               </div>
             </ScrollArea>
 
-            {/* Footer actions (detail mode only) */}
+            {/* Footer — action bar (open) or confirmation strip (settled) */}
             {state.mode === "detail" && d.status === "open" && (
               <div className="border-t border-border px-5 py-3 flex items-center gap-2">
                 <Button
                   size="sm"
-                  onClick={() => { approve(d.id); onOpenChange(false); }}
+                  onClick={() => approve(d.id)}
                   className="h-9 text-[13px] gap-1.5 flex-1"
                 >
                   {d.actionVerb} <ArrowRight className="h-3.5 w-3.5" />
@@ -135,13 +135,22 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => { reject(d.id); onOpenChange(false); }}
+                  onClick={() => reject(d.id)}
                   className="h-9 text-[13px] text-muted-foreground hover:text-destructive"
                 >
                   Reject
                 </Button>
               </div>
             )}
+            {d.status !== "open" && (
+              <div className={"border-t border-border px-3 py-3 " + settledTintClasses(d.status)}>
+                <SettledStrip decision={d} />
+                <div className="mt-1 px-2 text-[11.5px] text-muted-foreground">
+                  Closing automatically when the undo window ends.
+                </div>
+              </div>
+            )}
+
           </>
         )}
       </SheetContent>
