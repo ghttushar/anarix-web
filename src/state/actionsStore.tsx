@@ -104,19 +104,19 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
 
   const approve = useCallback((id: string) => {
     setStatus(id, "in_flight");
-    toast.success("Approved. I'll get to work in 30 seconds.", { duration: UNDO_MS });
+    toast.success("Approved.");
     publishUndoable({ id: `dec:${id}:approve`, label: "Approved. I'll execute in 30s.", onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const reject = useCallback((id: string) => {
     setStatus(id, "rejected");
-    toast.message("Rejected. I'll stand down for 24h.", { duration: UNDO_MS });
+    toast.message("Rejected.");
     publishUndoable({ id: `dec:${id}:reject`, label: "Rejected. I'll stand down for 24h.", onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const delegateToAan = useCallback((id: string) => {
     setStatus(id, "with_aan");
-    toast.success("On it. I'll draft, execute, and report back.", { duration: UNDO_MS });
+    toast.success("Handed to Aan.");
     publishUndoable({ id: `dec:${id}:delegate`, label: "You handed it to me. I'll take it from here.", onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
@@ -124,17 +124,20 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
     const until = Date.now() + SNOOZE_MS[choice];
     setStatus(id, "snoozed", { snoozedUntil: until });
     const label = choice === "1h" ? "1 hour" : choice === "tomorrow" ? "tomorrow" : "next week";
-    toast.message(`Snoozed until ${label}.`, { duration: UNDO_MS });
+    toast.message(`Snoozed until ${label}.`);
     publishUndoable({ id: `dec:${id}:snooze`, label: `Snoozed until ${label}.`, onUndo: () => rollback(id) });
   }, [rollback, setStatus]);
 
   const bulkApprove = useCallback((ids: string[]) => {
     ids.forEach((id) => setStatus(id, "in_flight"));
-    toast.success(`Approved ${ids.length} items. I'll execute in 30 seconds.`, {
-      duration: UNDO_MS,
-      action: { label: "Undo all", onClick: () => ids.forEach(rollback) },
+    toast.success(`Approved ${ids.length} items.`);
+    publishUndoable({
+      id: `dec:bulk-${Date.now()}:approve`,
+      label: `Approved ${ids.length} item${ids.length === 1 ? "" : "s"}.`,
+      onUndo: () => ids.forEach(rollback),
     });
   }, [rollback, setStatus]);
+
 
   // ---- Meeting task lifecycle ----
 
@@ -161,19 +164,19 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
 
   const markTaskCompleted = useCallback((taskId: string) => {
     setTaskStatus(taskId, "completed");
-    toast.success("Marked completed.", { duration: UNDO_MS });
+    toast.success("Marked completed.");
     publishUndoable({ id: `task:${taskId}:done`, label: "Marked completed.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const markTaskNotCompleted = useCallback((taskId: string) => {
     setTaskStatus(taskId, "not_completed");
-    toast.message("Marked not completed.", { duration: UNDO_MS });
+    toast.message("Marked not completed.");
     publishUndoable({ id: `task:${taskId}:reject`, label: "Marked not completed.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const delegateTaskToAan = useCallback((taskId: string) => {
     setTaskStatus(taskId, "with_aan");
-    toast.success("On it. I'll take this from here.", { duration: UNDO_MS });
+    toast.success("Handed to Aan.");
     publishUndoable({ id: `task:${taskId}:delegate`, label: "You handed it to me.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
@@ -192,11 +195,14 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
       toast.message("Nothing left to complete in this bundle.");
       return;
     }
-    toast.success(`Marked ${ids.length} task${ids.length === 1 ? "" : "s"} completed.`, {
-      duration: UNDO_MS,
-      action: { label: "Undo all", onClick: () => ids.forEach(rollbackTask) },
+    toast.success(`Marked ${ids.length} task${ids.length === 1 ? "" : "s"} completed.`);
+    publishUndoable({
+      id: `task:bundle-${bundleId}-${Date.now()}:done`,
+      label: `Marked ${ids.length} task${ids.length === 1 ? "" : "s"} completed.`,
+      onUndo: () => ids.forEach(rollbackTask),
     });
   }, [rollbackTask]);
+
 
   const tasksForBundle = useCallback((bundleId: string) =>
     meetingTasks.filter((t) => t.bundleId === bundleId), [meetingTasks]);
@@ -231,10 +237,8 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
       qUndoRef.current.set(id, { timer, prev: target.status, prevChoice: target.chosenId });
       return prev.map((q) => (q.id === id ? { ...q, status: "answered", chosenId: choiceId } : q));
     });
-    toast.success("Answer recorded. I'll remember for next time.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollbackQuestion(id) },
-    });
+    toast.success("Answer recorded.");
+    publishUndoable({ id: `q:${id}:answer`, label: "Answer recorded.", onUndo: () => rollbackQuestion(id) });
   }, [rollbackQuestion]);
 
   const skipQuestion = useCallback((id: string) => {
@@ -247,11 +251,10 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
       qUndoRef.current.set(id, { timer, prev: target.status, prevChoice: target.chosenId });
       return prev.map((q) => (q.id === id ? { ...q, status: "skipped" } : q));
     });
-    toast.message("Skipped. I'll guess safely and note it in Handled.", {
-      duration: UNDO_MS,
-      action: { label: "Undo", onClick: () => rollbackQuestion(id) },
-    });
+    toast.message("Skipped.");
+    publishUndoable({ id: `q:${id}:skip`, label: "Skipped. I'll guess safely and note it.", onUndo: () => rollbackQuestion(id) });
   }, [rollbackQuestion]);
+
 
   const openQuestionsCount = useMemo(
     () => questions.filter((q) => q.status === "open").length,

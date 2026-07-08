@@ -10,6 +10,8 @@ import { ValueBlock } from "./ValueBlock";
 import { SourceGlyph } from "./SourceGlyph";
 import { ActionChoiceRow } from "./ActionChoiceRow";
 import { ShareMenu } from "./ShareMenu";
+import { SettledStrip, settledTintClasses } from "./SettledStrip";
+
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
 import type { Decision } from "@/data/mockDecisions";
@@ -66,9 +68,11 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
       className={cn(
         "group relative flex overflow-hidden rounded-lg border bg-card transition-all",
         expanded ? "border-primary/40 shadow-sm" : "border-border hover:border-border/80 hover:shadow-sm",
+        !isActionable && settledTintClasses(d.status),
         isSelected && "ring-1 ring-primary/40",
       )}
     >
+
       <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
 
       <div className="flex-1 min-w-0 flex flex-col">
@@ -130,6 +134,10 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
                 Expand for actions
               </span>
             )}
+            {!expanded && !isActionable && (
+              <SettledStrip decision={d} size="sm" className="px-0 py-0" />
+            )}
+
           </div>
         </div>
 
@@ -162,6 +170,12 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
               </div>
             )}
 
+            {!isActionable && (
+              <div className="mt-4">
+                <SettledStrip decision={d} />
+              </div>
+            )}
+
             {isFyi && isActionable && (
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-[12.5px] text-muted-foreground">Notification only — no action required.</span>
@@ -169,6 +183,7 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
                   Got it
                 </Button>
               </div>
+
             )}
 
             <div className="mt-4 flex items-center justify-end border-t border-border/40 pt-3">

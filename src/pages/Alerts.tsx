@@ -23,9 +23,9 @@ import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from 
 import { MeetingWorkspace } from "@/components/actions/MeetingWorkspace";
 import type { ViewMode } from "@/components/actions/ViewSwitcher";
 import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
-import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
-import { useFilter } from "@/contexts/FilterContext";
+import { valueMagnitude } from "@/lib/decisions/valueFormat";
 import type { Decision } from "@/data/mockDecisions";
+
 
 /* ---------- persistence hooks ---------- */
 
@@ -74,9 +74,34 @@ function inWindow(ts: number, win: FilterState["window"]): boolean {
 
 /* ============================================================ */
 
+function useAlertsDateRange(): [{ from: Date; to: Date }, (r: { from: Date; to: Date }) => void] {
+  const [range, setRange] = useState<{ from: Date; to: Date }>(() => {
+    if (typeof window !== "undefined") {
+      const stored = sessionStorage.getItem("alerts:date-range");
+      if (stored) {
+        try {
+          const p = JSON.parse(stored);
+          return { from: new Date(p.from), to: new Date(p.to) };
+        } catch { /* fall through */ }
+      }
+    }
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 29);
+    return { from, to };
+  });
+  return [
+    range,
+    (r) => {
+      setRange(r);
+      sessionStorage.setItem("alerts:date-range", JSON.stringify({ from: r.from.toISOString(), to: r.to.toISOString() }));
+    },
+  ];
+}
+
 function AlertsInner() {
   const { decisions } = useActionsStore();
-  const { dateRange } = useFilter();
+  const [alertsDateRange, setAlertsDateRange] = useAlertsDateRange();
 
   const [viewMode, setViewMode] = useViewMode();
   const [tab, setTab] = useTab();
@@ -106,10 +131,10 @@ function AlertsInner() {
 
   const pool = useMemo(() => filterByTab(decisions, tab), [decisions, tab]);
 
-  // Custom date-range filter from AppTaskbar (inclusive of `to` end-of-day).
-  const dateFrom = dateRange.from.getTime();
+  // Custom date-range filter (alerts-local; taskbar override).
+  const dateFrom = alertsDateRange.from.getTime();
   const dateToEnd = (() => {
-    const d = new Date(dateRange.to);
+    const d = new Date(alertsDateRange.to);
     d.setHours(23, 59, 59, 999);
     return d.getTime();
   })();
@@ -147,15 +172,7 @@ function AlertsInner() {
     return Array.from(m.entries());
   }, [sorted]);
 
-  // Hero summary counts
-  const openCount = decisions.filter((d) => d.status === "open").length;
-  const criticalCount = decisions.filter((d) => d.status === "open" && d.severity === "critical").length;
-  const openValueCents = decisions
-    .filter((d) => d.status === "open")
-    .reduce((s, d) => s + valueMagnitude(d.valueKind, d.valueCents), 0);
-  const totalValueFmt = openValueCents > 0
-    ? formatValue({ cents: openValueCents, kind: "gain" }).text.replace("+ ", "")
-    : null;
+
 
   
 
@@ -192,7 +209,12 @@ function AlertsInner() {
 
   return (
     <AppLayout>
-      <AppTaskbar breadcrumbItems={[{ label: "Alerts" }]} showDateRange />
+      <AppTaskbar
+        breadcrumbItems={[{ label: "Alerts" }]}
+        showDateRange
+        dateRangeOverride={alertsDateRange}
+        onDateRangeOverrideChange={setAlertsDateRange}
+      />
       <div className="px-4 py-4 max-w-[1480px] mx-auto w-full">
 
         {/* Hero — compact, single line */}
@@ -208,23 +230,8 @@ function AlertsInner() {
               Alerts
             </h1>
           </div>
-          <div className="text-[12.5px] text-muted-foreground text-right leading-tight">
-            <div>
-              <span className="font-medium text-foreground tabular-nums">{openCount}</span> open
-              {totalValueFmt && (
-                <>
-                  {" · "}
-                  <span className="font-mono text-success tabular-nums">{totalValueFmt}</span> at stake
-                </>
-              )}
-            </div>
-            {criticalCount > 0 && (
-              <div>
-                <span className="font-medium text-destructive tabular-nums">{criticalCount}</span> critical
-              </div>
-            )}
-          </div>
         </header>
+
 
         {/* Toolbar */}
         <AlertsToolbar

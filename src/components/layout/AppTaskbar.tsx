@@ -124,9 +124,13 @@ interface AppTaskbarProps {
   onRun?: () => void;
   children?: ReactNode;
   breadcrumbItems?: BreadcrumbItem[];
+  /** Optional override — when provided, the taskbar date picker reads/writes
+   *  these instead of the global FilterContext (used by /alerts). */
+  dateRangeOverride?: { from: Date; to: Date };
+  onDateRangeOverrideChange?: (r: { from: Date; to: Date }) => void;
 }
 
-export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems }: AppTaskbarProps) {
+export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems, dateRangeOverride, onDateRangeOverrideChange }: AppTaskbarProps) {
   const { view } = useViewport();
   // Mobile delegates to a purpose-built taskbar.
   if (view === "mobile") {
@@ -141,7 +145,9 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
       </MobileTaskbar>
     );
   }
-  const { adType, setAdType, frequency, setFrequency, dateRange, setDateRange } = useFilter();
+  const { adType, setAdType, frequency, setFrequency, dateRange: ctxDateRange, setDateRange: setCtxDateRange } = useFilter();
+  const dateRange = dateRangeOverride ?? ctxDateRange;
+  const setDateRange = onDateRangeOverrideChange ?? setCtxDateRange;
   const { effects } = useVisualEffects();
   const { setDataPanel, hasAnyPanel } = useActivePanel();
   const { marketplace } = useMarketplace();
@@ -154,6 +160,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
 
 
   const [draftRange, setDraftRange] = useState<{ from: Date; to: Date }>(dateRange);
+
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
 
   useEffect(() => {

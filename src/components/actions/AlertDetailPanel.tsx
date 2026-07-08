@@ -8,8 +8,11 @@ import { AanMark } from "@/components/branding/AanMark";
 import { ArrowRight, ExternalLink, MessageSquare, Send } from "lucide-react";
 import { SourceGlyph } from "./SourceGlyph";
 import { ValueBlock } from "./ValueBlock";
+import { SettledStrip, settledTintClasses } from "./SettledStrip";
+import { useUndoFor } from "./useUndoFor";
 import { useActionsStore } from "@/state/actionsStore";
 import type { Decision } from "@/data/mockDecisions";
+
 
 export type PanelMode = "detail" | "ask_aan" | "custom";
 
@@ -34,12 +37,21 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
   const [message, setMessage] = useState("");
   useEffect(() => { setMessage(""); }, [state.decisionId, state.mode]);
 
+  // Auto-close panel after the 30s undo window elapses on a settled decision.
+  useEffect(() => {
+    if (!d || d.status === "open") return;
+    const t = setTimeout(() => onOpenChange(false), 30_000);
+    return () => clearTimeout(t);
+  }, [d?.id, d?.status, onOpenChange]);
+
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-[540px] p-0 flex flex-col"
       >
+
         {d && (
           <>
             {/* Header */}
@@ -94,12 +106,12 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
               </div>
             </ScrollArea>
 
-            {/* Footer actions (detail mode only) */}
+            {/* Footer — action bar (open) or confirmation strip (settled) */}
             {state.mode === "detail" && d.status === "open" && (
               <div className="border-t border-border px-5 py-3 flex items-center gap-2">
                 <Button
                   size="sm"
-                  onClick={() => { approve(d.id); onOpenChange(false); }}
+                  onClick={() => approve(d.id)}
                   className="h-9 text-[13px] gap-1.5 flex-1"
                 >
                   {d.actionVerb} <ArrowRight className="h-3.5 w-3.5" />
@@ -123,13 +135,22 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => { reject(d.id); onOpenChange(false); }}
+                  onClick={() => reject(d.id)}
                   className="h-9 text-[13px] text-muted-foreground hover:text-destructive"
                 >
                   Reject
                 </Button>
               </div>
             )}
+            {d.status !== "open" && (
+              <div className={"border-t border-border px-3 py-3 " + settledTintClasses(d.status)}>
+                <SettledStrip decision={d} />
+                <div className="mt-1 px-2 text-[11.5px] text-muted-foreground">
+                  Closing automatically when the undo window ends.
+                </div>
+              </div>
+            )}
+
           </>
         )}
       </SheetContent>

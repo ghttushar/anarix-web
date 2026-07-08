@@ -10,6 +10,8 @@ import { ValueBlock } from "./ValueBlock";
 import { SourceGlyph } from "./SourceGlyph";
 import { ActionChoiceRow } from "./ActionChoiceRow";
 import { ShareMenu } from "./ShareMenu";
+import { SettledStrip, settledTintClasses } from "./SettledStrip";
+
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
 import { formatValue } from "@/lib/decisions/valueFormat";
@@ -69,12 +71,14 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
       ref={rowRef}
       className={cn(
         "group relative flex items-stretch border-b border-border/60 last:border-b-0 transition-colors",
+        !isActionable && settledTintClasses(d.status),
         isSelected && "bg-primary/[0.05]",
         isFocused && "ring-1 ring-primary/50 ring-inset",
-        !isSelected && "hover:bg-muted/30",
+        !isSelected && isActionable && "hover:bg-muted/30",
       )}
     >
       <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
+
 
       <div className="flex-1 min-w-0 flex items-center gap-4 px-4 py-4">
         {interactive && sel && (
@@ -147,15 +151,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               layout="horizontal"
             />
           ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => { e.stopPropagation(); onOpenDetail(d.id, "detail"); }}
-              className="h-9 text-[13px] text-muted-foreground px-3"
-            >
-              View details
-            </Button>
+            <SettledStrip decision={d} size="sm" />
           )}
+
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
