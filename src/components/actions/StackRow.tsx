@@ -151,15 +151,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               layout="horizontal"
             />
           ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => { e.stopPropagation(); onOpenDetail(d.id, "detail"); }}
-              className="h-9 text-[13px] text-muted-foreground px-3"
-            >
-              View details
-            </Button>
+            <SettledStrip decision={d} size="sm" />
           )}
+
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
