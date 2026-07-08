@@ -72,6 +72,13 @@ const HOUR = 60 * 60 * 1000;
 const MIN = 60 * 1000;
 const now = Date.now();
 
+// Anchor helper — timestamp for today at the given hour/minute.
+function todayAt(hour: number, minute = 0): number {
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  return d.getTime();
+}
+
 export const MOCK_DECISIONS: Decision[] = [
   // ————— CRITICAL —————
   {
