@@ -107,10 +107,18 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => { delegateToAan(d.id); onOpenChange(false); }}
+                  onClick={() => onModeChange("custom")}
+                  className="h-9 text-[13px] gap-1.5"
+                >
+                  Write custom action
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onModeChange("ask_aan")}
                   className="h-9 text-[13px] gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
                 >
-                  <AanMark size={13} className="text-primary" /> Aan handles it
+                  <AanMark size={13} className="text-primary" /> Ask Aan
                 </Button>
                 <Button
                   size="sm"
