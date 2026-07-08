@@ -164,19 +164,19 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
 
   const markTaskCompleted = useCallback((taskId: string) => {
     setTaskStatus(taskId, "completed");
-    toast.success("Marked completed.", { duration: UNDO_MS });
+    toast.success("Marked completed.");
     publishUndoable({ id: `task:${taskId}:done`, label: "Marked completed.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const markTaskNotCompleted = useCallback((taskId: string) => {
     setTaskStatus(taskId, "not_completed");
-    toast.message("Marked not completed.", { duration: UNDO_MS });
+    toast.message("Marked not completed.");
     publishUndoable({ id: `task:${taskId}:reject`, label: "Marked not completed.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
   const delegateTaskToAan = useCallback((taskId: string) => {
     setTaskStatus(taskId, "with_aan");
-    toast.success("On it. I'll take this from here.", { duration: UNDO_MS });
+    toast.success("Handed to Aan.");
     publishUndoable({ id: `task:${taskId}:delegate`, label: "You handed it to me.", onUndo: () => rollbackTask(taskId) });
   }, [rollbackTask, setTaskStatus]);
 
@@ -195,11 +195,14 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
       toast.message("Nothing left to complete in this bundle.");
       return;
     }
-    toast.success(`Marked ${ids.length} task${ids.length === 1 ? "" : "s"} completed.`, {
-      duration: UNDO_MS,
-      action: { label: "Undo all", onClick: () => ids.forEach(rollbackTask) },
+    toast.success(`Marked ${ids.length} task${ids.length === 1 ? "" : "s"} completed.`);
+    publishUndoable({
+      id: `task:bundle-${bundleId}-${Date.now()}:done`,
+      label: `Marked ${ids.length} task${ids.length === 1 ? "" : "s"} completed.`,
+      onUndo: () => ids.forEach(rollbackTask),
     });
   }, [rollbackTask]);
+
 
   const tasksForBundle = useCallback((bundleId: string) =>
     meetingTasks.filter((t) => t.bundleId === bundleId), [meetingTasks]);
