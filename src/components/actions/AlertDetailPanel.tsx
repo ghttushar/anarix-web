@@ -38,12 +38,12 @@ export function AlertDetailPanel({ state, onOpenChange, onModeChange }: Props) {
   useEffect(() => { setMessage(""); }, [state.decisionId, state.mode]);
 
   // Auto-close panel after the 30s undo window elapses on a settled decision.
-  const undo = useUndoFor(d?.id);
   useEffect(() => {
     if (!d || d.status === "open") return;
     const t = setTimeout(() => onOpenChange(false), 30_000);
     return () => clearTimeout(t);
   }, [d?.id, d?.status, onOpenChange]);
+
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
