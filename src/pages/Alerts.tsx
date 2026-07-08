@@ -209,7 +209,12 @@ function AlertsInner() {
 
   return (
     <AppLayout>
-      <AppTaskbar breadcrumbItems={[{ label: "Alerts" }]} showDateRange />
+      <AppTaskbar
+        breadcrumbItems={[{ label: "Alerts" }]}
+        showDateRange
+        dateRangeOverride={alertsDateRange}
+        onDateRangeOverrideChange={setAlertsDateRange}
+      />
       <div className="px-4 py-4 max-w-[1480px] mx-auto w-full">
 
         {/* Hero — compact, single line */}
@@ -225,23 +230,8 @@ function AlertsInner() {
               Alerts
             </h1>
           </div>
-          <div className="text-[12.5px] text-muted-foreground text-right leading-tight">
-            <div>
-              <span className="font-medium text-foreground tabular-nums">{openCount}</span> open
-              {totalValueFmt && (
-                <>
-                  {" · "}
-                  <span className="font-mono text-success tabular-nums">{totalValueFmt}</span> at stake
-                </>
-              )}
-            </div>
-            {criticalCount > 0 && (
-              <div>
-                <span className="font-medium text-destructive tabular-nums">{criticalCount}</span> critical
-              </div>
-            )}
-          </div>
         </header>
+
 
         {/* Toolbar */}
         <AlertsToolbar
