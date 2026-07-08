@@ -68,9 +68,11 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
       className={cn(
         "group relative flex overflow-hidden rounded-lg border bg-card transition-all",
         expanded ? "border-primary/40 shadow-sm" : "border-border hover:border-border/80 hover:shadow-sm",
+        !isActionable && settledTintClasses(d.status),
         isSelected && "ring-1 ring-primary/40",
       )}
     >
+
       <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
 
       <div className="flex-1 min-w-0 flex flex-col">
