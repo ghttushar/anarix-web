@@ -8,8 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ValueBlock } from "./ValueBlock";
 import { SourceGlyph } from "./SourceGlyph";
-import { ActionChoiceRow, deriveActionOptions } from "./ActionChoiceRow";
-import { AskAanButton } from "./AskAanButton";
+import { ActionChoiceRow } from "./ActionChoiceRow";
 import { ShareMenu } from "./ShareMenu";
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
@@ -24,7 +23,7 @@ const SEV_RAIL: Record<Decision["severity"], string> = {
 
 const STATUS_TAG: Record<Decision["status"], { label: string; className: string } | null> = {
   open: null,
-  with_aan: { label: "Delegated to Aan", className: "text-primary bg-primary/10 border-primary/30" },
+  with_aan: { label: "Custom action set", className: "text-primary bg-primary/10 border-primary/30" },
   in_flight: { label: "In progress", className: "text-primary bg-primary/10 border-primary/30" },
   completed: { label: "Completed", className: "text-success bg-success/10 border-success/25" },
   rejected: { label: "Rejected", className: "text-muted-foreground bg-muted border-border" },
@@ -50,7 +49,7 @@ interface Props {
 }
 
 export function GridCard({ decision: d, expanded, focused, onToggleExpand, onToggleFocus, onOpenDetail }: Props) {
-  const { approve, reject, delegateToAan } = useActionsStore();
+  const { approve, reject } = useActionsStore();
   let sel: ReturnType<typeof useSelection> | null = null;
   try { sel = useSelection(); } catch { sel = null; }
   const isSelected = sel ? sel.isSelected(d.id) : false;
@@ -59,13 +58,6 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
   const isActionable = d.status === "open";
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
-
-  const options = deriveActionOptions(d, {
-    approve: () => approve(d.id),
-    delegate: () => delegateToAan(d.id),
-    reject: () => reject(d.id),
-    custom: () => onOpenDetail(d.id, "custom"),
-  });
 
   return (
     <div
@@ -77,15 +69,11 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
         isSelected && "ring-1 ring-primary/40",
       )}
     >
-      {/* Rail */}
       <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* Header row (always visible) */}
-        <div
-          onClick={onToggleExpand}
-          className="flex items-start gap-3 px-4 pt-4 pb-3 cursor-pointer"
-        >
+        {/* Header row */}
+        <div onClick={onToggleExpand} className="flex items-start gap-3 px-4 pt-4 pb-3 cursor-pointer">
           {sel && (
             <div
               className={cn(
@@ -103,43 +91,25 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
           )}
 
           <div className="flex-1 min-w-0">
-            {/* Value first */}
-            <ValueBlock
-              cents={d.valueCents}
-              kind={d.valueKind}
-              cadence={d.cadence}
-              caption={d.valueCaption}
-              size="md"
-            />
-
-            {/* Headline */}
-            <div className="mt-2.5 text-[14.5px] font-medium leading-snug text-foreground">
-              {d.insight}
-            </div>
-
-            {/* Context strip */}
+            <ValueBlock cents={d.valueCents} kind={d.valueKind} cadence={d.cadence} caption={d.valueCaption} size="md" />
+            <div className="mt-2.5 text-[14.5px] font-medium leading-snug text-foreground">{d.insight}</div>
             <div className="mt-2 flex items-center gap-2 flex-wrap text-[12.5px] text-muted-foreground">
               <SourceGlyph source={d.source} refLabel={d.sourceRef.label} size={11} />
               <span className="text-foreground/70">{d.sourceRef.label}</span>
               <span className="text-border">·</span>
               <span>{timeAgo(d.createdAt)}</span>
               {tag && (
-                <span className={cn(
-                  "ml-1 rounded-full border px-2 py-[1px] text-[11px] font-medium",
-                  tag.className,
-                )}>
+                <span className={cn("ml-1 rounded-full border px-2 py-[1px] text-[11px] font-medium", tag.className)}>
                   {tag.label}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Header trailing */}
           <div className="shrink-0 flex flex-col items-end gap-1">
             <div className="flex items-center gap-0.5">
               <Button
-                variant="ghost"
-                size="icon"
+                variant="ghost" size="icon"
                 onClick={(e) => { e.stopPropagation(); onToggleFocus(); }}
                 className="h-7 w-7 text-muted-foreground"
                 title={focused ? "Exit focus" : "Focus this card"}
@@ -147,8 +117,7 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
                 {focused ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
               </Button>
               <Button
-                variant="ghost"
-                size="icon"
+                variant="ghost" size="icon"
                 onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
                 className="h-7 w-7 text-muted-foreground"
                 title={expanded ? "Collapse" : "Expand"}
@@ -158,7 +127,7 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
             </div>
             {!expanded && isActionable && !isFyi && (
               <span className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground">
-                3 actions · Ask Aan
+                Expand for actions
               </span>
             )}
           </div>
@@ -180,10 +149,16 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
 
             {isActionable && !isFyi && (
               <div className="mt-4">
-                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
-                  Choose how to handle this
-                </div>
-                <ActionChoiceRow options={options} layout={focused ? "horizontal" : "vertical"} />
+                <ActionChoiceRow
+                  decision={d}
+                  handlers={{
+                    approve: () => approve(d.id),
+                    reject: () => reject(d.id),
+                    custom: () => onOpenDetail(d.id, "custom"),
+                    viewMore: () => onOpenDetail(d.id, "detail"),
+                  }}
+                  layout={focused ? "horizontal" : "horizontal"}
+                />
               </div>
             )}
 
@@ -196,18 +171,7 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
               </div>
             )}
 
-            <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
-              <div className="flex items-center gap-1">
-                <AskAanButton onClick={() => onOpenDetail(d.id, "ask_aan")} />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onOpenDetail(d.id, "detail")}
-                  className="h-8 text-[12.5px] text-muted-foreground"
-                >
-                  View full context
-                </Button>
-              </div>
+            <div className="mt-4 flex items-center justify-end border-t border-border/40 pt-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="More">
@@ -215,6 +179,9 @@ export function GridCard({ decision: d, expanded, focused, onToggleExpand, onTog
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "ask_aan")}>
+                    Ask Aan about this
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={() => {
                       navigator.clipboard.writeText(

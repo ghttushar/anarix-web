@@ -8,8 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ValueBlock } from "./ValueBlock";
 import { SourceGlyph } from "./SourceGlyph";
-import { ActionChoiceRow, deriveActionOptions } from "./ActionChoiceRow";
-import { AskAanButton } from "./AskAanButton";
+import { ActionChoiceRow } from "./ActionChoiceRow";
 import { ShareMenu } from "./ShareMenu";
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
@@ -24,7 +23,7 @@ const SEV_RAIL: Record<Decision["severity"], string> = {
 
 const STATUS_TAG: Record<Decision["status"], { label: string; className: string } | null> = {
   open: null,
-  with_aan: { label: "Delegated to Aan", className: "text-primary bg-primary/10 border-primary/30" },
+  with_aan: { label: "Custom action set", className: "text-primary bg-primary/10 border-primary/30" },
   in_flight: { label: "In progress", className: "text-primary bg-primary/10 border-primary/30" },
   completed: { label: "Completed", className: "text-success bg-success/10 border-success/25" },
   rejected: { label: "Rejected", className: "text-muted-foreground bg-muted border-border" },
@@ -47,7 +46,7 @@ interface Props {
 }
 
 export function StackRow({ decision: d, onOpenDetail, interactive = true }: Props) {
-  const { approve, reject, delegateToAan } = useActionsStore();
+  const { approve, reject } = useActionsStore();
   let sel: ReturnType<typeof useSelection> | null = null;
   try { sel = useSelection(); } catch { sel = null; }
   const isSelected = interactive && sel ? sel.isSelected(d.id) : false;
@@ -60,13 +59,6 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
   const isActionable = d.status === "open";
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
-
-  const options = deriveActionOptions(d, {
-    approve: () => approve(d.id),
-    delegate: () => delegateToAan(d.id),
-    reject: () => reject(d.id),
-    custom: () => onOpenDetail(d.id, "custom"),
-  });
 
   const handleRowClick = useCallback(() => {
     onOpenDetail(d.id, "detail");
@@ -82,11 +74,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
         !isSelected && "hover:bg-muted/30",
       )}
     >
-      {/* Severity rail */}
       <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
 
       <div className="flex-1 min-w-0 flex items-center gap-4 px-4 py-4">
-        {/* Selection checkbox */}
         {interactive && sel && (
           <div
             className={cn(
@@ -109,29 +99,12 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
           </div>
         )}
 
-        {/* Value — first thing you read */}
-        <button
-          onClick={handleRowClick}
-          className="shrink-0 w-[140px] text-left"
-          aria-label="Open details"
-        >
-          <ValueBlock
-            cents={d.valueCents}
-            kind={d.valueKind}
-            cadence={d.cadence}
-            caption={d.valueCaption}
-            size="md"
-          />
+        <button onClick={handleRowClick} className="shrink-0 w-[140px] text-left" aria-label="Open details">
+          <ValueBlock cents={d.valueCents} kind={d.valueKind} cadence={d.cadence} caption={d.valueCaption} size="md" />
         </button>
 
-        {/* Headline + context */}
-        <button
-          onClick={handleRowClick}
-          className="flex-1 min-w-0 text-left"
-        >
-          <div className="text-[15px] font-medium text-foreground leading-snug">
-            {d.insight}
-          </div>
+        <button onClick={handleRowClick} className="flex-1 min-w-0 text-left">
+          <div className="text-[15px] font-medium text-foreground leading-snug">{d.insight}</div>
           <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[12.5px] text-muted-foreground">
             <SourceGlyph source={d.source} refLabel={d.sourceRef.label} size={11} />
             <span className="text-foreground/70">{d.sourceRef.label}</span>
@@ -144,38 +117,41 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               </>
             )}
             {tag && (
-              <span className={cn(
-                "ml-1 rounded-full border px-2 py-[1px] text-[11px] font-medium",
-                tag.className,
-              )}>
+              <span className={cn("ml-1 rounded-full border px-2 py-[1px] text-[11px] font-medium", tag.className)}>
                 {tag.label}
               </span>
             )}
           </div>
         </button>
 
-        {/* Actions cluster */}
+        {/* Actions cluster — fixed slots, aligned across rows */}
         <div className="shrink-0 flex items-center gap-1.5">
           {isFyi && isActionable ? (
             <Button
               size="sm"
               variant="outline"
               onClick={(e) => { e.stopPropagation(); approve(d.id); }}
-              className="h-8 text-[12.5px]"
+              className="h-9 text-[13px] px-3"
             >
               Got it
             </Button>
           ) : isActionable ? (
-            <>
-              <ActionChoiceRow options={options.slice(0, 3)} layout="horizontal" />
-              <AskAanButton onClick={() => onOpenDetail(d.id, "ask_aan")} />
-            </>
+            <ActionChoiceRow
+              decision={d}
+              handlers={{
+                approve: () => approve(d.id),
+                reject: () => reject(d.id),
+                custom: () => onOpenDetail(d.id, "custom"),
+                viewMore: () => onOpenDetail(d.id, "detail"),
+              }}
+              layout="horizontal"
+            />
           ) : (
             <Button
               size="sm"
               variant="ghost"
               onClick={(e) => { e.stopPropagation(); onOpenDetail(d.id, "detail"); }}
-              className="h-8 text-[12.5px] text-muted-foreground"
+              className="h-9 text-[13px] text-muted-foreground px-3"
             >
               View details
             </Button>
@@ -183,16 +159,13 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="More">
+              <Button variant="ghost" size="icon" className="h-9 w-9" title="More">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "detail")}>
-                View more
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "custom")}>
-                Write your own instruction
+              <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "ask_aan")}>
+                Ask Aan about this
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => {
