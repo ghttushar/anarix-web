@@ -20,9 +20,11 @@ import { BulkBar } from "@/components/actions/BulkBar";
 import { StackRow } from "@/components/actions/StackRow";
 import { GridCard } from "@/components/actions/GridCard";
 import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from "@/components/actions/AlertDetailPanel";
+import { MeetingWorkspace } from "@/components/actions/MeetingWorkspace";
 import type { ViewMode } from "@/components/actions/ViewSwitcher";
 import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
 import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
+import { useFilter } from "@/contexts/FilterContext";
 import type { Decision } from "@/data/mockDecisions";
 
 /* ---------- persistence hooks ---------- */
