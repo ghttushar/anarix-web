@@ -1,39 +1,41 @@
-## Alerts — Grid & Meeting Card Polish
+## Grid Card v10 — Meeting content, independent expand, in-card undo
 
-### 1. Equal-height grid cards (All / Needs Approval tabs)
-- In `src/pages/Alerts.tsx`, replace the CSS-columns layout in `GridBody` with a CSS grid (`grid grid-cols-1 lg:grid-cols-2 gap-3 auto-rows-fr items-stretch`) so every card in a row shares the tallest card's height.
-- In `src/components/actions/GridCard.tsx`, add `h-full` to the outer card wrapper so it stretches to the grid row height.
-- Note: expansion will still make one card taller — because rows use `auto-rows-fr`, the neighboring card in the same row will match. Acceptable and matches the "aligned" ask.
+### 1. Independent expand (fix "right card grows when left expands")
+**File:** `src/pages/Alerts.tsx`
+- Replace `grid grid-cols-1 lg:grid-cols-2 gap-3 auto-rows-fr items-stretch` with a **CSS masonry-style 2-column layout** using two flex columns so each column's cards stack independently:
+  - Wrap in `<div className="flex gap-3">` with two `<div className="flex-1 flex flex-col gap-3">` columns.
+  - Distribute cards by index (`i % 2 === 0` → left column, else right).
+- This makes expanding a left-column card only push cards **below it in the left column** down. Right column is untouched.
 
-### 2. Overview action buttons — rename & simplify
-In `src/components/actions/ActionChoiceRow.tsx`:
-- Rename primary button label from the dynamic `actionVerb` (currently "Approve", "Reply", etc.) to a single word: **"Action"**. Split-button dropdown chevron on the right is kept (that's how alternates are chosen), but the standalone chevron/caret decoration on the primary label is removed.
-- Replace the "Dismiss" text button with an icon-only button: `X` icon, ghost/outline style, `aria-label="Dismiss"`, `title="Dismiss"`. No text label.
+**File:** `src/components/actions/GridCard.tsx`
+- Remove `h-full` from the outer wrapper (no longer stretching to row height).
+- Collapsed cards render at their natural (small) height; expanded cards grow only themselves.
+- To keep collapsed cards visually consistent, set a `min-h-[140px]` on the outer card so all collapsed cards share the same baseline height (as user asked: same height when collapsed).
 
-### 3. Grid card header — remove clutter, add share on expand
-In `src/components/actions/GridCard.tsx`:
-- Remove the `MoreHorizontal` "More" dropdown block at the bottom of the expanded body (lines ~199-228).
-- Remove the chevron/expand icon button in the header top-right (lines ~140-150). Expansion still works via clicking the card header row.
-- When `expanded === true`, render a small **Share** icon button (using `Share2` from lucide) in the header top-right that opens the existing `ShareMenu` (wrap it in a `DropdownMenu` or reuse the existing ShareMenu component as trigger). Only visible in expanded state.
+### 2. Meeting card — fill empty collapsed space
+**File:** `src/components/actions/GridCard.tsx`, meeting branch of the header (`isMeeting`)
+- Below the meta chip row (`N action items · N attendees`), add a small **preview block** shown only when collapsed:
+  - **Meeting context line:** first sentence of `bundle.summary` (truncated to 2 lines with `line-clamp-2`, muted-foreground, 13px).
+  - **Attendee avatar row:** horizontal stack of `AttendeePill` initials (max 5 shown, then `+N` chip). Uses `bundle.attendees` and the existing `AttendeePill` (already used in `InlineMeetingWorkspace`).
+- Hide this preview when `expanded` is true (the full workspace covers it).
 
-### 4. Meeting card — de-duplicate, surface counts
-In `src/components/actions/GridCard.tsx` (overview / collapsed meeting header):
-- Keep meeting title as headline (already done).
-- Replace the "insight repeated after timestamp" chip (lines ~126-131) with two meta chips:
-  - `{tasks.length} action items`
-  - `{attendees.length} attendees`
-- Data source: read `d.meetingRef.bundleId` → look up via `useActionsStore().meetings` + `tasksForBundle(bundleId)` (same pattern used by `InlineMeetingWorkspace`).
+### 3. In-card undo (replace floating toast for approve/complete)
+Already partially wired via `useUndoFor` + `ActionChoiceRow`'s undo branch and `UndoToast` suppression for `dec:*:approve` / `task:*:done`. Verify + tighten:
 
-In `src/components/actions/InlineMeetingWorkspace.tsx` (expanded state):
-- Remove the duplicated meeting title header block (lines ~34-59) since the parent card already shows title + attendees. Start the expanded panel directly with the Summary section.
-- Remove the "Meeting workspace" eyebrow label.
-- The "Action items" section stays as-is (per-item value + action row).
+**File:** `src/components/actions/GridCard.tsx`
+- The FYI branch currently renders a plain `<Button>Got it</Button>` with no undo swap. Wrap it so when `undo.active` (already computed at top of component) it renders the same green **"Undo · Ns"** pill as `ActionChoiceRow` does (extract a small `<InlineUndoPill />` from `ActionChoiceRow` or reuse it directly by rendering `ActionChoiceRow` in FYI mode).
+- Confirm existing effect (lines 55–61) that hides the card once undo window ends is intact: after the 30s pill expires, `setHidden(true)` runs and card disappears; store already moves the decision to `completed` status so it appears in the **Done** tab.
 
-### 5. Also apply overview button renames to Stack view
-`StackRow.tsx` uses the same `ActionChoiceRow`, so changes flow through automatically. No stack-specific edits required for the button rename.
+**File:** `src/components/actions/UndoToast.tsx` — no change needed (already suppresses `dec:*:approve` and `task:*:done`).
 
-### Files to edit
-- `src/pages/Alerts.tsx` — GridBody layout
-- `src/components/actions/GridCard.tsx` — height, header icons, meeting meta chips, remove More menu
-- `src/components/actions/ActionChoiceRow.tsx` — "Action" label, icon-only Dismiss
-- `src/components/actions/InlineMeetingWorkspace.tsx` — remove duplicate header
+### 4. Same behavior in Stack view
+No change requested; StackRow already reuses `ActionChoiceRow` so the undo pill works there too.
+
+### Technical notes
+- Column-distribution approach is intentional over CSS `columns-*` (which we removed earlier) because we need each card to be a flex item, not a fragmented block, and we need independent scroll/expand per column without CSS-columns' balancing behavior.
+- `auto-rows-fr` on CSS grid is what forces neighboring cards to grow — removing it (by switching to flex columns) fixes the "right card expands too" bug.
+- Bucket sections (`Today` / `Yesterday` / `Earlier`) each get their own 2-column split so cards stay grouped by date.
+
+### Files touched
+- `src/pages/Alerts.tsx` (GridBody column layout)
+- `src/components/actions/GridCard.tsx` (remove h-full, add meeting preview block, wire FYI undo pill)
