@@ -1,4 +1,4 @@
-import { ChevronDown, PenLine, XCircle } from "lucide-react";
+import { ChevronDown, PenLine, XCircle, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +11,8 @@ import {
 import { cn } from "@/lib/utils";
 import type { Decision } from "@/data/mockDecisions";
 import { deriveAlternateActions } from "@/lib/decisions/deriveAlternateActions";
+import { useUndoFor } from "./useUndoFor";
+import { CountdownRing } from "./CountdownRing";
 
 export interface ActionHandlers {
   approve: () => void;
@@ -27,20 +29,50 @@ interface Props {
   layout?: "horizontal" | "vertical";
   className?: string;
   compact?: boolean;
+  /** Override for the id used to observe the inline undo bus (task rows use task.id). */
+  undoTargetId?: string;
 }
 
 /**
  * Two-button action cluster used everywhere:
  *   [ Primary verb ▾ ]   [ Dismiss ]
  *
- * The dropdown carries alternate variants and the "Write custom action /
- * Discuss with Aan" option (opens the right-side Aan chat panel).
+ * When the approve action is pending its 30s undo window, the primary
+ * button swaps into an inline "Undo · Ns" pill (with countdown ring) and
+ * Dismiss is hidden — replacing the floating toast on card surfaces.
  */
-export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", className, compact }: Props) {
+export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", className, compact, undoTargetId }: Props) {
   const alternates = deriveAlternateActions(d);
   const primaryVerb = d.actionVerb || "Approve";
   const btnH = compact ? "h-8" : "h-9";
   const btnText = compact ? "text-[12.5px]" : "text-[13px]";
+  const undo = useUndoFor(undoTargetId ?? d.id);
+
+  if (undo.active) {
+    return (
+      <div
+        className={cn(
+          layout === "horizontal" ? "flex items-center" : "flex flex-col",
+          className,
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={(e) => { e.stopPropagation(); undo.undo(); }}
+          className={cn(
+            btnH, btnText,
+            "inline-flex items-center gap-2 rounded-md border border-success/40 bg-success/10 text-success",
+            "px-2.5 pr-3 font-medium hover:bg-success/15 transition-colors",
+          )}
+          title="Undo — reverts the approve action"
+        >
+          <CountdownRing pct={undo.pct} secs={undo.secondsLeft} size={compact ? 20 : 22} />
+          <Undo2 className="h-3.5 w-3.5" />
+          <span>Undo</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -123,3 +155,4 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
     </div>
   );
 }
+
