@@ -71,6 +71,7 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
       if (d.status !== "open") setHidden(true);
     }
   }, [undo.active, d.status]);
+  const toggleExpand = useCallback(() => setExpanded((v) => !v), []);
 
   if (hidden) return null;
 
@@ -79,7 +80,6 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
   const tag = STATUS_TAG[d.status];
   const isMeeting = !!d.meetingRef;
 
-  const toggleExpand = useCallback(() => setExpanded((v) => !v), []);
 
   return (
     <div
