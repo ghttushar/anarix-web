@@ -13,7 +13,7 @@ interface Props {
   withLabel?: boolean;
 }
 
-export function SourceGlyph({ source, refLabel, size = 14, className, withLabel = false }: Props) {
+export function SourceGlyph({ source, refLabel, size = 18, className, withLabel = false }: Props) {
   const meta = getSourceMeta(source);
   const Icon = meta.icon;
   const tip = refLabel ? `${meta.label} · ${refLabel}` : meta.description;

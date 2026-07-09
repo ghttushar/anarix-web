@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, MoreHorizontal, PenLine, XCircle } from "lucide-react";
+import { ArrowRight, ChevronDown, PenLine, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,13 +11,17 @@ import {
 import { cn } from "@/lib/utils";
 import type { Decision } from "@/data/mockDecisions";
 import { deriveAlternateActions } from "@/lib/decisions/deriveAlternateActions";
+import { AanMark } from "@/components/branding/AanMark";
 
 export interface ActionHandlers {
   approve: () => void;
   approveVariant?: (id: string, label: string) => void;
+  /** Renamed from reject in copy; store status is unchanged. */
   reject: () => void;
+  /** Opens the right-side Aan chat panel for a custom instruction / discussion. */
   custom: () => void;
-  viewMore: () => void;
+  /** Retained for API compatibility; no longer rendered as a button. */
+  viewMore?: () => void;
 }
 
 interface Props {
@@ -29,15 +33,10 @@ interface Props {
 }
 
 /**
- * Three-slot action bar — same fixed order across Stack and Grid so cards align:
- *   [ Primary verb ▾ ]   [ Reject ]   [ View more ]
+ * Left-aligned action cluster shared by Stack and Grid:
+ *   [ Primary verb ▾ ]   [ Dismiss ]   [ ✎ Write custom action / Discuss with Aan ]
  *
- * Primary is a split button:
- *   - click        → runs `actionVerb` as-is
- *   - caret click  → alternates + "Write custom action…"
- *
- * "Aan handles it" has been removed. Delegation happens only when a user
- * submits a custom instruction from the right-side panel.
+ * The custom/Aan button opens the right-side Aan chat panel.
  */
 export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", className, compact }: Props) {
   const alternates = deriveAlternateActions(d);
@@ -81,7 +80,7 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
               <ChevronDown className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuContent align="start" className="w-64">
             <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Choose how to run
             </DropdownMenuLabel>
@@ -102,15 +101,15 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
             >
               <PenLine className="h-3.5 w-3.5" />
               <div className="flex flex-col">
-                <span className="text-[13px] font-medium">Write custom action…</span>
-                <span className="text-[11.5px] text-muted-foreground">Tell me exactly how to handle it.</span>
+                <span className="text-[13px] font-medium">Write custom action / Discuss with Aan</span>
+                <span className="text-[11.5px] text-muted-foreground">Chat opens in the side panel.</span>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Reject */}
+      {/* Dismiss */}
       <Button
         size="sm"
         variant="outline"
@@ -122,22 +121,23 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
         )}
       >
         <XCircle className="h-3.5 w-3.5" />
-        <span>Reject</span>
+        <span>Dismiss</span>
       </Button>
 
-      {/* View more */}
+      {/* Write custom action / Discuss with Aan */}
       <Button
         size="sm"
-        variant="ghost"
-        onClick={(e) => { e.stopPropagation(); handlers.viewMore(); }}
+        variant="outline"
+        onClick={(e) => { e.stopPropagation(); handlers.custom(); }}
         className={cn(
           btnH, btnText,
-          "gap-1.5 text-muted-foreground hover:text-foreground px-3",
+          "gap-1.5 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary px-3",
           layout === "vertical" && "w-full justify-start",
         )}
+        title="Write a custom instruction or discuss this with Aan"
       >
-        <MoreHorizontal className="h-3.5 w-3.5" />
-        <span>View more</span>
+        <AanMark size={13} className="text-primary" />
+        <span>Write custom action / Discuss with Aan</span>
       </Button>
     </div>
   );

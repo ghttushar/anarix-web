@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
-import { formatValue, type ValueKind, type Cadence } from "@/lib/decisions/valueFormat";
+import type { ValueKind, Cadence } from "@/lib/decisions/valueFormat";
 
 interface Props {
   cents: number;
   kind: ValueKind;
+  /** Kept for API compatibility, no longer rendered. */
   cadence?: Cadence;
   caption?: string;
   size?: "sm" | "md" | "lg";
@@ -24,22 +25,34 @@ const SIZE: Record<NonNullable<Props["size"]>, { num: string; cap: string }> = {
   lg: { num: "text-[22px]", cap: "text-[12.5px]" },
 };
 
+function formatMoney(absCents: number): string {
+  const dollars = Math.round(absCents / 100);
+  if (dollars < 1000) return `$${dollars.toLocaleString()}`;
+  if (dollars < 100_000) {
+    const k = dollars / 1000;
+    return `$${k >= 10 ? k.toFixed(0) : k.toFixed(1)}k`;
+  }
+  if (dollars < 1_000_000) return `$${Math.round(dollars / 1000)}k`;
+  const m = dollars / 1_000_000;
+  return `$${m >= 10 ? m.toFixed(0) : m.toFixed(1)}M`;
+}
+
 /**
- * Canonical value renderer. Same visual weight in Stack and Grid.
- * Number first, caption second — always readable at a glance.
+ * Canonical value renderer. Pure dollar amount only — no prefix, no cadence.
+ * Color still driven by `kind`.
  */
 export function ValueBlock({
-  cents, kind, cadence, caption, size = "md", align = "left", className,
+  cents, kind, caption, size = "md", align = "left", className,
 }: Props) {
-  const v = formatValue({ cents, kind, cadence });
+  const text = kind === "info" ? "Info" : formatMoney(Math.abs(cents));
   const sz = SIZE[size];
   return (
     <div
       className={cn("flex flex-col leading-tight", align === "right" && "items-end text-right", className)}
-      aria-label={v.ariaLabel}
+      aria-label={caption ? `${text}, ${caption}` : text}
     >
       <span className={cn("font-mono font-semibold tabular-nums whitespace-nowrap", sz.num, KIND_COLOR[kind])}>
-        {v.text}
+        {text}
       </span>
       {caption && (
         <span className={cn("mt-0.5 text-muted-foreground", sz.cap)}>

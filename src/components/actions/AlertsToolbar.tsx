@@ -1,7 +1,7 @@
-import { MoreHorizontal, Keyboard, Eraser } from "lucide-react";
+import { MoreHorizontal, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ALERT_TABS, type AlertTabKey } from "./tabs";
@@ -21,14 +21,13 @@ interface Props {
   onSortChange: (s: SortKey) => void;
   filterSheetOpen: boolean;
   onFilterSheetOpenChange: (o: boolean) => void;
-  onClearCompleted?: () => void;
   onOpenShortcuts?: () => void;
 }
 
 export function AlertsToolbar(p: Props) {
   return (
-    <div className="sticky top-0 z-20 -mx-1 mb-3 rounded-md border border-border bg-card/95 backdrop-blur-none">
-      <div className="flex flex-wrap items-center gap-2 px-2 py-2">
+    <div className="sticky top-0 z-20 mb-3 rounded-md border border-border bg-card">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         {/* Tabs — left side */}
         <nav role="tablist" aria-label="Alert filters" className="flex flex-wrap items-center gap-1">
           {ALERT_TABS.map((t) => {
@@ -85,14 +84,6 @@ export function AlertsToolbar(p: Props) {
                 <DropdownMenuItem onSelect={p.onOpenShortcuts}>
                   <Keyboard className="h-4 w-4 mr-2" /> Keyboard shortcuts
                 </DropdownMenuItem>
-              )}
-              {p.onClearCompleted && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={p.onClearCompleted}>
-                    <Eraser className="h-4 w-4 mr-2" /> Clear completed
-                  </DropdownMenuItem>
-                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
