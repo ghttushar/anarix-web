@@ -93,7 +93,7 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
           )}
           title={`Run "${primaryVerb}" as proposed`}
         >
-          <span>{primaryVerb}</span>
+          <span>Action</span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
