@@ -79,6 +79,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
   const isMeeting = !!d.meetingRef;
+  const bundle = isMeeting ? meetings.find((m) => m.id === d.meetingRef!.bundleId) : null;
+  const meetingTaskCount = bundle ? tasksForBundle(bundle.id).length : 0;
+  const meetingAttendeeCount = bundle ? bundle.attendees.length : 0;
 
 
   return (
