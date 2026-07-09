@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,11 +10,14 @@ import { ShareMenu } from "./ShareMenu";
 import { SettledStrip, settledTintClasses } from "./SettledStrip";
 import { InlineMeetingWorkspace } from "./InlineMeetingWorkspace";
 import { ExpandedAlertBody } from "./ExpandedAlertBody";
+import { AttendeePill } from "./AttendeePill";
+import { CountdownRing } from "./CountdownRing";
 import { useUndoFor } from "./useUndoFor";
 
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
 import type { Decision } from "@/data/mockDecisions";
+
 
 
 const SEV_RAIL: Record<Decision["severity"], string> = {
