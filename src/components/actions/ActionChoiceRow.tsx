@@ -1,4 +1,4 @@
-import { ChevronDown, PenLine, XCircle, Undo2 } from "lucide-react";
+import { ChevronDown, PenLine, X, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -93,7 +93,7 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
           )}
           title={`Run "${primaryVerb}" as proposed`}
         >
-          <span>{primaryVerb}</span>
+          <span>Action</span>
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -138,19 +138,19 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
         </DropdownMenu>
       </div>
 
-      {/* Dismiss */}
+      {/* Dismiss — icon only */}
       <Button
-        size="sm"
-        variant="outline"
+        size="icon"
+        variant="ghost"
         onClick={(e) => { e.stopPropagation(); handlers.reject(); }}
         className={cn(
-          btnH, btnText,
-          "gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive px-3",
-          layout === "vertical" && "w-full justify-start",
+          btnH, "w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+          layout === "vertical" && "w-full",
         )}
+        title="Dismiss"
+        aria-label="Dismiss"
       >
-        <XCircle className="h-3.5 w-3.5" />
-        <span>Dismiss</span>
+        <X className="h-4 w-4" />
       </Button>
     </div>
   );

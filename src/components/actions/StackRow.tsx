@@ -51,7 +51,7 @@ interface Props {
 }
 
 export function StackRow({ decision: d, onOpenDetail, interactive = true }: Props) {
-  const { approve, reject } = useActionsStore();
+  const { approve, reject, meetings, tasksForBundle } = useActionsStore();
   let sel: ReturnType<typeof useSelection> | null = null;
   try { sel = useSelection(); } catch { sel = null; }
   const isSelected = interactive && sel ? sel.isSelected(d.id) : false;
@@ -79,6 +79,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
   const isMeeting = !!d.meetingRef;
+  const bundle = isMeeting ? meetings.find((m) => m.id === d.meetingRef!.bundleId) : null;
+  const meetingTaskCount = bundle ? tasksForBundle(bundle.id).length : 0;
+  const meetingAttendeeCount = bundle ? bundle.attendees.length : 0;
 
 
   return (
@@ -141,7 +144,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               {isMeeting && (
                 <>
                   <span className="text-border">·</span>
-                  <span className="text-foreground/70 truncate max-w-[240px]">{d.insight}</span>
+                  <span className="text-foreground/70">{meetingTaskCount} action items</span>
+                  <span className="text-border">·</span>
+                  <span className="text-foreground/70">{meetingAttendeeCount} attendees</span>
                 </>
               )}
               {tag && (

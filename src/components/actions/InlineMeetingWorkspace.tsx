@@ -31,32 +31,7 @@ export function InlineMeetingWorkspace({ bundleId, onDiscuss }: Props) {
 
   return (
     <div className="rounded-md border border-border bg-card overflow-hidden">
-      {/* Header */}
-      <div className="px-4 pt-3.5 pb-3 border-b border-border/60">
-        <div className="text-[11.5px] uppercase tracking-wider font-semibold text-primary mb-2">
-          Meeting workspace
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-md bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0">
-            <span className="text-primary font-heading font-semibold text-[15px]">M</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-heading text-[15px] font-semibold text-foreground leading-snug truncate">
-              {bundle.title}
-            </div>
-            <div className="text-[12.5px] text-muted-foreground">
-              {new Date(bundle.ts).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-              {" · "}{bundle.durationMin} min
-            </div>
-          </div>
-          {/* Attendees — initials only */}
-          <div className="flex items-center -space-x-1.5 shrink-0">
-            {bundle.attendees.map((a) => (
-              <AttendeePill key={a.name} name={a.name} role={a.role} size={24} />
-            ))}
-          </div>
-        </div>
-      </div>
+
 
       {/* Summary */}
       <div className="px-4 py-3 border-b border-border/60">

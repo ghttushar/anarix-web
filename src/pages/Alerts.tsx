@@ -283,9 +283,8 @@ function GridBody({
       {bucketed.map(([bucket, list]) => (
         <section key={bucket}>
           <BucketHeader label={bucket} />
-          {/* CSS columns: expanding a card in one column only pushes cards
-              below it in the same column. */}
-          <div className="columns-1 lg:columns-2 gap-3">
+          {/* Grid: rows share the tallest card height so cards stay aligned. */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 auto-rows-fr items-stretch">
             {list.map((d) => (
               <GridCard
                 key={d.id}

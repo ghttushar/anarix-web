@@ -1,11 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, MoreHorizontal, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { ValueBlock } from "./ValueBlock";
 import { SourceGlyph } from "./SourceGlyph";
 import { ActionChoiceRow } from "./ActionChoiceRow";
@@ -52,7 +48,7 @@ interface Props {
 }
 
 export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }: Props) {
-  const { approve, reject } = useActionsStore();
+  const { approve, reject, meetings, tasksForBundle } = useActionsStore();
   let sel: ReturnType<typeof useSelection> | null = null;
   try { sel = useSelection(); } catch { sel = null; }
   const isSelected = sel ? sel.isSelected(d.id) : false;
@@ -74,13 +70,16 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
   const isMeeting = !!d.meetingRef;
+  const bundle = isMeeting ? meetings.find((m) => m.id === d.meetingRef!.bundleId) : null;
+  const meetingTaskCount = bundle ? tasksForBundle(bundle.id).length : 0;
+  const meetingAttendeeCount = bundle ? bundle.attendees.length : 0;
 
   return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       className={cn(
-        "group relative flex overflow-hidden rounded-lg border bg-card transition-all break-inside-avoid mb-3",
+        "group relative flex overflow-hidden rounded-lg border bg-card transition-all h-full",
         expanded ? "border-primary/40 shadow-sm" : "border-border hover:border-border/80 hover:shadow-sm",
         !isActionable && settledTintClasses(d.status),
         isSelected && "ring-1 ring-primary/40",
@@ -126,7 +125,9 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
               {isMeeting && (
                 <>
                   <span className="text-border">·</span>
-                  <span className="text-foreground/70 truncate">{d.insight}</span>
+                  <span className="text-foreground/70">{meetingTaskCount} action items</span>
+                  <span className="text-border">·</span>
+                  <span className="text-foreground/70">{meetingAttendeeCount} attendees</span>
                 </>
               )}
               {tag && (
@@ -137,17 +138,11 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
             </div>
           </div>
 
-          <div className="shrink-0 flex flex-col items-end gap-1">
-            <Button
-              variant="ghost" size="icon"
-              onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
-              className="h-7 w-7 text-muted-foreground"
-              title={expanded ? "Collapse" : "Expand"}
-              aria-label={expanded ? "Collapse" : "Expand"}
-            >
-              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
-            </Button>
-          </div>
+          {expanded && (
+            <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+              <ShareMenu itemLabel={isMeeting ? d.meetingRef!.title : d.insight} />
+            </div>
+          )}
         </div>
 
         {/* Overview actions — left-aligned; hidden for meetings (per-item actions live in the expanded workspace) */}
@@ -196,36 +191,6 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
               />
             )}
 
-            <div className="px-4 py-2 flex items-center justify-end border-t border-border/40">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="More">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  {d.deepLink && (
-                    <DropdownMenuItem onSelect={() => window.location.assign(d.deepLink!.href)}>
-                      {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-auto" />
-                    </DropdownMenuItem>
-                  )}
-                  <div className="px-2 py-1">
-                    <ShareMenu itemLabel={d.insight} />
-                  </div>
-                  {isActionable && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onSelect={() => reject(d.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        Dismiss
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           </div>
         )}
       </div>
