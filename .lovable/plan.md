@@ -1,35 +1,30 @@
-# Alerts v7 - Polish Pass
+## Alerts v8 — Meeting headline, inline undo, expanded polish
 
-Presentation-only tweaks to Stack + Grid views on `/alerts/*`.
+### 1. Meeting card headline
+- **StackRow.tsx / GridCard.tsx**: When `decision.kind === "meeting_bundle"`, replace the value-as-headline with the meeting title as the primary headline. The value block is removed from the meeting overview (values stay only on individual action items inside `InlineMeetingWorkspace`).
+- Non-meeting cards keep current value-first headline.
 
-## Changes
+### 2. Stack expanded background
+- **StackRow.tsx**: The inline expansion currently sits on the page background. Change wrapper so expanded content uses `bg-card` (same as the row), removing the visual "gap" — it should read as the same card growing taller. Keep a subtle top divider only.
 
-### 1. Meeting card - no clubbed CTA in overview
-- `StackRow.tsx` / `GridCard.tsx`: when `decision.kind === "meeting_bundle"` (or bundle), do NOT render the `[Action ▾] [Dismiss]` cluster in the collapsed overview. Only chevron to expand remains. Per-task CTAs live inside the expanded `InlineMeetingWorkspace`.
+### 3. Remove "Expand to review action items" hint
+- Search & remove that helper string from `StackRow.tsx`, `GridCard.tsx`, `InlineMeetingWorkspace.tsx`, and anywhere else it appears.
 
-### 2. Meeting card - distinct left border
-- Add a 3px left border in a distinct accent (using existing token, e.g. `border-l-[3px] border-l-primary/70` or a warm accent already in the palette) to meeting cards/rows in both views. Non-meeting cards keep current border.
+### 4. Remove "Discuss with Aan" link from expanded view
+- **ExpandedAlertBody.tsx**: Delete the bottom "Discuss with Aan →" link that was added in v7. The dropdown item in the Action split button remains the only entry point.
 
-### 3. Remove arrow icon from primary blue buttons
-- `ActionChoiceRow.tsx`: remove the `ArrowRight` icon from the primary split button (keep the label + chevron for dropdown).
-- `ExpandedAlertBody.tsx`: remove `ArrowRight` from the inline "Run" buttons in suggested-actions list (which is being removed anyway - see #5).
-- Any other blue Button with `ArrowRight` in Alerts scope: strip it.
+### 5. Inline undo (replace floating toast for approve action)
+- **ActionChoiceRow.tsx**: When the primary approve action fires, swap the approve button in place into an "Undo · 30s" button showing a countdown (reuse `CountdownRing` + `useUndoFor`). Dismiss button hides during the undo window.
+- After 30s with no undo, the row/card auto-dismisses (fades out and is removed from the visible list — actionsStore already marks it completed; UI just needs to hide it once the undo window closes).
+- **UndoToast.tsx**: Suppress rendering for events that originate from approve/complete actions on alert cards (they now render inline). Simplest approach: gate `UndoToast` off on `/alerts/*` routes, OR filter by event id prefix. Plan: filter by id prefix (`dec:*:approve`, `task:*:complete`) so other surfaces still get toasts.
+- Applies in both Stack and Grid views, and to per-task action rows inside `InlineMeetingWorkspace`.
 
-### 4. Bump text size in expanded bodies
-- `ExpandedAlertBody.tsx`: eyebrows 10.5px -> 11.5px, body copy 13px -> 14px, value-basis callout 12.5px -> 13.5px, evidence row 12.5px -> 13.5px.
-- `InlineMeetingWorkspace.tsx`: summary 12.5px -> 14px, action-item insight 13px -> 14px, transcript 12px -> 13px, eyebrows 10.5px -> 11.5px, meta 11.5px -> 12.5px.
-- Keep collapsed row typography unchanged.
-
-### 5. Remove "Suggested actions" section everywhere
-- `ExpandedAlertBody.tsx`: delete the entire right column (Eyebrow "Suggested actions" + list + "Write custom action" button). Expand left column to full width. The primary action + dismiss are already accessible via the collapsed row's action cluster and via the "..." expand chevron; discussion access moves to a single subtle text link at the bottom of the expanded body: "Discuss with Aan ->" (no arrow icon, primary color text).
-- Remove `deriveAlternateActions` import from `ExpandedAlertBody.tsx`.
-- Grid becomes single-column layout inside expanded body.
-
-## Files
-- `src/components/actions/ActionChoiceRow.tsx`
-- `src/components/actions/ExpandedAlertBody.tsx`
-- `src/components/actions/InlineMeetingWorkspace.tsx`
+### Files touched
 - `src/components/actions/StackRow.tsx`
 - `src/components/actions/GridCard.tsx`
+- `src/components/actions/InlineMeetingWorkspace.tsx`
+- `src/components/actions/ExpandedAlertBody.tsx`
+- `src/components/actions/ActionChoiceRow.tsx`
+- `src/components/actions/UndoToast.tsx`
 
-No data, routing, or state changes.
+No data, routing, or store logic changes.

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown, MoreHorizontal, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,12 @@ import { ShareMenu } from "./ShareMenu";
 import { SettledStrip, settledTintClasses } from "./SettledStrip";
 import { InlineMeetingWorkspace } from "./InlineMeetingWorkspace";
 import { ExpandedAlertBody } from "./ExpandedAlertBody";
+import { useUndoFor } from "./useUndoFor";
 
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
 import type { Decision } from "@/data/mockDecisions";
+
 
 const SEV_RAIL: Record<Decision["severity"], string> = {
   critical: "bg-destructive",
@@ -55,6 +57,18 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
   try { sel = useSelection(); } catch { sel = null; }
   const isSelected = sel ? sel.isSelected(d.id) : false;
   const [hover, setHover] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const undo = useUndoFor(d.id);
+  const wasActiveRef = useRef(false);
+  useEffect(() => {
+    if (undo.active) { wasActiveRef.current = true; return; }
+    if (wasActiveRef.current) {
+      wasActiveRef.current = false;
+      if (d.status !== "open") setHidden(true);
+    }
+  }, [undo.active, d.status]);
+
+  if (hidden) return null;
 
   const isActionable = d.status === "open";
   const isFyi = d.severity === "fyi";
@@ -94,13 +108,27 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
           )}
 
           <div className="flex-1 min-w-0">
-            <ValueBlock cents={d.valueCents} kind={d.valueKind} caption={d.valueCaption} size="md" />
-            <div className="mt-2.5 text-[14.5px] font-medium leading-snug text-foreground">{d.insight}</div>
+            {isMeeting ? (
+              <div className="text-[16px] font-semibold leading-snug text-foreground">
+                {d.meetingRef!.title}
+              </div>
+            ) : (
+              <>
+                <ValueBlock cents={d.valueCents} kind={d.valueKind} caption={d.valueCaption} size="md" />
+                <div className="mt-2.5 text-[14.5px] font-medium leading-snug text-foreground">{d.insight}</div>
+              </>
+            )}
             <div className="mt-2 flex items-center gap-2 flex-wrap text-[12.5px] text-muted-foreground">
               <SourceGlyph source={d.source} refLabel={d.sourceRef.label} size={14} />
               <span className="text-foreground/70">{d.sourceRef.label}</span>
               <span className="text-border">·</span>
               <span>{timeAgo(d.createdAt)}</span>
+              {isMeeting && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="text-foreground/70 truncate">{d.insight}</span>
+                </>
+              )}
               {tag && (
                 <span className={cn("ml-1 rounded-full border px-2 py-[1px] text-[11px] font-medium", tag.className)}>
                   {tag.label}
@@ -122,37 +150,37 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
           </div>
         </div>
 
-        {/* Overview actions — left-aligned, always visible in collapsed view */}
-        <div className="px-4 pb-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {!isActionable ? (
-            <SettledStrip decision={d} size="sm" className="px-0" />
-          ) : isMeeting ? (
-            <span className="text-[12px] text-muted-foreground italic">Expand to review action items</span>
-          ) : isFyi ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => approve(d.id)}
-              className="h-9 text-[13px] px-3"
-            >
-              Got it
-            </Button>
-          ) : (
-            <ActionChoiceRow
-              decision={d}
-              handlers={{
-                approve: () => approve(d.id),
-                reject: () => reject(d.id),
-                custom: () => onOpenDetail(d.id, "custom"),
-              }}
-              layout="horizontal"
-            />
-          )}
-        </div>
+        {/* Overview actions — left-aligned; hidden for meetings (per-item actions live in the expanded workspace) */}
+        {!isMeeting && (
+          <div className="px-4 pb-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {!isActionable ? (
+              <SettledStrip decision={d} size="sm" className="px-0" />
+            ) : isFyi ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => approve(d.id)}
+                className="h-9 text-[13px] px-3"
+              >
+                Got it
+              </Button>
+            ) : (
+              <ActionChoiceRow
+                decision={d}
+                handlers={{
+                  approve: () => approve(d.id),
+                  reject: () => reject(d.id),
+                  custom: () => onOpenDetail(d.id, "custom"),
+                }}
+                layout="horizontal"
+              />
+            )}
+          </div>
+        )}
 
-        {/* Expanded body */}
+        {/* Expanded body — shares card background so it reads as the card growing taller */}
         {expanded && (
-          <div className="border-t border-border/40 bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="border-t border-border/40 animate-in fade-in slide-in-from-top-1 duration-150">
             {isMeeting ? (
               <div className="p-3">
                 <InlineMeetingWorkspace
@@ -176,9 +204,6 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "custom")}>
-                    Discuss with Aan
-                  </DropdownMenuItem>
                   {d.deepLink && (
                     <DropdownMenuItem onSelect={() => window.location.assign(d.deepLink!.href)}>
                       {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-auto" />
@@ -207,3 +232,4 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
     </div>
   );
 }
+

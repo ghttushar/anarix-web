@@ -29,6 +29,10 @@ export function UndoToast() {
     function onEv(ev: Event) {
       const detail = (ev as CustomEvent<UndoEvent>).detail;
       if (!detail) return;
+      // Approve/complete events are rendered inline on the card itself —
+      // suppress the floating toast for those to avoid duplicate UI.
+      if (/^dec:[^:]+:approve$/.test(detail.id)) return;
+      if (/^task:[^:]+:done$/.test(detail.id)) return;
       setStack((s) => [...s.filter((x) => x.id !== detail.id), { ...detail, startedAt: Date.now() }]);
     }
     function onConsume(ev: Event) {

@@ -13,10 +13,12 @@ import { ShareMenu } from "./ShareMenu";
 import { SettledStrip, settledTintClasses } from "./SettledStrip";
 import { InlineMeetingWorkspace } from "./InlineMeetingWorkspace";
 import { ExpandedAlertBody } from "./ExpandedAlertBody";
+import { useUndoFor } from "./useUndoFor";
 
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
 import type { Decision } from "@/data/mockDecisions";
+
 
 const SEV_RAIL: Record<Decision["severity"], string> = {
   critical: "bg-destructive",
@@ -56,9 +58,21 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
   const isFocused = interactive && sel ? sel.focusedId === d.id : false;
   const rowRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const undo = useUndoFor(d.id);
+  const wasActiveRef = useRef(false);
   useEffect(() => {
     if (isFocused) rowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [isFocused]);
+  useEffect(() => {
+    if (undo.active) { wasActiveRef.current = true; return; }
+    if (wasActiveRef.current) {
+      wasActiveRef.current = false;
+      if (d.status !== "open") setHidden(true);
+    }
+  }, [undo.active, d.status]);
+
+  if (hidden) return null;
 
   const isActionable = d.status === "open";
   const isFyi = d.severity === "fyi";
@@ -81,7 +95,12 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
       <div className="flex items-stretch">
         <div className={cn(isMeeting ? "w-[3px] bg-primary" : "w-1", "shrink-0", !isMeeting && SEV_RAIL[d.severity])} aria-hidden />
 
-        <div className="flex-1 min-w-0 grid grid-cols-[auto_120px_minmax(0,1fr)_auto_auto_auto] items-center gap-3 px-3 py-3">
+        <div className={cn(
+          "flex-1 min-w-0 grid items-center gap-3 px-3 py-3",
+          isMeeting
+            ? "grid-cols-[auto_minmax(0,1fr)_auto_auto_auto]"
+            : "grid-cols-[auto_120px_minmax(0,1fr)_auto_auto_auto]",
+        )}>
           {interactive && sel ? (
             <div
               className={cn(
@@ -104,21 +123,25 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
             </div>
           ) : <span />}
 
-          <button onClick={toggleExpand} className="text-left" aria-label="Expand">
-            <ValueBlock cents={d.valueCents} kind={d.valueKind} caption={d.valueCaption} size="md" />
-          </button>
+          {!isMeeting && (
+            <button onClick={toggleExpand} className="text-left" aria-label="Expand">
+              <ValueBlock cents={d.valueCents} kind={d.valueKind} caption={d.valueCaption} size="md" />
+            </button>
+          )}
 
           <button onClick={toggleExpand} className="min-w-0 text-left">
-            <div className="text-[14.5px] font-medium text-foreground leading-snug">{d.insight}</div>
+            <div className="text-[14.5px] font-medium text-foreground leading-snug">
+              {isMeeting ? d.meetingRef!.title : d.insight}
+            </div>
             <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[12.5px] text-muted-foreground">
               <SourceGlyph source={d.source} refLabel={d.sourceRef.label} size={14} />
               <span className="text-foreground/70">{d.sourceRef.label}</span>
               <span className="text-border">·</span>
               <span>{timeAgo(d.createdAt)}</span>
-              {d.meetingRef && (
+              {isMeeting && (
                 <>
                   <span className="text-border">·</span>
-                  <span className="text-foreground/70">from {d.meetingRef.title}</span>
+                  <span className="text-foreground/70 truncate max-w-[240px]">{d.insight}</span>
                 </>
               )}
               {tag && (
@@ -134,7 +157,7 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
             {!isActionable ? (
               <SettledStrip decision={d} size="sm" />
             ) : isMeeting ? (
-              <span className="text-[12px] text-muted-foreground italic">Expand to review action items</span>
+              <span />
             ) : isFyi ? (
               <Button
                 size="sm"
@@ -175,9 +198,6 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "custom")}>
-                Discuss with Aan
-              </DropdownMenuItem>
               {d.deepLink && (
                 <DropdownMenuItem onSelect={() => window.location.assign(d.deepLink!.href)}>
                   {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-auto" />
@@ -202,9 +222,9 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
         </div>
       </div>
 
-      {/* Inline expanded body */}
+      {/* Inline expanded body — shares card background so it reads as the card growing taller */}
       {expanded && (
-        <div className="border-t border-border/40 bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="border-t border-border/40 animate-in fade-in slide-in-from-top-1 duration-150">
           {isMeeting ? (
             <div className="p-3">
               <InlineMeetingWorkspace
@@ -224,3 +244,4 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
     </div>
   );
 }
+

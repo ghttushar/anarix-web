@@ -1,7 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SourceGlyph } from "./SourceGlyph";
-import { AanMark } from "@/components/branding/AanMark";
 import type { Decision } from "@/data/mockDecisions";
 
 interface Props {
@@ -10,6 +9,7 @@ interface Props {
   onApprove: () => void;
   onDiscuss: () => void;
 }
+
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -31,7 +31,7 @@ function timeAgo(ts: number): string {
  * Categorized expanded body for non-meeting Decision cards.
  * Sections: Context · Why this number · Evidence.
  */
-export function ExpandedAlertBody({ decision: d, onDiscuss }: Props) {
+export function ExpandedAlertBody({ decision: d }: Props) {
   return (
     <div className="px-5 pt-4 pb-4 space-y-5">
       {d.insightDetail && (
@@ -80,16 +80,6 @@ export function ExpandedAlertBody({ decision: d, onDiscuss }: Props) {
           )}
         </div>
       </section>
-
-      <div className="pt-1">
-        <button
-          onClick={onDiscuss}
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary hover:underline"
-        >
-          <AanMark size={13} className="text-primary" />
-          Discuss with Aan
-        </button>
-      </div>
     </div>
   );
 }
