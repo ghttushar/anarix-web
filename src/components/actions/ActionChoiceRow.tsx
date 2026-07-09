@@ -11,16 +11,13 @@ import {
 import { cn } from "@/lib/utils";
 import type { Decision } from "@/data/mockDecisions";
 import { deriveAlternateActions } from "@/lib/decisions/deriveAlternateActions";
-import { AanMark } from "@/components/branding/AanMark";
 
 export interface ActionHandlers {
   approve: () => void;
   approveVariant?: (id: string, label: string) => void;
-  /** Renamed from reject in copy; store status is unchanged. */
   reject: () => void;
   /** Opens the right-side Aan chat panel for a custom instruction / discussion. */
   custom: () => void;
-  /** Retained for API compatibility; no longer rendered as a button. */
   viewMore?: () => void;
 }
 
@@ -33,10 +30,11 @@ interface Props {
 }
 
 /**
- * Left-aligned action cluster shared by Stack and Grid:
- *   [ Primary verb ▾ ]   [ Dismiss ]   [ ✎ Write custom action / Discuss with Aan ]
+ * Two-button action cluster used everywhere:
+ *   [ Primary verb ▾ ]   [ Dismiss ]
  *
- * The custom/Aan button opens the right-side Aan chat panel.
+ * The dropdown carries alternate variants and the "Write custom action /
+ * Discuss with Aan" option (opens the right-side Aan chat panel).
  */
 export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", className, compact }: Props) {
   const alternates = deriveAlternateActions(d);
@@ -122,22 +120,6 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
       >
         <XCircle className="h-3.5 w-3.5" />
         <span>Dismiss</span>
-      </Button>
-
-      {/* Write custom action / Discuss with Aan */}
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={(e) => { e.stopPropagation(); handlers.custom(); }}
-        className={cn(
-          btnH, btnText,
-          "gap-1.5 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary px-3",
-          layout === "vertical" && "w-full justify-start",
-        )}
-        title="Write a custom instruction or discuss this with Aan"
-      >
-        <AanMark size={13} className="text-primary" />
-        <span>Write custom action / Discuss with Aan</span>
       </Button>
     </div>
   );
