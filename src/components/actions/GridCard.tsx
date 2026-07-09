@@ -70,13 +70,16 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
   const isMeeting = !!d.meetingRef;
+  const bundle = isMeeting ? meetings.find((m) => m.id === d.meetingRef!.bundleId) : null;
+  const meetingTaskCount = bundle ? tasksForBundle(bundle.id).length : 0;
+  const meetingAttendeeCount = bundle ? bundle.attendees.length : 0;
 
   return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       className={cn(
-        "group relative flex overflow-hidden rounded-lg border bg-card transition-all break-inside-avoid mb-3",
+        "group relative flex overflow-hidden rounded-lg border bg-card transition-all h-full",
         expanded ? "border-primary/40 shadow-sm" : "border-border hover:border-border/80 hover:shadow-sm",
         !isActionable && settledTintClasses(d.status),
         isSelected && "ring-1 ring-primary/40",
