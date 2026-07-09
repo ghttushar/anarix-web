@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, PenLine, XCircle } from "lucide-react";
+import { ChevronDown, PenLine, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -61,7 +61,6 @@ export function ActionChoiceRow({ decision: d, handlers, layout = "horizontal", 
           )}
           title={`Run "${primaryVerb}" as proposed`}
         >
-          <ArrowRight className="h-3.5 w-3.5" />
           <span>{primaryVerb}</span>
         </Button>
         <DropdownMenu>

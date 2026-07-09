@@ -79,7 +79,7 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
       )}
     >
       <div className="flex items-stretch">
-        <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
+        <div className={cn(isMeeting ? "w-[3px] bg-primary" : "w-1", "shrink-0", !isMeeting && SEV_RAIL[d.severity])} aria-hidden />
 
         <div className="flex-1 min-w-0 grid grid-cols-[auto_120px_minmax(0,1fr)_auto_auto_auto] items-center gap-3 px-3 py-3">
           {interactive && sel ? (
@@ -131,7 +131,11 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
 
           {/* Actions — left-aligned immediately after meta, in their own column */}
           <div className="justify-self-start shrink-0" onClick={(e) => e.stopPropagation()}>
-            {isFyi && isActionable ? (
+            {!isActionable ? (
+              <SettledStrip decision={d} size="sm" />
+            ) : isMeeting ? (
+              <span className="text-[12px] text-muted-foreground italic">Expand to review action items</span>
+            ) : isFyi ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -140,7 +144,7 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               >
                 Got it
               </Button>
-            ) : isActionable ? (
+            ) : (
               <ActionChoiceRow
                 decision={d}
                 handlers={{
@@ -150,8 +154,6 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
                 }}
                 layout="horizontal"
               />
-            ) : (
-              <SettledStrip decision={d} size="sm" />
             )}
           </div>
 

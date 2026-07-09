@@ -1,53 +1,35 @@
-## /alerts redesign v6
+# Alerts v7 - Polish Pass
 
-### Routing
-- Add routes `/alerts/stack` and `/alerts/grid` in `src/App.tsx`. `/alerts` redirects to the last-used view (sessionStorage) or `/alerts/stack`.
-- `Alerts.tsx` reads `viewMode` from the URL (`useParams`), replaces the `useViewMode` hook. `ViewSwitcher` navigates via `useNavigate` instead of setting state.
+Presentation-only tweaks to Stack + Grid views on `/alerts/*`.
 
-### Global action row (both views, everywhere)
-- Reduce to exactly TWO controls: `[Action ▾]` split button + `[Dismiss]`.
-- Remove the standalone "Write custom action / Discuss with Aan" outline button from `ActionChoiceRow`. Keep "Write custom action / Discuss with Aan" as the last item inside the dropdown (already there).
-- Left-align the cluster in stack rows: replace the fixed right slot with a flex layout where `[value | insight | meta]` share the left, and actions sit in a fixed-width left-aligned zone immediately after meta (not pushed to the right edge). Concretely: remove `justify-start` inside a right-anchored slot; put actions in their own left-aligned column with `ml-0`, and move the chevron + more menu to the far right as separate right-anchored controls.
-- Show the same 2-button action cluster in Grid **collapsed** overview (currently only visible when expanded). Place under the insight text, left-aligned, above meta.
+## Changes
 
-### Expanded card redesign (non-meeting alerts)
-Rebuild inline expansion for both Stack and Grid into a shared `ExpandedAlertBody` component with clear sections:
-1. **Context** — `insightDetail` paragraph.
-2. **Why this number** — `valueBasis` in a bordered callout with muted eyebrow.
-3. **Evidence** — source chip row: source glyph, `sourceRef.label`, deep-link button, timestamp.
-4. **Suggested actions** — vertical list of the alternate actions from `deriveAlternateActions` (each row: verb + hint + inline `Run` button). Custom/Discuss row at the bottom.
-5. **Footer meta** — created/updated timestamps, agent name.
+### 1. Meeting card - no clubbed CTA in overview
+- `StackRow.tsx` / `GridCard.tsx`: when `decision.kind === "meeting_bundle"` (or bundle), do NOT render the `[Action ▾] [Dismiss]` cluster in the collapsed overview. Only chevron to expand remains. Per-task CTAs live inside the expanded `InlineMeetingWorkspace`.
 
-Denser than today (target ~1.6× collapsed height, down from ~2×). Remove the duplicate `MoreHorizontal` menu inside expanded body (kept in row header only).
+### 2. Meeting card - distinct left border
+- Add a 3px left border in a distinct accent (using existing token, e.g. `border-l-[3px] border-l-primary/70` or a warm accent already in the palette) to meeting cards/rows in both views. Non-meeting cards keep current border.
 
-### Expanded meeting card redesign
-Rewrite `InlineMeetingWorkspace` to be compact and categorized:
-- **Header**: `M` avatar + meeting title + datetime · duration. Small attendee row = initials-only pills (dc, mr, ps) using existing `AttendeePill`. Remove full names + role text + the rounded name chip wrapper.
-- **Remove** the 3-stat grid entirely (Tasks / Open / Committed / $15k).
-- **Summary + transcript** collapsible unchanged but tightened padding.
-- **Action items** section: each row keeps its own independent `[Action ▾] [Dismiss]` cluster (same 2-button cluster as global). Owner shown as initials pill only.
-- **Remove the bottom "Mark all completed" clubbed CTA** at the meeting level (per user: keep only independent CTAs per action item).
-- Shorter overall vertical footprint (tighter paddings, smaller header block).
+### 3. Remove arrow icon from primary blue buttons
+- `ActionChoiceRow.tsx`: remove the `ArrowRight` icon from the primary split button (keep the label + chevron for dropdown).
+- `ExpandedAlertBody.tsx`: remove `ArrowRight` from the inline "Run" buttons in suggested-actions list (which is being removed anyway - see #5).
+- Any other blue Button with `ArrowRight` in Alerts scope: strip it.
 
-### Info density
-- Non-meeting expanded cards get MORE info (context + why + evidence + suggested actions list) — currently sparse.
-- Meeting expanded cards get LESS chrome (remove stat grid, remove bulk CTA, initials-only attendees).
+### 4. Bump text size in expanded bodies
+- `ExpandedAlertBody.tsx`: eyebrows 10.5px -> 11.5px, body copy 13px -> 14px, value-basis callout 12.5px -> 13.5px, evidence row 12.5px -> 13.5px.
+- `InlineMeetingWorkspace.tsx`: summary 12.5px -> 14px, action-item insight 13px -> 14px, transcript 12px -> 13px, eyebrows 10.5px -> 11.5px, meta 11.5px -> 12.5px.
+- Keep collapsed row typography unchanged.
 
-### Consistency / polish sweep
-- Uniform section eyebrows: `text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground`.
-- Uniform button heights: `h-8` inside expanded bodies, `h-9` in row overview.
-- Chevron + more menu column right-anchored consistently across Stack and Grid overview.
-- Grid card gains the same overview action cluster as Stack for parity.
+### 5. Remove "Suggested actions" section everywhere
+- `ExpandedAlertBody.tsx`: delete the entire right column (Eyebrow "Suggested actions" + list + "Write custom action" button). Expand left column to full width. The primary action + dismiss are already accessible via the collapsed row's action cluster and via the "..." expand chevron; discussion access moves to a single subtle text link at the bottom of the expanded body: "Discuss with Aan ->" (no arrow icon, primary color text).
+- Remove `deriveAlternateActions` import from `ExpandedAlertBody.tsx`.
+- Grid becomes single-column layout inside expanded body.
 
-### Files
-- edit `src/App.tsx` — routes + redirect
-- edit `src/pages/Alerts.tsx` — URL-driven view mode
-- edit `src/components/actions/ViewSwitcher.tsx` — navigate on change
-- edit `src/components/actions/ActionChoiceRow.tsx` — remove standalone custom button
-- edit `src/components/actions/StackRow.tsx` — left-align actions, use shared expanded body
-- edit `src/components/actions/GridCard.tsx` — overview actions, use shared expanded body
-- new `src/components/actions/ExpandedAlertBody.tsx` — shared categorized expanded view
-- rewrite `src/components/actions/InlineMeetingWorkspace.tsx` — compact, no stats, no bulk CTA, initials-only attendees
-- edit `src/components/actions/AttendeePill.tsx` if needed to guarantee initials-only mode
+## Files
+- `src/components/actions/ActionChoiceRow.tsx`
+- `src/components/actions/ExpandedAlertBody.tsx`
+- `src/components/actions/InlineMeetingWorkspace.tsx`
+- `src/components/actions/StackRow.tsx`
+- `src/components/actions/GridCard.tsx`
 
-No data / business-logic changes; presentation only.
+No data, routing, or state changes.

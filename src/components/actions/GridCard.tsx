@@ -72,7 +72,7 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
         isSelected && "ring-1 ring-primary/40",
       )}
     >
-      <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
+      <div className={cn(isMeeting ? "w-[3px] bg-primary" : "w-1", "shrink-0", !isMeeting && SEV_RAIL[d.severity])} aria-hidden />
 
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Header row */}
@@ -124,7 +124,11 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
 
         {/* Overview actions — left-aligned, always visible in collapsed view */}
         <div className="px-4 pb-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {isFyi && isActionable ? (
+          {!isActionable ? (
+            <SettledStrip decision={d} size="sm" className="px-0" />
+          ) : isMeeting ? (
+            <span className="text-[12px] text-muted-foreground italic">Expand to review action items</span>
+          ) : isFyi ? (
             <Button
               size="sm"
               variant="outline"
@@ -133,7 +137,7 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
             >
               Got it
             </Button>
-          ) : isActionable ? (
+          ) : (
             <ActionChoiceRow
               decision={d}
               handlers={{
@@ -143,8 +147,6 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
               }}
               layout="horizontal"
             />
-          ) : (
-            <SettledStrip decision={d} size="sm" className="px-0" />
           )}
         </div>
 
