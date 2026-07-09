@@ -125,7 +125,9 @@ export function InlineMeetingWorkspace({ bundleId, onDiscuss }: Props) {
                       }}
                       layout="horizontal"
                       compact
+                      undoTargetId={t.id}
                     />
+
                   ) : (
                     <span className={cn(
                       "text-[10.5px] uppercase tracking-wider font-semibold px-2 py-1 rounded",
