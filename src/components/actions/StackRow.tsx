@@ -131,7 +131,11 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
 
           {/* Actions — left-aligned immediately after meta, in their own column */}
           <div className="justify-self-start shrink-0" onClick={(e) => e.stopPropagation()}>
-            {isFyi && isActionable ? (
+            {!isActionable ? (
+              <SettledStrip decision={d} size="sm" />
+            ) : isMeeting ? (
+              <span className="text-[12px] text-muted-foreground italic">Expand to review action items</span>
+            ) : isFyi ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -140,7 +144,7 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
               >
                 Got it
               </Button>
-            ) : isActionable ? (
+            ) : (
               <ActionChoiceRow
                 decision={d}
                 handlers={{
@@ -150,8 +154,6 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
                 }}
                 layout="horizontal"
               />
-            ) : (
-              <SettledStrip decision={d} size="sm" />
             )}
           </div>
 
