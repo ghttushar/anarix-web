@@ -1,91 +1,53 @@
-## Scope
-Rebuild Stack and Grid views on `/alerts` to fix alignment, terminology, expand behavior, action layout, and undo. Match the earlier "Phase 2 Meetings" layout inside both views. No business-logic changes — presentation only.
+## /alerts redesign v6
 
-## Global changes (both views)
+### Routing
+- Add routes `/alerts/stack` and `/alerts/grid` in `src/App.tsx`. `/alerts` redirects to the last-used view (sessionStorage) or `/alerts/stack`.
+- `Alerts.tsx` reads `viewMode` from the URL (`useParams`), replaces the `useViewMode` hook. `ViewSwitcher` navigates via `useNavigate` instead of setting state.
 
-### Value rendering
-- `ValueBlock.tsx`: remove the `Protect` / `+` prefix labels and the `/mo`, `/wk` cadence suffix. Render pure amount only: `$12k`, `$4.8k`, `$1.6k`. Color still driven by `kind` (gain=green, at_risk/cost=red-ish, info=muted). Caption line (e.g., "buyer commit at risk") kept as-is.
-- Keep monospace tabular-nums; unchanged sizes.
+### Global action row (both views, everywhere)
+- Reduce to exactly TWO controls: `[Action ▾]` split button + `[Dismiss]`.
+- Remove the standalone "Write custom action / Discuss with Aan" outline button from `ActionChoiceRow`. Keep "Write custom action / Discuss with Aan" as the last item inside the dropdown (already there).
+- Left-align the cluster in stack rows: replace the fixed right slot with a flex layout where `[value | insight | meta]` share the left, and actions sit in a fixed-width left-aligned zone immediately after meta (not pushed to the right edge). Concretely: remove `justify-start` inside a right-anchored slot; put actions in their own left-aligned column with `ml-0`, and move the chevron + more menu to the far right as separate right-anchored controls.
+- Show the same 2-button action cluster in Grid **collapsed** overview (currently only visible when expanded). Place under the insight text, left-aligned, above meta.
 
-### Source icon
-- `SourceGlyph.tsx`: default size bumped from 11 → 14px; container padding adjusted so it reads clearly next to the meta line.
+### Expanded card redesign (non-meeting alerts)
+Rebuild inline expansion for both Stack and Grid into a shared `ExpandedAlertBody` component with clear sections:
+1. **Context** — `insightDetail` paragraph.
+2. **Why this number** — `valueBasis` in a bordered callout with muted eyebrow.
+3. **Evidence** — source chip row: source glyph, `sourceRef.label`, deep-link button, timestamp.
+4. **Suggested actions** — vertical list of the alternate actions from `deriveAlternateActions` (each row: verb + hint + inline `Run` button). Custom/Discuss row at the bottom.
+5. **Footer meta** — created/updated timestamps, agent name.
 
-### Terminology sweep
-- Global rename in `src/data/*.ts` and any label strings: `monitor` → `agent` (case-preserving: `Monitor`→`Agent`, `monitor`→`agent`). Examples: `Buy Box monitor` → `Buy Box agent`, `Inventory monitor` → `Inventory agent`, `Campaign monitor` → `Campaign agent`, `Buybox monitor` → `Buybox agent`.
-- Em-dash sweep: replace every `—` in decision/meeting/task copy with ` - ` (regular hyphen surrounded by spaces). Applies to `mockDecisions.ts`, `mockMeetings.ts`, `mockMeetingTasks.ts`, and any inline strings in the alert components.
+Denser than today (target ~1.6× collapsed height, down from ~2×). Remove the duplicate `MoreHorizontal` menu inside expanded body (kept in row header only).
 
-### Action row (`ActionChoiceRow.tsx`)
-- Rename "Reject" → "Dismiss" everywhere (button label, aria-labels, dropdown items, bulk bar, detail panel footer). Store status stays `rejected` internally.
-- Remove the standalone "View more" button from the action row.
-- Consolidate custom-action + Ask Aan: single secondary item labeled **"Write custom action / Discuss with Aan"**. Clicking it opens the right-side Aan chat panel (mini Aan panel already used app-wide), pre-seeded with the decision context. No separate Ask Aan button, no Ask Aan menu item.
-- Left-align the action cluster in Stack rows (currently right-aligned). Order: `[Primary action] [caret variants] [Dismiss] [Custom/Discuss with Aan] [⋯ overflow]`. Buttons in a fixed-width slot so rows line up column-wise.
+### Expanded meeting card redesign
+Rewrite `InlineMeetingWorkspace` to be compact and categorized:
+- **Header**: `M` avatar + meeting title + datetime · duration. Small attendee row = initials-only pills (dc, mr, ps) using existing `AttendeePill`. Remove full names + role text + the rounded name chip wrapper.
+- **Remove** the 3-stat grid entirely (Tasks / Open / Committed / $15k).
+- **Summary + transcript** collapsible unchanged but tightened padding.
+- **Action items** section: each row keeps its own independent `[Action ▾] [Dismiss]` cluster (same 2-button cluster as global). Owner shown as initials pill only.
+- **Remove the bottom "Mark all completed" clubbed CTA** at the meeting level (per user: keep only independent CTAs per action item).
+- Shorter overall vertical footprint (tighter paddings, smaller header block).
 
-### Expand behavior
-- Remove separate expand icon + chevron pair. Single chevron toggle only. Remove the `Maximize2`/`Minimize2` "focus" control that swapped Grid→Stack — that behavior is gone.
-- Card expands **in place**. No layout jump between views.
+### Info density
+- Non-meeting expanded cards get MORE info (context + why + evidence + suggested actions list) — currently sparse.
+- Meeting expanded cards get LESS chrome (remove stat grid, remove bulk CTA, initials-only attendees).
 
-### Undo / completion
-- Remove "Clear completed" concept from Stack + Grid toolbars and any bulk bar affordances tied to it.
-- On action: card stays in place, shows subtle status gradient + `SettledStrip` with 30s `CountdownRing` and inline **Undo**.
-- After 30s: card auto-moves to the **Done** tab (filter reclassification only — decision already has terminal status). No manual clear step.
+### Consistency / polish sweep
+- Uniform section eyebrows: `text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground`.
+- Uniform button heights: `h-8` inside expanded bodies, `h-9` in row overview.
+- Chevron + more menu column right-anchored consistently across Stack and Grid overview.
+- Grid card gains the same overview action cluster as Stack for parity.
 
-### Toolbar alignment
-- `AlertsToolbar` + tabs row: unify to a single flex row with consistent 12px vertical padding, aligned to the card container's left/right edges (same horizontal inset as cards). Fixes the "toolbar wider than cards" misalignment visible in screenshots.
-- Right-side controls (Filter, Sort, Stack/Grid switcher, overflow) share the same baseline; overflow `⋯` sits flush with card right edge.
+### Files
+- edit `src/App.tsx` — routes + redirect
+- edit `src/pages/Alerts.tsx` — URL-driven view mode
+- edit `src/components/actions/ViewSwitcher.tsx` — navigate on change
+- edit `src/components/actions/ActionChoiceRow.tsx` — remove standalone custom button
+- edit `src/components/actions/StackRow.tsx` — left-align actions, use shared expanded body
+- edit `src/components/actions/GridCard.tsx` — overview actions, use shared expanded body
+- new `src/components/actions/ExpandedAlertBody.tsx` — shared categorized expanded view
+- rewrite `src/components/actions/InlineMeetingWorkspace.tsx` — compact, no stats, no bulk CTA, initials-only attendees
+- edit `src/components/actions/AttendeePill.tsx` if needed to guarantee initials-only mode
 
-## Stack view (`StackRow.tsx`)
-- Actions cluster moves to **left-aligned** slot immediately after the insight text block (not far-right). Meta row (source, time, meeting ref) sits below insight, action cluster to the right of insight but left-anchored within a fixed 420px zone so all rows align.
-- No "View more" button. Clicking the row body opens **inline expansion** below the row (not the right panel). Expanded region contains: `insightDetail`, meeting excerpt if any, and the same action row.
-- Right panel opens **only** when user clicks "Write custom action / Discuss with Aan".
-- Ambient completion gradient stays; SettledStrip with 30s timer + Undo lives in the row itself.
-
-## Grid view (`GridCard.tsx`)
-- Remove `Maximize2` focus button (was swapping to stack). Keep single chevron.
-- Expanded card = exactly **2× collapsed height** (measured via CSS `min-h` set from collapsed measurement, or fixed heights: collapsed ~140px, expanded ~280px).
-- Two-column CSS grid changed to **column-based masonry** using `columns-2 gap-4` with `break-inside-avoid` on cards. This way expanding a left-column card only pushes cards below it in the same column; the right column is untouched. Same for right-column expands.
-- Action row: left-aligned inside expanded body, same button set as Stack. "Dismiss" replaces "Reject". No "View more".
-- Right panel opens only for "Write custom action / Discuss with Aan".
-- SettledStrip w/ 30s undo lives in the card; auto-migrates to Done tab after timer.
-
-## Meeting layout in Stack + Grid
-Match the older Phase 2 Meetings design (screenshots `image-219`, `image-220`, `image-221`) but rendered as native rows/cards.
-
-### Meeting summary row/card (parent)
-- Left: purple `M` avatar (28px rounded).
-- Title: `Meeting name` + meta line: date · time · duration.
-- Attendee pills: initial chip (colored) + name + role, e.g., `PS Priya Shah · Anarix account lead`.
-- Right-side stats: `N attendees · N tasks · N open · $X committed`.
-- Thin progress bar on the far right with % completed.
-- Clicking expands **inline**:
-
-### Expanded meeting body
-- `MEETING WORKSPACE` eyebrow, title, datetime.
-- Attendee pills row.
-- Three-up stat cards: TASKS / OPEN / COMMITTED.
-- SUMMARY paragraph + collapsible "Transcript excerpt".
-- `ACTION ITEMS` list — each item is a compact row with:
-  - Value chip (`+ $4.8k /mo` style — note: meetings keep the value chip with cadence since screenshots show it; this is the one exception to the value-simplification rule, per the reference design).
-  - Task text, owner pill.
-  - Right-side actions: `Mark completed` primary + `Write custom action / Discuss with Aan` secondary + `⋯`.
-- Header action: `Mark all completed`.
-- Remove "You take care of it" / "With Aan" labels — replace with the unified custom-action button.
-
-### Grid variant
-- Same content, laid out as a wider card spanning both columns when expanded (via `column-span: all` on the masonry container).
-
-## Files touched (edits only, no new files unless noted)
-- `src/components/actions/ValueBlock.tsx` — strip prefix/cadence.
-- `src/components/actions/SourceGlyph.tsx` — larger default size.
-- `src/components/actions/ActionChoiceRow.tsx` — Dismiss rename, remove View more, unified custom/Aan button, left-align layout.
-- `src/components/actions/StackRow.tsx` — left-align actions, inline expansion, remove View more/focus, meeting-row variant.
-- `src/components/actions/GridCard.tsx` — remove focus button, single chevron, 2× expand height, column-safe layout, meeting-card variant.
-- `src/components/actions/AlertsToolbar.tsx` + `src/pages/Alerts.tsx` — toolbar/card alignment, remove Clear completed, masonry container for grid, auto-migrate-to-Done after 30s.
-- `src/components/actions/AlertDetailPanel.tsx` — repurposed to Ask-Aan-only mini panel (opens only on custom-action click). Rename/trim accordingly.
-- `src/components/actions/BulkBar.tsx` — Dismiss rename, drop clear-completed action.
-- `src/components/actions/MeetingWorkspace.tsx` + `MeetingTaskRow.tsx` — refit as inline expansion body used by both Stack and Grid; drop "You take care of it".
-- `src/data/mockDecisions.ts`, `src/data/mockMeetings.ts`, `src/data/mockMeetingTasks.ts` — monitor→agent and em-dash sweep.
-
-## Out of scope
-- Filters, sort, tab logic, data schema, store logic beyond the auto-migrate timer.
-- No visual changes to the hero/header.
-- No changes outside `/alerts`.
+No data / business-logic changes; presentation only.
