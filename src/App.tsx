@@ -266,8 +266,11 @@ function AppRoutes() {
       {/* Reports */}
       <Route path="/reports/client-portal" element={<ClientPortal />} />
 
-      {/* Alerts (full-screen) */}
-      <Route path="/alerts" element={<AlertsPage />} />
+      {/* Alerts (full-screen) — URL-driven stack/grid views */}
+      <Route path="/alerts" element={<Navigate to="/alerts/stack" replace />} />
+      <Route path="/alerts/:viewMode" element={<AlertsPage />} />
+
+
 
 
       {/* Standalone panel routes — for figma export and shareable deep links */}

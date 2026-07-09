@@ -2,6 +2,7 @@
 // selection, bulk bar, and a single right-side Aan chat panel.
 
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,14 +24,6 @@ import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/ac
 import { valueMagnitude } from "@/lib/decisions/valueFormat";
 import type { Decision } from "@/data/mockDecisions";
 
-function useViewMode(): [ViewMode, (m: ViewMode) => void] {
-  const [mode, setMode] = useState<ViewMode>(() => {
-    if (typeof window === "undefined") return "stack";
-    return (sessionStorage.getItem("alerts:view-mode") as ViewMode) || "stack";
-  });
-  return [mode, (m) => { setMode(m); sessionStorage.setItem("alerts:view-mode", m); }];
-}
-
 function useTab(): [AlertTabKey, (t: AlertTabKey) => void] {
   const [tab, setTab] = useState<AlertTabKey>(() => {
     if (typeof window === "undefined") return "all";
@@ -38,6 +31,7 @@ function useTab(): [AlertTabKey, (t: AlertTabKey) => void] {
   });
   return [tab, (t) => { setTab(t); sessionStorage.setItem("alerts:tab", t); }];
 }
+
 
 function bucketLabel(ts: number): string {
   const d = new Date(ts);
@@ -91,9 +85,13 @@ function useAlertsDateRange(): [{ from: Date; to: Date }, (r: { from: Date; to: 
 
 function AlertsInner() {
   const { decisions } = useActionsStore();
+  const params = useParams<{ viewMode?: string }>();
+  const navigate = useNavigate();
+  const viewMode: ViewMode = params.viewMode === "grid" ? "grid" : "stack";
+  const setViewMode = useCallback((m: ViewMode) => navigate(`/alerts/${m}`), [navigate]);
   const [alertsDateRange, setAlertsDateRange] = useAlertsDateRange();
 
-  const [viewMode, setViewMode] = useViewMode();
+
   const [tab, setTab] = useTab();
   const [sort, setSort] = useState<SortKey>("value");
   const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);

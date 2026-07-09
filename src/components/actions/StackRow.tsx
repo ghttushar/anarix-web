@@ -12,6 +12,7 @@ import { ActionChoiceRow } from "./ActionChoiceRow";
 import { ShareMenu } from "./ShareMenu";
 import { SettledStrip, settledTintClasses } from "./SettledStrip";
 import { InlineMeetingWorkspace } from "./InlineMeetingWorkspace";
+import { ExpandedAlertBody } from "./ExpandedAlertBody";
 
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
@@ -43,7 +44,6 @@ function timeAgo(ts: number): string {
 
 interface Props {
   decision: Decision;
-  /** Opens the right-side Aan chat panel (custom action / discuss). */
   onOpenDetail: (id: string, mode?: "detail" | "ask_aan" | "custom") => void;
   interactive?: boolean;
 }
@@ -63,6 +63,7 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
   const isActionable = d.status === "open";
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
+  const isMeeting = !!d.meetingRef;
 
   const toggleExpand = useCallback(() => setExpanded((v) => !v), []);
 
@@ -80,8 +81,8 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
       <div className="flex items-stretch">
         <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
 
-        <div className="flex-1 min-w-0 flex items-center gap-3 px-3 py-3">
-          {interactive && sel && (
+        <div className="flex-1 min-w-0 grid grid-cols-[auto_120px_minmax(0,1fr)_auto_auto_auto] items-center gap-3 px-3 py-3">
+          {interactive && sel ? (
             <div
               className={cn(
                 "shrink-0 transition-opacity",
@@ -101,13 +102,13 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
                 aria-label="Select alert"
               />
             </div>
-          )}
+          ) : <span />}
 
-          <button onClick={toggleExpand} className="shrink-0 w-[120px] text-left" aria-label="Expand">
+          <button onClick={toggleExpand} className="text-left" aria-label="Expand">
             <ValueBlock cents={d.valueCents} kind={d.valueKind} caption={d.valueCaption} size="md" />
           </button>
 
-          <button onClick={toggleExpand} className="flex-1 min-w-0 text-left">
+          <button onClick={toggleExpand} className="min-w-0 text-left">
             <div className="text-[14.5px] font-medium text-foreground leading-snug">{d.insight}</div>
             <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[12.5px] text-muted-foreground">
               <SourceGlyph source={d.source} refLabel={d.sourceRef.label} size={14} />
@@ -128,8 +129,8 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
             </div>
           </button>
 
-          {/* Actions — left-aligned within a fixed slot so rows column-align */}
-          <div className="shrink-0 flex items-center gap-1.5 justify-start">
+          {/* Actions — left-aligned immediately after meta, in their own column */}
+          <div className="justify-self-start shrink-0" onClick={(e) => e.stopPropagation()}>
             {isFyi && isActionable ? (
               <Button
                 size="sm"
@@ -152,67 +153,70 @@ export function StackRow({ decision: d, onOpenDetail, interactive = true }: Prop
             ) : (
               <SettledStrip decision={d} size="sm" />
             )}
-
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleExpand(); }}
-              className="h-9 w-8 flex items-center justify-center rounded hover:bg-muted text-muted-foreground shrink-0"
-              title={expanded ? "Collapse" : "Expand"}
-              aria-label={expanded ? "Collapse" : "Expand"}
-            >
-              <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
-            </button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9" title="More">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "custom")}>
-                  Discuss with Aan
-                </DropdownMenuItem>
-                {d.deepLink && (
-                  <DropdownMenuItem onSelect={() => window.location.assign(d.deepLink!.href)}>
-                    {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-auto" />
-                  </DropdownMenuItem>
-                )}
-                <div className="px-2 py-1">
-                  <ShareMenu itemLabel={d.insight} />
-                </div>
-                {isActionable && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onSelect={() => reject(d.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      Dismiss
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
+
+          {/* Chevron */}
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleExpand(); }}
+            className="h-9 w-8 flex items-center justify-center rounded hover:bg-muted text-muted-foreground shrink-0"
+            title={expanded ? "Collapse" : "Expand"}
+            aria-label={expanded ? "Collapse" : "Expand"}
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
+          </button>
+
+          {/* More */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9" title="More">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onSelect={() => onOpenDetail(d.id, "custom")}>
+                Discuss with Aan
+              </DropdownMenuItem>
+              {d.deepLink && (
+                <DropdownMenuItem onSelect={() => window.location.assign(d.deepLink!.href)}>
+                  {d.deepLink.label} <ExternalLink className="h-3 w-3 ml-auto" />
+                </DropdownMenuItem>
+              )}
+              <div className="px-2 py-1">
+                <ShareMenu itemLabel={d.insight} />
+              </div>
+              {isActionable && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={() => reject(d.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    Dismiss
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Inline expanded body */}
       {expanded && (
-        <div className="border-t border-border/40 bg-muted/20 px-4 pt-3 pb-4 animate-in fade-in slide-in-from-top-1 duration-150">
-          {d.insightDetail && (
-            <p className="text-[13px] leading-relaxed text-foreground/90">{d.insightDetail}</p>
+        <div className="border-t border-border/40 bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-150">
+          {isMeeting ? (
+            <div className="p-3">
+              <InlineMeetingWorkspace
+                bundleId={d.meetingRef!.bundleId}
+                onDiscuss={(taskId) => onOpenDetail(taskId ?? d.id, "custom")}
+              />
+            </div>
+          ) : (
+            <ExpandedAlertBody
+              decision={d}
+              onApprove={() => approve(d.id)}
+              onDiscuss={() => onOpenDetail(d.id, "custom")}
+            />
           )}
-          {d.meetingRef ? (
-            <div className="mt-3">
-              <InlineMeetingWorkspace bundleId={d.meetingRef.bundleId} onDiscuss={(taskId) => onOpenDetail(taskId ?? d.id, "custom")} />
-            </div>
-          ) : d.valueBasis ? (
-            <div className="mt-3 text-[12.5px] text-muted-foreground leading-relaxed">
-              <span className="uppercase tracking-wider text-[10.5px] font-semibold text-foreground/70 mr-2">Why this number</span>
-              {d.valueBasis}
-            </div>
-          ) : null}
         </div>
       )}
     </div>

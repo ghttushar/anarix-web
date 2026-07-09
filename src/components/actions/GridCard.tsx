@@ -12,6 +12,7 @@ import { ActionChoiceRow } from "./ActionChoiceRow";
 import { ShareMenu } from "./ShareMenu";
 import { SettledStrip, settledTintClasses } from "./SettledStrip";
 import { InlineMeetingWorkspace } from "./InlineMeetingWorkspace";
+import { ExpandedAlertBody } from "./ExpandedAlertBody";
 
 import { useActionsStore } from "@/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
@@ -48,11 +49,6 @@ interface Props {
   onOpenDetail: (id: string, mode?: "detail" | "ask_aan" | "custom") => void;
 }
 
-/**
- * Grid card. Single chevron toggle. When expanded, height is ~2× collapsed.
- * Parent uses CSS columns so expanding one card only pushes cards below it
- * in the same column — the neighbour column is untouched.
- */
 export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }: Props) {
   const { approve, reject } = useActionsStore();
   let sel: ReturnType<typeof useSelection> | null = null;
@@ -63,6 +59,7 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
   const isActionable = d.status === "open";
   const isFyi = d.severity === "fyi";
   const tag = STATUS_TAG[d.status];
+  const isMeeting = !!d.meetingRef;
 
   return (
     <div
@@ -75,11 +72,10 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
         isSelected && "ring-1 ring-primary/40",
       )}
     >
-
       <div className={cn("w-1 shrink-0", SEV_RAIL[d.severity])} aria-hidden />
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/* Header row — click toggles expand */}
+        {/* Header row */}
         <div onClick={onToggleExpand} className="flex items-start gap-3 px-4 pt-4 pb-3 cursor-pointer">
           {sel && (
             <div
@@ -123,59 +119,54 @@ export function GridCard({ decision: d, expanded, onToggleExpand, onOpenDetail }
             >
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
             </Button>
-            {!expanded && isActionable && !isFyi && (
-              <span className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground">
-                Expand for actions
-              </span>
-            )}
-            {!expanded && !isActionable && (
-              <SettledStrip decision={d} size="sm" className="px-0 py-0" />
-            )}
           </div>
         </div>
 
-        {/* Expanded body — target ~2× collapsed height */}
-        {expanded && (
-          <div className="px-4 pb-4 pt-1 border-t border-border/40 animate-in fade-in slide-in-from-top-1 duration-150">
-            {d.insightDetail && (
-              <p className="mt-3 text-[13px] leading-relaxed text-foreground/85">{d.insightDetail}</p>
-            )}
-            {d.meetingRef && (
-              <div className="mt-3">
-                <InlineMeetingWorkspace bundleId={d.meetingRef.bundleId} onDiscuss={(taskId) => onOpenDetail(taskId ?? d.id, "custom")} />
-              </div>
-            )}
+        {/* Overview actions — left-aligned, always visible in collapsed view */}
+        <div className="px-4 pb-3 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {isFyi && isActionable ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => approve(d.id)}
+              className="h-9 text-[13px] px-3"
+            >
+              Got it
+            </Button>
+          ) : isActionable ? (
+            <ActionChoiceRow
+              decision={d}
+              handlers={{
+                approve: () => approve(d.id),
+                reject: () => reject(d.id),
+                custom: () => onOpenDetail(d.id, "custom"),
+              }}
+              layout="horizontal"
+            />
+          ) : (
+            <SettledStrip decision={d} size="sm" className="px-0" />
+          )}
+        </div>
 
-            {isActionable && !isFyi && (
-              <div className="mt-4 flex justify-start">
-                <ActionChoiceRow
-                  decision={d}
-                  handlers={{
-                    approve: () => approve(d.id),
-                    reject: () => reject(d.id),
-                    custom: () => onOpenDetail(d.id, "custom"),
-                  }}
-                  layout="horizontal"
+        {/* Expanded body */}
+        {expanded && (
+          <div className="border-t border-border/40 bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-150">
+            {isMeeting ? (
+              <div className="p-3">
+                <InlineMeetingWorkspace
+                  bundleId={d.meetingRef!.bundleId}
+                  onDiscuss={(taskId) => onOpenDetail(taskId ?? d.id, "custom")}
                 />
               </div>
+            ) : (
+              <ExpandedAlertBody
+                decision={d}
+                onApprove={() => approve(d.id)}
+                onDiscuss={() => onOpenDetail(d.id, "custom")}
+              />
             )}
 
-            {!isActionable && (
-              <div className="mt-4">
-                <SettledStrip decision={d} />
-              </div>
-            )}
-
-            {isFyi && isActionable && (
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-[12.5px] text-muted-foreground">Notification only, no action required.</span>
-                <Button size="sm" variant="outline" onClick={() => approve(d.id)} className="h-8 text-[12.5px]">
-                  Got it
-                </Button>
-              </div>
-            )}
-
-            <div className="mt-4 flex items-center justify-end border-t border-border/40 pt-3">
+            <div className="px-4 py-2 flex items-center justify-end border-t border-border/40">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="More">
