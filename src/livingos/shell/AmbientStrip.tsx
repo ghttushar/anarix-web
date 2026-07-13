@@ -1,10 +1,29 @@
 import { scenario } from "../scenario";
+import { useLivingOS } from "../state/LivingOSContext";
+import { CoolingWindow } from "../proposals/CoolingWindow";
+import { RunningAgentIndicator } from "../agents/RunningAgentIndicator";
 
 interface Props {
   onExit: () => void;
 }
 
 export function AmbientStrip({ onExit }: Props) {
+  const { simulating, proposalStatus, setAanOpen } = useLivingOS();
+
+  const standing = simulating
+    ? `If approved: ${scenario.proposal.projectedStanding}`
+    : proposalStatus === "approved"
+      ? "You approved the shift. Standing holds — Advertising is settling."
+      : proposalStatus === "rejected"
+        ? "You declined. Advertising remains watching. Aan will re-draft if needed."
+        : scenario.standing;
+
+  const tone = simulating
+    ? "var(--los-signal)"
+    : proposalStatus === "approved"
+      ? "var(--los-warm)"
+      : "var(--los-ink)";
+
   return (
     <header
       style={{
@@ -17,10 +36,9 @@ export function AmbientStrip({ onExit }: Props) {
         background: "var(--los-paper-warm)",
         borderBottom: "1px solid var(--los-line)",
         position: "relative",
-        zIndex: 10,
+        zIndex: 30,
       }}
     >
-      {/* Left: day + time */}
       <div
         style={{
           fontFamily: "var(--los-mono)",
@@ -34,33 +52,40 @@ export function AmbientStrip({ onExit }: Props) {
         {scenario.day} · {scenario.time}
       </div>
 
-      {/* Center: Standing sentence */}
       <div
         style={{
           flex: 1,
           fontFamily: "var(--los-serif)",
           fontSize: 15,
           fontWeight: 400,
-          color: "var(--los-ink)",
+          color: tone,
           textAlign: "center",
           letterSpacing: "-0.005em",
+          transition: "color 320ms var(--los-ease)",
         }}
       >
-        {scenario.standing}
+        {standing}
       </div>
 
-      {/* Right: Aan presence + avatar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 140, justifyContent: "flex-end" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260, justifyContent: "flex-end" }}>
+        <CoolingWindow />
+        <RunningAgentIndicator />
+        <button
+          onClick={() => setAanOpen(true)}
+          title="Ask Aan (⌥Space)"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+          }}
+        >
           <span
             className="livingos-breath"
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "var(--los-warm)",
-              display: "inline-block",
-            }}
+            style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--los-warm)", display: "inline-block" }}
           />
           <span
             style={{
@@ -73,7 +98,7 @@ export function AmbientStrip({ onExit }: Props) {
           >
             Aan
           </span>
-        </div>
+        </button>
         <button
           onClick={onExit}
           title="Return to Anarix"
