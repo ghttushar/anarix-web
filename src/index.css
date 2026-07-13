@@ -831,3 +831,22 @@ html[data-view="mobile"] [data-island] {
 
 
 
+
+/* Living OS exploration surfaces — hide all global app chrome (floating action island,
+   gesture feedback, onboarding tutorial, toasters, welcome overlays). Scoped by body
+   data attribute set by src/livingos/shell/DirectionShell.tsx and DirectionsIndex.tsx. */
+body[data-livingos="true"] > div:not(#root),
+body[data-livingos="true"] #root > *:not([data-livingos-surface]) {
+  /* fall back to hiding known top-level portals — see rules below */
+}
+body[data-livingos="true"] [class*="floating"],
+body[data-livingos="true"] [data-sonner-toaster],
+body[data-livingos="true"] .sonner-toast,
+body[data-livingos="true"] [data-radix-toast-viewport] {
+  display: none !important;
+}
+/* Nuclear option: hide every element rendered as a direct portal on <body> that isn't ours. */
+body[data-livingos="true"] > div[style*="position: fixed"],
+body[data-livingos="true"] > div[class*="fixed"] {
+  display: none !important;
+}
