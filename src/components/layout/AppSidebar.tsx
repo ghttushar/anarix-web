@@ -367,6 +367,10 @@ export function AppSidebar() {
                     <CreditCard className="h-4 w-4" /><span>Billing</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => navigate("/livingos")}>
+                    <span className="pl-6">Switch to Living OS</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
                     <User className="h-4 w-4" /><span>Profile</span>
                   </DropdownMenuItem>
