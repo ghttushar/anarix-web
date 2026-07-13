@@ -1,13 +1,24 @@
-import { MoreHorizontal, Keyboard } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SlidersHorizontal, ArrowUpDown, LayoutList, Grid3x3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALERT_TABS, type AlertTabKey } from "./tabs";
-import { ViewSwitcher, type ViewMode } from "./ViewSwitcher";
+import { type ViewMode } from "./ViewSwitcher";
 import { FilterSheet, countActiveFilters, type FilterState } from "./FilterSheet";
 import { SortMenu, type SortKey } from "./SortMenu";
+
+/**
+ * Living OS toolbar — tabs are re-authored as "Registers".
+ * Quiet text links with hairline underline for the active register.
+ * Right-side controls are minimal and unobtrusive.
+ */
+
+const REGISTER_LABEL: Record<AlertTabKey, string> = {
+  all: "Everything",
+  needs_approval: "Judgment",
+  morning_brief: "Standing brief",
+  from_meetings: "From the room",
+  fyi: "For your notice",
+  done: "Settled",
+};
 
 interface Props {
   tab: AlertTabKey;
@@ -26,10 +37,9 @@ interface Props {
 
 export function AlertsToolbar(p: Props) {
   return (
-    <div className="sticky top-0 z-20 mb-3 rounded-md border border-border bg-card">
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
-        {/* Tabs — left side */}
-        <nav role="tablist" aria-label="Alert filters" className="flex flex-wrap items-center gap-1">
+    <div className="mb-10 mt-2 border-b border-[hsl(var(--los-hairline))]/70 pb-3">
+      <div className="flex flex-wrap items-end gap-x-7 gap-y-2">
+        <nav role="tablist" aria-label="Registers" className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           {ALERT_TABS.map((t) => {
             const active = p.tab === t.key;
             const c = p.counts[t.key];
@@ -39,54 +49,51 @@ export function AlertsToolbar(p: Props) {
                 role="tab"
                 aria-selected={active}
                 onClick={() => p.onTabChange(t.key)}
-                className={cn(
-                  "h-8 px-3 rounded-md text-[13px] transition-colors flex items-center gap-1.5",
-                  active
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                )}
+                className="los-register"
               >
-                {t.label}
-                {c > 0 && (
-                  <span
-                    className={cn(
-                      "text-[11px] font-semibold px-1.5 rounded-full leading-[18px] min-w-[18px] text-center",
-                      active ? "bg-primary-foreground/20" : "bg-muted-foreground/15",
-                    )}
-                  >
-                    {c}
-                  </span>
-                )}
+                {REGISTER_LABEL[t.key]}
+                {c > 0 && <span className="los-register-count">{c}</span>}
               </button>
             );
           })}
         </nav>
 
-        {/* Right side controls */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 text-[hsl(var(--los-muted))]">
           <FilterSheet
             value={p.filter}
             onChange={p.onFilterChange}
             activeCount={countActiveFilters(p.filter)}
             externalOpen={p.filterSheetOpen}
             onExternalOpenChange={p.onFilterSheetOpenChange}
+            triggerIcon={<SlidersHorizontal className="h-3.5 w-3.5" />}
           />
-          <SortMenu value={p.sort} onChange={p.onSortChange} />
-          <ViewSwitcher value={p.viewMode} onChange={p.onViewChange} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="More">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {p.onOpenShortcuts && (
-                <DropdownMenuItem onSelect={p.onOpenShortcuts}>
-                  <Keyboard className="h-4 w-4 mr-2" /> Keyboard shortcuts
-                </DropdownMenuItem>
+          <SortMenu value={p.sort} onChange={p.onSortChange} triggerIcon={<ArrowUpDown className="h-3.5 w-3.5" />} />
+          <div className="ml-2 flex items-center gap-0.5 rounded-sm border border-[hsl(var(--los-hairline))] p-0.5">
+            <button
+              onClick={() => p.onViewChange("stack")}
+              title="Stream"
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-sm los-breathe",
+                p.viewMode === "stack"
+                  ? "bg-[hsl(var(--los-ink))] text-[hsl(var(--los-paper))]"
+                  : "hover:bg-[hsl(var(--los-hairline))]/60",
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            >
+              <LayoutList className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => p.onViewChange("grid")}
+              title="Field"
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-sm los-breathe",
+                p.viewMode === "grid"
+                  ? "bg-[hsl(var(--los-ink))] text-[hsl(var(--los-paper))]"
+                  : "hover:bg-[hsl(var(--los-hairline))]/60",
+              )}
+            >
+              <Grid3x3 className="h-3 w-3" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

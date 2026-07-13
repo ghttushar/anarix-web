@@ -1,0 +1,167 @@
+/* Living OS — scoped tokens.
+   Only bites within [data-livingos]. Warm paper light / warm graphite dark.
+   Rebinds shadcn semantic variables so duplicated components inherit the
+   Living OS material without per-component rewrites. */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+[data-livingos] {
+  /* Paper (light) */
+  --los-paper: 40 33% 94%;         /* #F5F1E8 */
+  --los-paper-raised: 40 30% 97%;
+  --los-ink: 30 12% 10%;           /* #1A1815 */
+  --los-muted: 30 8% 40%;          /* #6B6558 */
+  --los-line: 30 15% 82%;
+  --los-hairline: 30 15% 88%;
+
+  /* Desaturated dollar-impact */
+  --los-loss: 5 45% 42%;           /* muted brick */
+  --los-gain: 145 25% 32%;         /* muted moss */
+  --los-info: 30 8% 40%;
+
+  /* Aan accent — quiet ink-blue */
+  --los-aan: 220 35% 40%;
+
+  /* Rebind shadcn vars within scope */
+  --background: var(--los-paper);
+  --foreground: var(--los-ink);
+  --card: var(--los-paper-raised);
+  --card-foreground: var(--los-ink);
+  --popover: var(--los-paper-raised);
+  --popover-foreground: var(--los-ink);
+  --primary: var(--los-ink);
+  --primary-foreground: var(--los-paper);
+  --secondary: 30 15% 88%;
+  --secondary-foreground: var(--los-ink);
+  --muted: 30 20% 91%;
+  --muted-foreground: var(--los-muted);
+  --accent: 30 15% 88%;
+  --accent-foreground: var(--los-ink);
+  --destructive: var(--los-loss);
+  --destructive-foreground: var(--los-paper);
+  --border: var(--los-line);
+  --input: var(--los-line);
+  --ring: var(--los-aan);
+
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: hsl(var(--los-ink));
+  background-color: hsl(var(--los-paper));
+  letter-spacing: -0.005em;
+}
+
+/* Dark = warm graphite */
+.dark [data-livingos],
+[data-livingos].dark {
+  --los-paper: 30 8% 10%;          /* #1C1A17 */
+  --los-paper-raised: 30 8% 13%;
+  --los-ink: 40 30% 92%;
+  --los-muted: 40 10% 60%;
+  --los-line: 30 8% 22%;
+  --los-hairline: 30 8% 18%;
+  --los-loss: 5 40% 60%;
+  --los-gain: 145 22% 55%;
+  --los-info: 40 10% 60%;
+  --los-aan: 220 35% 68%;
+
+  --background: var(--los-paper);
+  --foreground: var(--los-ink);
+  --card: var(--los-paper-raised);
+  --card-foreground: var(--los-ink);
+  --popover: var(--los-paper-raised);
+  --popover-foreground: var(--los-ink);
+  --primary: var(--los-ink);
+  --primary-foreground: var(--los-paper);
+  --secondary: 30 8% 20%;
+  --secondary-foreground: var(--los-ink);
+  --muted: 30 8% 18%;
+  --muted-foreground: var(--los-muted);
+  --accent: 30 8% 20%;
+  --accent-foreground: var(--los-ink);
+  --destructive: var(--los-loss);
+  --destructive-foreground: var(--los-paper);
+  --border: var(--los-line);
+  --input: var(--los-line);
+  --ring: var(--los-aan);
+}
+
+/* Typography roles within scope */
+[data-livingos] .los-authored,
+[data-livingos] h1,
+[data-livingos] h2 {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+[data-livingos] .los-mono,
+[data-livingos] time {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Paper grain — subtle, non-repeating feel */
+[data-livingos] .los-grain {
+  position: relative;
+}
+[data-livingos] .los-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(hsl(var(--los-ink) / 0.03) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+.dark [data-livingos] .los-grain::before,
+[data-livingos].dark .los-grain::before {
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+
+/* Motion — Living OS transitions resolve to stillness */
+[data-livingos] .los-breathe {
+  transition: opacity 320ms cubic-bezier(0.2, 0, 0, 1),
+              transform 320ms cubic-bezier(0.2, 0, 0, 1),
+              background-color 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Registers — quiet tab replacement */
+[data-livingos] .los-register {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: hsl(var(--los-muted));
+  padding: 6px 2px;
+  border-bottom: 1px solid transparent;
+  transition: color 220ms, border-color 220ms;
+}
+[data-livingos] .los-register:hover {
+  color: hsl(var(--los-ink));
+}
+[data-livingos] .los-register[aria-selected="true"] {
+  color: hsl(var(--los-ink));
+  border-bottom-color: hsl(var(--los-ink));
+}
+[data-livingos] .los-register-count {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: hsl(var(--los-muted));
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Breathing dot */
+@keyframes los-breathe {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.15); }
+}
+[data-livingos] .los-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: hsl(var(--los-aan));
+  animation: los-breathe 3.6s ease-in-out infinite;
+}
