@@ -1,4 +1,4 @@
-import { SlidersHorizontal, ArrowUpDown, LayoutList, Grid3x3 } from "lucide-react";
+import { LayoutList, Grid3x3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALERT_TABS, type AlertTabKey } from "./tabs";
 import { type ViewMode } from "./ViewSwitcher";
@@ -65,9 +65,8 @@ export function AlertsToolbar(p: Props) {
             activeCount={countActiveFilters(p.filter)}
             externalOpen={p.filterSheetOpen}
             onExternalOpenChange={p.onFilterSheetOpenChange}
-            triggerIcon={<SlidersHorizontal className="h-3.5 w-3.5" />}
           />
-          <SortMenu value={p.sort} onChange={p.onSortChange} triggerIcon={<ArrowUpDown className="h-3.5 w-3.5" />} />
+          <SortMenu value={p.sort} onChange={p.onSortChange} />
           <div className="ml-2 flex items-center gap-0.5 rounded-sm border border-[hsl(var(--los-hairline))] p-0.5">
             <button
               onClick={() => p.onViewChange("stack")}
