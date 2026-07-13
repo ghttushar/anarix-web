@@ -28,7 +28,7 @@ export function StandingPanel() {
     for (const d of decisions) {
       if (d.status !== "open") continue;
       const mag = valueMagnitude(d.valueKind, d.valueCents);
-      if (d.valueKind === "loss" || d.valueKind === "cost") atRisk += mag;
+      if (d.valueKind === "at_risk" || d.valueKind === "cost") atRisk += mag;
       else if (d.valueKind === "gain") protectedC += mag;
     }
     return { judgment, aiAtWork, settledToday, atRisk, protectedC };

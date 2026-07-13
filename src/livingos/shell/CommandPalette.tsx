@@ -51,7 +51,7 @@ export function CommandPalette({ open, onOpenChange, onSetRegister }: Props) {
     const term = q.toLowerCase().trim();
     const open = questions.filter((qi) => qi.status === "open");
     if (!term) return open.slice(0, 3);
-    return open.filter((qi) => qi.text.toLowerCase().includes(term)).slice(0, 5);
+    return open.filter((qi) => qi.prompt.toLowerCase().includes(term)).slice(0, 5);
   }, [questions, q]);
 
   const go = (id: string) => {
@@ -105,11 +105,11 @@ export function CommandPalette({ open, onOpenChange, onSetRegister }: Props) {
             <CommandSeparator />
             <CommandGroup heading="Aan is asking">
               {filteredQuestions.map((qi) => (
-                <CommandItem key={qi.id} value={`q-${qi.id}-${qi.text}`} onSelect={() => onOpenChange(false)}>
+                <CommandItem key={qi.id} value={`q-${qi.id}-${qi.prompt}`} onSelect={() => onOpenChange(false)}>
                   <span className="los-mono mr-3 text-[10.5px] uppercase tracking-wider text-[hsl(var(--los-muted))]">
                     ask
                   </span>
-                  <span className="truncate">{qi.text}</span>
+                  <span className="truncate">{qi.prompt}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

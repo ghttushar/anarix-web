@@ -5,19 +5,13 @@ import { type ViewMode } from "./ViewSwitcher";
 import { FilterSheet, countActiveFilters, type FilterState } from "./FilterSheet";
 import { SortMenu, type SortKey } from "./SortMenu";
 
-/**
- * Living OS toolbar — tabs are re-authored as "Registers".
- * Quiet text links with hairline underline for the active register.
- * Right-side controls are minimal and unobtrusive.
- */
-
 const REGISTER_LABEL: Record<AlertTabKey, string> = {
   all: "Everything",
-  needs_approval: "Judgment",
-  morning_brief: "Standing brief",
-  from_meetings: "From the room",
-  fyi: "For your notice",
-  done: "Settled",
+  judgment: "Judgment",
+  ai_at_work: "Aan at work",
+  watching: "Watching",
+  notice: "For your notice",
+  settled: "Settled",
 };
 
 interface Props {
@@ -37,7 +31,7 @@ interface Props {
 
 export function AlertsToolbar(p: Props) {
   return (
-    <div className="mb-10 mt-2 border-b border-[hsl(var(--los-hairline))]/70 pb-3">
+    <div className="mb-8 mt-2 border-b border-[hsl(var(--los-hairline))]/70 pb-3">
       <div className="flex flex-wrap items-end gap-x-7 gap-y-2">
         <nav role="tablist" aria-label="Registers" className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           {ALERT_TABS.map((t) => {
