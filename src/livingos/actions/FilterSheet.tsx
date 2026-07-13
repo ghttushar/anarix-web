@@ -3,8 +3,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Button } from "@/components/ui/button";
 import { Filter as FilterIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SOURCE_REGISTRY, type DecisionSource } from "@/lib/decisions/sourceRegistry";
-import type { DecisionDomain } from "@/data/mockDecisions";
+import { SOURCE_REGISTRY, type DecisionSource } from "@/livingos/lib/decisions/sourceRegistry";
+import type { DecisionDomain } from "@/livingos/data/mockDecisions";
 import { cn } from "@/lib/utils";
 
 export interface FilterState {

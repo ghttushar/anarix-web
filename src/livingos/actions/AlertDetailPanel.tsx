@@ -7,7 +7,7 @@ import { AanMark } from "@/components/branding/AanMark";
 import { Send } from "lucide-react";
 import { SourceGlyph } from "./SourceGlyph";
 import { ValueBlock } from "./ValueBlock";
-import { useActionsStore } from "@/state/actionsStore";
+import { useActionsStore } from "@/livingos/state/actionsStore";
 
 export type PanelMode = "detail" | "ask_aan" | "custom";
 

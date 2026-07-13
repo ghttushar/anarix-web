@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { ValueKind, Cadence } from "@/lib/decisions/valueFormat";
+import type { ValueKind, Cadence } from "@/livingos/lib/decisions/valueFormat";
 
 interface Props {
   cents: number;

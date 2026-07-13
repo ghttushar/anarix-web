@@ -7,22 +7,22 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AanMascot } from "@/components/aan/AanMascot";
-import { ActionsProvider, useActionsStore } from "@/state/actionsStore";
+import { ActionsProvider, useActionsStore } from "@/livingos/state/actionsStore";
 import { SelectionProvider } from "@/state/selectionStore";
-import { EmptyState } from "@/components/actions/EmptyState";
-import { EMPTY_FILTER, type FilterState } from "@/components/actions/FilterSheet";
-import { type SortKey } from "@/components/actions/SortMenu";
-import { KeyboardHelpOverlay } from "@/components/actions/KeyboardHelpOverlay";
-import { UndoToast } from "@/components/actions/UndoToast";
-import { AlertsToolbar } from "@/components/actions/AlertsToolbar";
-import { BulkBar } from "@/components/actions/BulkBar";
-import { StackRow } from "@/components/actions/StackRow";
-import { GridCard } from "@/components/actions/GridCard";
-import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from "@/components/actions/AlertDetailPanel";
-import type { ViewMode } from "@/components/actions/ViewSwitcher";
-import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
-import { valueMagnitude } from "@/lib/decisions/valueFormat";
-import type { Decision } from "@/data/mockDecisions";
+import { EmptyState } from "@/livingos/actions/EmptyState";
+import { EMPTY_FILTER, type FilterState } from "@/livingos/actions/FilterSheet";
+import { type SortKey } from "@/livingos/actions/SortMenu";
+import { KeyboardHelpOverlay } from "@/livingos/actions/KeyboardHelpOverlay";
+import { UndoToast } from "@/livingos/actions/UndoToast";
+import { AlertsToolbar } from "@/livingos/actions/AlertsToolbar";
+import { BulkBar } from "@/livingos/actions/BulkBar";
+import { StackRow } from "@/livingos/actions/StackRow";
+import { GridCard } from "@/livingos/actions/GridCard";
+import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from "@/livingos/actions/AlertDetailPanel";
+import type { ViewMode } from "@/livingos/actions/ViewSwitcher";
+import { filterByTab, computeTabCounts, type AlertTabKey } from "@/livingos/actions/tabs";
+import { valueMagnitude } from "@/livingos/lib/decisions/valueFormat";
+import type { Decision } from "@/livingos/data/mockDecisions";
 
 function useTab(): [AlertTabKey, (t: AlertTabKey) => void] {
   const [tab, setTab] = useState<AlertTabKey>(() => {

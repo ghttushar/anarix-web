@@ -3,8 +3,8 @@
 // as a Decision, but lives inside a bundle. Action buttons use the task's
 // action verb (Send forecast, Approve refund, Pause keyword, Draft memo…).
 
-import type { ValueKind, Cadence } from "@/lib/decisions/valueFormat";
-import type { DecisionDomain } from "@/data/mockDecisions";
+import type { ValueKind, Cadence } from "@/livingos/lib/decisions/valueFormat";
+import type { DecisionDomain } from "@/livingos/data/mockDecisions";
 
 export type MeetingTaskStatus = "open" | "completed" | "not_completed" | "with_aan";
 

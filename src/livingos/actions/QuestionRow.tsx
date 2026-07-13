@@ -3,8 +3,8 @@ import { HelpCircle, Check, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SourceGlyph } from "./SourceGlyph";
-import { useActionsStore } from "@/state/actionsStore";
-import type { AanQuestion } from "@/data/mockQuestions";
+import { useActionsStore } from "@/livingos/state/actionsStore";
+import type { AanQuestion } from "@/livingos/data/mockQuestions";
 
 interface Props {
   question: AanQuestion;

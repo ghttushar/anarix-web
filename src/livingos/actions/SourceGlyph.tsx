@@ -1,5 +1,5 @@
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { getSourceMeta, type DecisionSource } from "@/lib/decisions/sourceRegistry";
+import { getSourceMeta, type DecisionSource } from "@/livingos/lib/decisions/sourceRegistry";
 import { cn } from "@/lib/utils";
 
 interface Props {

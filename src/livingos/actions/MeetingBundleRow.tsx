@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { AttendeePill } from "./AttendeePill";
 import { ValuePill } from "./ValuePill";
 import { SourceGlyph } from "./SourceGlyph";
-import { useActionsStore } from "@/state/actionsStore";
+import { useActionsStore } from "@/livingos/state/actionsStore";
 
 interface Props {
   bundleId: string;

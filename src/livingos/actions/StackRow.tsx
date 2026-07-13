@@ -15,9 +15,9 @@ import { InlineMeetingWorkspace } from "./InlineMeetingWorkspace";
 import { ExpandedAlertBody } from "./ExpandedAlertBody";
 import { useUndoFor } from "./useUndoFor";
 
-import { useActionsStore } from "@/state/actionsStore";
+import { useActionsStore } from "@/livingos/state/actionsStore";
 import { useSelection } from "@/state/selectionStore";
-import type { Decision } from "@/data/mockDecisions";
+import type { Decision } from "@/livingos/data/mockDecisions";
 
 
 const SEV_RAIL: Record<Decision["severity"], string> = {

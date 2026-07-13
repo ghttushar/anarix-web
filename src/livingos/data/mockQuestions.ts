@@ -1,8 +1,8 @@
 // Aan Questions — things Aan would rather ask than guess.
 // Answering feeds the policy engine so Aan stops asking that class of question.
 
-import type { DecisionSource } from "@/lib/decisions/sourceRegistry";
-import type { DecisionDomain } from "@/data/mockDecisions";
+import type { DecisionSource } from "@/livingos/lib/decisions/sourceRegistry";
+import type { DecisionDomain } from "@/livingos/data/mockDecisions";
 
 export type QuestionStatus = "open" | "answered" | "skipped" | "expired";
 

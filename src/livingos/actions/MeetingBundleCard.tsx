@@ -3,8 +3,8 @@ import { ArrowRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AttendeePill } from "./AttendeePill";
 import { ShareMenu } from "./ShareMenu";
-import { useActionsStore } from "@/state/actionsStore";
-import { formatValue } from "@/lib/decisions/valueFormat";
+import { useActionsStore } from "@/livingos/state/actionsStore";
+import { formatValue } from "@/livingos/lib/decisions/valueFormat";
 
 interface Props {
   bundleId: string;

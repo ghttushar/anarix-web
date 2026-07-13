@@ -3,8 +3,8 @@ import { CheckCircle2, ChevronDown, Clock, PenLine, User, X } from "lucide-react
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ValuePill } from "./ValuePill";
-import { useActionsStore } from "@/state/actionsStore";
-import type { MeetingTask, MeetingTaskStatus } from "@/data/mockMeetings";
+import { useActionsStore } from "@/livingos/state/actionsStore";
+import type { MeetingTask, MeetingTaskStatus } from "@/livingos/data/mockMeetings";
 
 const STATUS_META: Record<MeetingTaskStatus, { label: string; className: string; dot: string }> = {
   open:          { label: "Open",             className: "text-muted-foreground", dot: "bg-muted-foreground/40" },

@@ -2,7 +2,7 @@ import { CheckCircle2, XCircle, Clock, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CountdownRing } from "./CountdownRing";
 import { useUndoFor } from "./useUndoFor";
-import type { Decision } from "@/data/mockDecisions";
+import type { Decision } from "@/livingos/data/mockDecisions";
 
 const KIND: Record<
   Exclude<Decision["status"], "open" | "expired">,

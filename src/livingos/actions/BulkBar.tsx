@@ -5,8 +5,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSelection } from "@/state/selectionStore";
-import { useActionsStore } from "@/state/actionsStore";
-import { valueMagnitude, formatValue } from "@/lib/decisions/valueFormat";
+import { useActionsStore } from "@/livingos/state/actionsStore";
+import { valueMagnitude, formatValue } from "@/livingos/lib/decisions/valueFormat";
 
 /** Docked bulk bar. Sits under the toolbar (not floating), matches TableToolbar style. */
 export function BulkBar() {

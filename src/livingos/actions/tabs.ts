@@ -1,5 +1,5 @@
 // Unified tab model — shared by Stack and Grid views.
-import type { Decision } from "@/data/mockDecisions";
+import type { Decision } from "@/livingos/data/mockDecisions";
 
 export type AlertTabKey =
   | "all"

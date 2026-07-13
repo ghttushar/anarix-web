@@ -1,4 +1,4 @@
-import { attendeeInitials, attendeeColor } from "@/lib/decisions/attendeeColor";
+import { attendeeInitials, attendeeColor } from "@/livingos/lib/decisions/attendeeColor";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 

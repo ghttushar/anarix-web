@@ -1,7 +1,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Clock, ChevronDown } from "lucide-react";
-import type { SnoozeChoice } from "@/state/actionsStore";
+import type { SnoozeChoice } from "@/livingos/state/actionsStore";
 
 interface Props {
   onSelect: (c: SnoozeChoice) => void;

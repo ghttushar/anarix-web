@@ -1,6 +1,6 @@
 import { ArrowDownAZ, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatValue } from "@/lib/decisions/valueFormat";
+import { formatValue } from "@/livingos/lib/decisions/valueFormat";
 
 interface Props {
   hiddenCount: number;

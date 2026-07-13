@@ -1,7 +1,7 @@
 // Small helper that synthesizes 2–3 alternate verbs for a Decision's split-button
 // dropdown. Purely presentational — no data-model change required.
 
-import type { Decision } from "@/data/mockDecisions";
+import type { Decision } from "@/livingos/data/mockDecisions";
 
 export interface AltAction {
   id: string;

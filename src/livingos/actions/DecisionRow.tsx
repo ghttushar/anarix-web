@@ -13,11 +13,11 @@ import { ValuePill } from "./ValuePill";
 import { SourceGlyph } from "./SourceGlyph";
 import { ShareMenu } from "./ShareMenu";
 import { SnoozeMenu } from "./SnoozeMenu";
-import type { Decision } from "@/data/mockDecisions";
-import { useActionsStore, type SnoozeChoice } from "@/state/actionsStore";
-import { formatValue } from "@/lib/decisions/valueFormat";
+import type { Decision } from "@/livingos/data/mockDecisions";
+import { useActionsStore, type SnoozeChoice } from "@/livingos/state/actionsStore";
+import { formatValue } from "@/livingos/lib/decisions/valueFormat";
 import { useSelection } from "@/state/selectionStore";
-import { getSourceMeta } from "@/lib/decisions/sourceRegistry";
+import { getSourceMeta } from "@/livingos/lib/decisions/sourceRegistry";
 
 interface Props {
   decision: Decision;

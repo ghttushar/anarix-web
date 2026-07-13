@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { ShareMenu } from "./ShareMenu";
 import { SnoozeMenu } from "./SnoozeMenu";
 import { SourceGlyph } from "./SourceGlyph";
-import type { Decision } from "@/data/mockDecisions";
-import { useActionsStore, type SnoozeChoice } from "@/state/actionsStore";
-import { getSourceMeta } from "@/lib/decisions/sourceRegistry";
-import { formatValue } from "@/lib/decisions/valueFormat";
+import type { Decision } from "@/livingos/data/mockDecisions";
+import { useActionsStore, type SnoozeChoice } from "@/livingos/state/actionsStore";
+import { getSourceMeta } from "@/livingos/lib/decisions/sourceRegistry";
+import { formatValue } from "@/livingos/lib/decisions/valueFormat";
 
 interface Props {
   decision: Decision;

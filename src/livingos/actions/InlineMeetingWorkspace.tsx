@@ -6,8 +6,8 @@ import { AttendeePill } from "./AttendeePill";
 import { ValueBlock } from "./ValueBlock";
 import { ActionChoiceRow } from "./ActionChoiceRow";
 
-import { useActionsStore } from "@/state/actionsStore";
-import type { Decision } from "@/data/mockDecisions";
+import { useActionsStore } from "@/livingos/state/actionsStore";
+import type { Decision } from "@/livingos/data/mockDecisions";
 
 interface Props {
   bundleId: string;

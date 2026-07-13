@@ -2,8 +2,8 @@
 // Each Decision names its dollar impact + a single verb the user takes,
 // and now carries richer copy for the 2-line row + expanded "Know more" panel.
 
-import type { DecisionSource } from "@/lib/decisions/sourceRegistry";
-import type { ValueKind, Cadence } from "@/lib/decisions/valueFormat";
+import type { DecisionSource } from "@/livingos/lib/decisions/sourceRegistry";
+import type { ValueKind, Cadence } from "@/livingos/lib/decisions/valueFormat";
 
 export type DecisionStatus =
   | "open"
