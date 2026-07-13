@@ -68,3 +68,10 @@
   100% { opacity: 0; }
 }
 .livingos-bloom { animation: losBloom 1600ms var(--los-ease) forwards; }
+
+/* Orbiting agent indicator */
+@keyframes losOrbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.livingos-orbit { animation: losOrbit 2.4s linear infinite; }
