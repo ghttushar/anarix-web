@@ -6,15 +6,31 @@ import { CommandPalette } from "./CommandPalette";
 import { DomainConstellation } from "../domains/DomainConstellation";
 import { DomainExpanded } from "../domains/DomainExpanded";
 import { scenario } from "../scenario";
+import { LivingOSProvider, useLivingOS } from "../state/LivingOSContext";
+import { SimulationOverlay } from "../proposals/SimulationMode";
+import { AwarenessBloom } from "../awareness/AwarenessBloom";
+import { AgentAmbientPanel } from "../agents/AgentAmbientPanel";
+import { AanCopilotPanel } from "@/components/aan/AanCopilotPanel";
+import { useAan } from "@/components/aan/AanContext";
 import "../tokens.css";
 
 export function LivingOSShell() {
+  return (
+    <LivingOSProvider initialSentence={scenario.proposal.sentence}>
+      <ShellInner />
+    </LivingOSProvider>
+  );
+}
+
+function ShellInner() {
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [entering, setEntering] = useState(true);
+  const { aanOpen, setAanOpen } = useLivingOS();
+  const aan = useAan();
 
-  // Inject fonts only within Living OS
+  // Fonts
   useEffect(() => {
     const id = "livingos-fonts-v2";
     if (!document.getElementById(id)) {
@@ -29,20 +45,27 @@ export function LivingOSShell() {
     return () => clearTimeout(t);
   }, []);
 
-  // Keyboard: Cmd+K opens palette · Esc collapses expanded Domain
+  // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setPaletteOpen((v) => !v);
+      } else if (e.altKey && e.code === "Space") {
+        e.preventDefault();
+        setAanOpen(true);
+        aan.setMode("copilot");
       } else if (e.key === "Escape") {
-        if (paletteOpen) setPaletteOpen(false);
+        if (aanOpen) {
+          setAanOpen(false);
+          aan.setMode("closed");
+        } else if (paletteOpen) setPaletteOpen(false);
         else if (expandedId) setExpandedId(null);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [expandedId, paletteOpen]);
+  }, [expandedId, paletteOpen, aanOpen, aan, setAanOpen]);
 
   const expanded = scenario.domains.find((d) => d.id === expandedId) ?? null;
 
@@ -58,7 +81,6 @@ export function LivingOSShell() {
         overflow: "hidden",
       }}
     >
-      {/* Entry bloom */}
       {entering && (
         <div
           className="livingos-bloom"
@@ -84,25 +106,46 @@ export function LivingOSShell() {
           overflow: "hidden",
         }}
       >
-        <DomainConstellation
-          onSelect={(id) => setExpandedId(id)}
-          dimmed={!!expanded}
-        />
-
-        {expanded && (
-          <DomainExpanded
-            domain={expanded}
-            onClose={() => setExpandedId(null)}
-          />
-        )}
+        <DomainConstellation onSelect={(id) => setExpandedId(id)} dimmed={!!expanded} />
+        {expanded && <DomainExpanded domain={expanded} onClose={() => setExpandedId(null)} />}
+        <SimulationOverlay />
+        <AwarenessBloom />
+        <AgentAmbientPanel />
       </main>
 
-      <ContextDock
-        onOpenDomain={(id) => setExpandedId(id)}
-        activeId={expandedId}
-      />
+      <ContextDock onOpenDomain={(id) => setExpandedId(id)} activeId={expandedId} />
 
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
+
+      {aanOpen && (
+        <div
+          onClick={() => {
+            setAanOpen(false);
+            aan.setMode("closed");
+          }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            background: "rgba(15,13,10,0.28)",
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "min(520px, 92vw)",
+              height: "100%",
+              background: "var(--los-paper-warm)",
+              borderLeft: "1px solid var(--los-line)",
+              overflow: "hidden",
+            }}
+          >
+            <AanCopilotPanel />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
