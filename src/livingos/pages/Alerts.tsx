@@ -249,11 +249,5 @@ function GridBody({
 }
 
 export default function LivingOSAlerts() {
-  return (
-    <ActionsProvider>
-      <SelectionProvider>
-        <AlertsInner />
-      </SelectionProvider>
-    </ActionsProvider>
-  );
+  return <AlertsInner />;
 }
