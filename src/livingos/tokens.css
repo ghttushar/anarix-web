@@ -1,0 +1,70 @@
+/* Living OS — scoped tokens. Applied only inside .livingos-scope. */
+
+.livingos-scope {
+  --los-ink: #1a1614;
+  --los-ink-muted: #6b6058;
+  --los-ink-faint: #a89e94;
+  --los-paper: #f4efe6;
+  --los-paper-warm: #faf6ec;
+  --los-paper-deep: #e8e0d1;
+  --los-line: #d9cfbf;
+  --los-warm: #c8875a;      /* Standing warmth */
+  --los-amber: #b56b2c;     /* Critical (never red) */
+  --los-signal: #4a3f36;    /* Aan authored voice */
+
+  --los-serif: "Fraunces", "Cormorant Garamond", Georgia, serif;
+  --los-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --los-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --los-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  font-family: var(--los-sans);
+  color: var(--los-ink);
+  background: var(--los-paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Dark mode variant — warm graphite */
+.dark .livingos-scope,
+.livingos-scope.livingos-dark {
+  --los-ink: #ede6da;
+  --los-ink-muted: #a89e94;
+  --los-ink-faint: #6b6058;
+  --los-paper: #17140f;
+  --los-paper-warm: #1e1a14;
+  --los-paper-deep: #0f0d0a;
+  --los-line: #2f2a22;
+  --los-warm: #d9955e;
+  --los-amber: #d8843a;
+  --los-signal: #cdbfa6;
+}
+
+/* Subtle paper grain, applied to the workspace surface */
+.livingos-grain {
+  background-image:
+    radial-gradient(rgba(0,0,0,0.018) 1px, transparent 1px),
+    radial-gradient(rgba(0,0,0,0.012) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+}
+.dark .livingos-grain {
+  background-image:
+    radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.012) 1px, transparent 1px);
+}
+
+/* Ambient breathing dot for Aan presence */
+@keyframes losBreath {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+.livingos-breath { animation: losBreath 3.4s var(--los-ease) infinite; }
+
+/* Warm bloom on entry */
+@keyframes losBloom {
+  0%   { opacity: 0; }
+  40%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+.livingos-bloom { animation: losBloom 1600ms var(--los-ease) forwards; }
