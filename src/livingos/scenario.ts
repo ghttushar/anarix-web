@@ -9,21 +9,46 @@ export type DomainState =
   | "silent"
   | "recovering";
 
+export interface TimelineEvent {
+  /** Human label, e.g. "Mon 14:20". */
+  when: string;
+  state: DomainState;
+  /** What Aan wrote at that moment about this Domain. */
+  narrative: string;
+  /** Optional past proposal at that time. */
+  pastProposal?: string;
+}
+
+export interface DelegationState {
+  /** Short authority description. */
+  scope: string;
+  /** Minimum confidence Aan must have to act unattended (0-1). */
+  confidenceFloor: number;
+  /** Human duration, e.g. "until Friday 18:00". */
+  duration: string;
+  boundaries: string[];
+  exceptions: string[];
+  history: { when: string; text: string }[];
+}
+
 export interface Domain {
   id: string;
   name: string;
   state: DomainState;
-  /** Deliberate loose composition — percentages of the workspace, stable across sessions. */
   x: number;
   y: number;
-  /** Relative visual weight — 1.0 baseline, larger = more mass. */
   weight: number;
-  /** True when this Domain is producing the next proposal. */
   leaning: boolean;
-  /** Short authored narrative Aan wrote about this Domain this morning. */
   narrative: string;
-  /** One-line relationships shown to the side when expanded. */
   relationships: string[];
+  timeline: TimelineEvent[];
+  delegation: DelegationState;
+}
+
+export interface ProposalAlternative {
+  label: string;
+  sentence: string;
+  tradeoff: string;
 }
 
 export interface Proposal {
@@ -32,13 +57,15 @@ export interface Proposal {
   why: string;
   evidence: string[];
   expectedImpact: string;
-  confidence: number; // 0-1
-  alternatives: number;
+  projectedStanding: string;
+  confidence: number;
+  alternatives: ProposalAlternative[];
 }
 
 export interface RunningAgent {
   id: string;
   label: string;
+  detail: string;
   remainingMinutes: number;
   domainId: string;
 }
@@ -52,6 +79,21 @@ export interface Scenario {
   proposal: Proposal;
   agent: RunningAgent;
 }
+
+const baseDelegation = (scope: string, floor: number): DelegationState => ({
+  scope,
+  confidenceFloor: floor,
+  duration: "until Friday 18:00",
+  boundaries: [
+    "Never exceed authorised spend envelope",
+    "Never touch delegated campaigns owned by Marketing",
+  ],
+  exceptions: ["Escalate on any single move > 8% budget shift"],
+  history: [
+    { when: "Fri", text: "Delegated bid-cap tuning · returned within window" },
+    { when: "Mon", text: "Delegated pacing checks · no action needed" },
+  ],
+});
 
 export const scenario: Scenario = {
   day: "Tuesday",
@@ -75,6 +117,13 @@ export const scenario: Scenario = {
         "watched by Marketing",
         "linked to Cash · Inventory",
       ],
+      timeline: [
+        { when: "Fri 09:00", state: "firm", narrative: "Q4 window opened; pacing well ahead of target." },
+        { when: "Sat 18:00", state: "holding", narrative: "Weekend spend cooled; SoV steady." },
+        { when: "Mon 11:00", state: "soft", narrative: "SB SoV drifted 3 points below trailing average.", pastProposal: "Lift SB bids by 6%." },
+        { when: "Tue 07:40", state: "watching", narrative: "SP saturation confirmed; SB slippage widened to 4 points." },
+      ],
+      delegation: baseDelegation("Bid caps, pacing, and intra-day budget tuning on Sponsored Products (US only).", 0.8),
     },
     {
       id: "inventory",
@@ -87,6 +136,12 @@ export const scenario: Scenario = {
       narrative:
         "The West-coast fulfillment gap from last week has closed. Stock levels on the top 8 SKUs are back inside their guardrails. Aan is no longer proposing intervention here.",
       relationships: ["8 SKUs · firm", "linked to Advertising · Cash"],
+      timeline: [
+        { when: "Thu", state: "soft", narrative: "West-coast FC lag surfaced; 3 SKUs at risk." },
+        { when: "Sun", state: "watching", narrative: "Recovery underway; buffer restored on 5 SKUs." },
+        { when: "Tue 06:00", state: "recovering", narrative: "All top-8 SKUs back inside guardrails." },
+      ],
+      delegation: baseDelegation("Reorder recommendations on top-40 SKUs; alerts only.", 0.85),
     },
     {
       id: "cash",
@@ -99,6 +154,11 @@ export const scenario: Scenario = {
       narrative:
         "$412k runway with 47 days of cover on current burn. Two receivables clear Friday. Nothing to attend to.",
       relationships: ["47 days cover · firm", "linked to Advertising"],
+      timeline: [
+        { when: "Fri", state: "firm", narrative: "Runway extended after receivables cleared." },
+        { when: "Tue", state: "firm", narrative: "Steady. No movement expected before Friday." },
+      ],
+      delegation: baseDelegation("Read-only. No autonomous cash movements.", 0.95),
     },
     {
       id: "customers",
@@ -111,6 +171,11 @@ export const scenario: Scenario = {
       narrative:
         "NPS steady at 62. Two enterprise conversations are in-flight — one closing this week, one on hold. No immediate signal.",
       relationships: ["2 open · 1 closing", "watched by Sales"],
+      timeline: [
+        { when: "Mon", state: "holding", narrative: "NPS held at 62. One enterprise thread reopened." },
+        { when: "Tue", state: "holding", narrative: "No change." },
+      ],
+      delegation: baseDelegation("Draft follow-ups only; nothing sent without review.", 0.9),
     },
     {
       id: "operations",
@@ -123,6 +188,11 @@ export const scenario: Scenario = {
       narrative:
         "All pipelines green. Last incident was 11 days ago. Aan has nothing to say here today.",
       relationships: ["green · 11d since incident"],
+      timeline: [
+        { when: "11d ago", state: "watching", narrative: "Incident: warehouse sync lag. Resolved same day." },
+        { when: "Tue", state: "silent", narrative: "All pipelines green." },
+      ],
+      delegation: baseDelegation("Auto-restart known-good jobs; escalate anything novel.", 0.9),
     },
     {
       id: "people",
@@ -135,6 +205,11 @@ export const scenario: Scenario = {
       narrative:
         "One hire closing Thursday. One 1:1 flagged for follow-up from last week's meeting notes. No urgency.",
       relationships: ["1 hire closing · 1 follow-up"],
+      timeline: [
+        { when: "Last wk", state: "holding", narrative: "Offer extended; 1:1 flagged for follow-up." },
+        { when: "Tue", state: "holding", narrative: "Awaiting signature." },
+      ],
+      delegation: baseDelegation("Scheduling and reminders only. No comms sent unattended.", 0.95),
     },
   ],
   proposal: {
@@ -145,12 +220,27 @@ export const scenario: Scenario = {
     evidence: ["SP ROAS 3.1×", "SB SoV −4pts", "Q4 window · 03d left"],
     expectedImpact:
       "Standing holds. Brand SoV recovers to trailing average by Thursday close.",
+    projectedStanding:
+      "You'd still be standing well. Advertising moves from watching to holding by Thursday evening.",
     confidence: 0.78,
-    alternatives: 2,
+    alternatives: [
+      {
+        label: "Smaller shift",
+        sentence: "Shift 6% instead of 12%.",
+        tradeoff: "Softer SoV recovery; less exposure if SP cools further.",
+      },
+      {
+        label: "Add net spend",
+        sentence: "Hold SP; add 8% net budget to SB.",
+        tradeoff: "Protects both channels; breaches Q4 spend envelope by ~2%.",
+      },
+    ],
   },
   agent: {
     id: "bid-cap-rebalance",
     label: "rebalancing US-Sponsored bid caps",
+    detail:
+      "Aan is walking the top-20 ad groups on US-Sponsored and easing bid caps where CPC has drifted more than 12% above the 14-day trailing median. No new budgets, no new keywords. Returns to standby when done.",
     remainingMinutes: 6,
     domainId: "advertising",
   },
