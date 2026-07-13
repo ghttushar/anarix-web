@@ -1,18 +1,38 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import "@/livingos/tokens.css";
 import { AmbientStrip } from "./AmbientStrip";
+import { ContextDock } from "./ContextDock";
+import { CommandPalette } from "./CommandPalette";
+import type { AlertTabKey } from "@/livingos/actions/tabs";
 
 /**
- * Living OS shell. No sidebar, no taskbar, no breadcrumbs.
- * Three regions only: Ambient Strip, Workspace, (Context Dock — reserved).
- * Applies data-livingos so scoped tokens.css takes over.
+ * Living OS shell.
+ * Three regions only: Ambient Strip, Workspace, Context Dock.
+ * ⌘K opens the universal command bar. No sidebar, no taskbar, no breadcrumbs.
  */
 export function LivingOSShell({ children }: { children: ReactNode }) {
-  // Hide any bleed-through app chrome that might still mount above us.
+  const [cmdOpen, setCmdOpen] = useState(false);
+
   useEffect(() => {
     document.body.setAttribute("data-livingos-active", "true");
     return () => document.body.removeAttribute("data-livingos-active");
   }, []);
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCmdOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+
+  const setRegister = (k: AlertTabKey) => {
+    sessionStorage.setItem("livingos:alerts:tab", k);
+    window.dispatchEvent(new CustomEvent("livingos:register:set", { detail: k }));
+  };
 
   return (
     <div
@@ -20,9 +40,15 @@ export function LivingOSShell({ children }: { children: ReactNode }) {
       className="los-grain fixed inset-0 z-[100] overflow-y-auto bg-[hsl(var(--los-paper))]"
     >
       <div className="relative z-[1]">
-        <AmbientStrip />
-        <main className="mx-auto max-w-[1180px] px-8 pb-24 pt-8">{children}</main>
+        <AmbientStrip onOpenCommand={() => setCmdOpen(true)} />
+        <main className="mx-auto max-w-[1180px] px-8 pb-32 pt-2">{children}</main>
       </div>
+      <ContextDock />
+      <CommandPalette
+        open={cmdOpen}
+        onOpenChange={setCmdOpen}
+        onSetRegister={setRegister}
+      />
     </div>
   );
 }

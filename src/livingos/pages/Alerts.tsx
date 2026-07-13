@@ -1,12 +1,11 @@
-// Living OS — Alerts as the supervisory surface.
-// Same functionality as /alerts, re-authored: paper aesthetic, registers instead
-// of tabs, no Anarix chrome. Wrapped by LivingOSShell.
+// Living OS — Alerts as the operational inbox.
+// Same functionality as /alerts, re-authored around the PDF philosophy:
+// Standing panel + operational registers + row-in-place expansion.
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ActionsProvider, useActionsStore } from "@/livingos/state/actionsStore";
-import { SelectionProvider } from "@/state/selectionStore";
+import { useActionsStore } from "@/livingos/state/actionsStore";
 import { EmptyState } from "@/livingos/actions/EmptyState";
 import { EMPTY_FILTER, type FilterState } from "@/livingos/actions/FilterSheet";
 import { type SortKey } from "@/livingos/actions/SortMenu";
@@ -18,16 +17,31 @@ import { StackRow } from "@/livingos/actions/StackRow";
 import { GridCard } from "@/livingos/actions/GridCard";
 import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from "@/livingos/actions/AlertDetailPanel";
 import type { ViewMode } from "@/livingos/actions/ViewSwitcher";
-import { filterByTab, computeTabCounts, type AlertTabKey } from "@/livingos/actions/tabs";
+import { filterByTab, computeTabCounts, isKnownTab, type AlertTabKey } from "@/livingos/actions/tabs";
 import { valueMagnitude } from "@/livingos/lib/decisions/valueFormat";
 import type { Decision } from "@/livingos/data/mockDecisions";
+import { StandingPanel } from "@/livingos/shell/StandingPanel";
+import { pushRecent } from "@/livingos/shell/ContextDock";
 
 function useTab(): [AlertTabKey, (t: AlertTabKey) => void] {
   const [tab, setTab] = useState<AlertTabKey>(() => {
     if (typeof window === "undefined") return "all";
-    return (sessionStorage.getItem("livingos:alerts:tab") as AlertTabKey) || "all";
+    const stored = sessionStorage.getItem("livingos:alerts:tab");
+    return isKnownTab(stored) ? stored : "all";
   });
-  return [tab, (t) => { setTab(t); sessionStorage.setItem("livingos:alerts:tab", t); }];
+  // Command palette can broadcast register changes.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const k = (e as CustomEvent<string>).detail;
+      if (isKnownTab(k)) setTab(k);
+    };
+    window.addEventListener("livingos:register:set", h);
+    return () => window.removeEventListener("livingos:register:set", h);
+  }, []);
+  return [
+    tab,
+    (t) => { setTab(t); sessionStorage.setItem("livingos:alerts:tab", t); },
+  ];
 }
 
 function bucketLabel(ts: number): string {
@@ -70,6 +84,7 @@ function AlertsInner() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const openDetail = useCallback((id: string, mode: PanelMode = "custom") => {
+    pushRecent(id);
     setPanel({ decisionId: id, mode });
   }, []);
   const closePanel = useCallback(() => setPanel(CLOSED_PANEL), []);
@@ -113,7 +128,7 @@ function AlertsInner() {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
-      else next.add(id);
+      else { next.add(id); pushRecent(id); }
       return next;
     });
   }, []);
@@ -128,6 +143,8 @@ function AlertsInner() {
 
   return (
     <>
+      <StandingPanel />
+
       <AlertsToolbar
         tab={tab}
         onTabChange={setTab}
@@ -144,7 +161,7 @@ function AlertsInner() {
 
       <BulkBar />
 
-      <ScrollArea className="min-h-[60vh]">
+      <ScrollArea className="min-h-[50vh]">
         {sorted.length === 0 ? (
           <EmptyState
             headline={tab === "all" ? "You're clear." : "Nothing in this register."}
@@ -199,7 +216,9 @@ function StackBody({
           <BucketHeader label={bucket} />
           <div className="overflow-hidden rounded-sm border border-[hsl(var(--los-hairline))] bg-[hsl(var(--los-paper-raised))]">
             {list.map((d) => (
-              <StackRow key={d.id} decision={d} onOpenDetail={onOpenDetail} />
+              <div key={d.id} data-decision-id={d.id}>
+                <StackRow decision={d} onOpenDetail={onOpenDetail} />
+              </div>
             ))}
           </div>
         </section>
@@ -224,13 +243,14 @@ function GridBody({
         const renderCol = (col: Decision[]) => (
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             {col.map((d) => (
-              <GridCard
-                key={d.id}
-                decision={d}
-                expanded={expandedIds.has(d.id)}
-                onToggleExpand={() => onToggleExpand(d.id)}
-                onOpenDetail={onOpenDetail}
-              />
+              <div key={d.id} data-decision-id={d.id}>
+                <GridCard
+                  decision={d}
+                  expanded={expandedIds.has(d.id)}
+                  onToggleExpand={() => onToggleExpand(d.id)}
+                  onOpenDetail={onOpenDetail}
+                />
+              </div>
             ))}
           </div>
         );

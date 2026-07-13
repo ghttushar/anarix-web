@@ -159,9 +159,19 @@
   50% { opacity: 0.85; transform: scale(1.15); }
 }
 [data-livingos] .los-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: hsl(var(--los-aan));
   animation: los-breathe 3.6s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* Row flash — used when the dock/command-bar sends focus to a row. */
+@keyframes los-flash-kf {
+  0% { background-color: hsl(var(--los-aan) / 0.14); }
+  100% { background-color: transparent; }
+}
+[data-livingos] .los-flash {
+  animation: los-flash-kf 1.4s ease-out;
 }
