@@ -1,127 +1,138 @@
-# Living OS — Alerts as the Supervisory Surface
 
-## Correction of the previous direction
+# Living OS — Re-authoring around the PDF philosophy
 
-The previous Living OS build (constellation of domains, proposal sheet, delegation face, timeline replay) is out. The Living OS surface is the **Aan Alerts system**, re-authored end-to-end under the Living OS philosophy. Alerts are not a feature inside Living OS — Alerts *is* Living OS. That is the supervisory loop: things happen, you judge them, they resolve.
+We keep every capability that the duplicated Aan Alerts system already provides (decisions, approvals, meetings, bundles, questions, undo, keyboard shortcuts, bulk, search/filter/sort). Nothing gets deleted. We change the *interaction model* around it so it stops feeling like "Alerts, restyled" and starts feeling like an operating layer that is already running the business.
 
-## What gets deleted
+All work stays inside `src/livingos/`. No Anarix files change.
 
-Everything under `src/livingos/` and `src/pages/livingos/` created previously:
+---
 
-- `src/livingos/{shell,domains,proposals,delegation,memory,awareness,behaviors,agents,state,scenario.ts,tokens.css}`
-- `src/pages/livingos/Workspace.tsx`
-- Route entries in `src/App.tsx` for the constellation shell
-- Sidebar "Switch to Living OS" entry (replaced by a new one pointing at the new route)
+## North star (from the PDF)
 
-## What gets duplicated (Phase 1)
+- Home answers *"What deserves my judgment?"* not *"What do you want to ask?"*
+- Money-first, then reason, then evidence, then action.
+- Standing is the **state**, not the interface. The interface is Inbox + Workspace + Tools + Actions + Memory.
+- The user supervises. Aan works. Everything is explainable and reversible.
+- One measurable metric: **time to confident decision**.
 
-The entire Aan Alerts system is copied — not imported, not aliased — into a Living OS namespace so we can redesign freely without touching the working Anarix Alerts page. Source → destination:
+## The seven layers we build toward
 
 ```text
-src/pages/Alerts.tsx                       → src/livingos/pages/Alerts.tsx
-src/components/actions/*  (39 files)       → src/livingos/actions/*
-src/state/actionsStore.tsx                 → src/livingos/state/actionsStore.tsx
-src/lib/decisions/*                        → src/livingos/lib/decisions/*
-src/data/{mockDecisions,mockMeetings,
-  mockMeetingTasks,mockQuestions}.ts       → src/livingos/data/*
+1  Ambient Strip     Standing sentence, time, search, avatar, running-agents pulse
+2  Standing panel    "You're standing well" + counts (proposals / agents / opportunities)
+3  Operational Inbox Requires judgment · Requires review · AI waiting · Cooling · Running · Completed · Watching
+4  Workspace         One fluid surface. Selecting an inbox item expands it here in place.
+5  Tools             Inspect · Compare · Replay · Simulate · Present · Share · Watch · Bookmark
+6  Actions           Approve · Modify · Reject · Delegate · Undo (with cooling window)
+7  Memory / Context  Timeline, related domains, evidence chain, prior decisions
 ```
 
-All internal imports rewritten to the `src/livingos/*` namespace. No behavior change in Phase 1 — the copy renders identically to `/alerts` today, just at `/livingos`. Existing Anarix Alerts stays untouched and continues working.
+Constellation of Domains is **demoted** to a "Spatial view" tool, not the home.
 
-Sidebar profile menu gets a single entry: **"Switch to Living OS"** → `/livingos`.
+---
 
-Deliverable at end of Phase 1: `/livingos` renders the full Alerts experience (All / Needs approval / Morning brief / From meetings / FYI / Done tabs, Stack + Grid, filter, sort, expanded rows, action dropdowns, bulk bar, undo toast, keyboard shortcuts, meeting bundles, question cards) — pixel-identical to `/alerts` but running off duplicated code.
+## Phase 1 — Shell + Home + Inbox (usable product)
 
-## What gets redesigned (Phase 2)
+Goal: opening `/livingos` immediately answers *what changed, what needs me, what is already handled, what can I do*.
 
-Now the philosophy lands. Every surface of the duplicated system is re-authored — no dashboards chrome, no SaaS taskbar, no generic KPI cards. The alerts *stay* (that's the functionality), but their material, voice, motion, and interaction model change.
+### 1.1 Ambient Strip (rebuild)
+Top 48px band. Contents, left→right:
+- Day + short standing sentence, generated from current decisions (e.g. *"Tuesday · You're standing well. Advertising needs one decision. Inventory recovered overnight."*).
+- Middle: `RunningAgents` pulse — 3–6 tiny dots with labels on hover (*"Watching Buy Box", "Reading meeting", "Preparing QBR"*). Sourced from open decisions + meetings.
+- Right: `⌘K` search hint, avatar.
 
-### Shell & environment
+No numbers, no charts, no chrome. Text only.
 
-- Remove `AppSidebar`, `AppTaskbar`, `MarketplaceSidebar`, breadcrumbs on `/livingos/*`. Living OS runs in its own shell with only three regions: **Ambient Strip** (top), **Workspace** (center — the alerts), **Context Dock** (bottom-right, quiet).
-- Ambient Strip carries the daily **Standing sentence** ("You have 41 items asking for judgment. $47.2k in play. Aan is watching 6 more.") and the Aan breathing dot. No logo, no account switcher, no date range picker in view.
-- Warm paper (light) / warm graphite (dark) tokens replace the existing white/gray card surfaces. Applied via a scoped `src/livingos/tokens.css` that only bites on `[data-livingos]`.
+### 1.2 Standing panel (new, replaces empty canvas)
+Directly under the strip, a single quiet block:
+- One-line standing verdict.
+- A row of muted counts derived from `actionsStore`: *N need judgment · N in cooling · N running · N settled today · $X protected · $Y at risk*.
+- No cards. Editorial spacing, Fraunces headline, Plex Sans body.
 
-### Material, type, motion
+### 1.3 Operational Inbox (replaces current Registers/tabs)
+Same data as today, re-grouped by **operational state**, not by source category:
+- Requires judgment (open, actionable, non-fyi)
+- Requires review (fyi + questions)
+- AI waiting / cooling (in_flight + cooling window)
+- Running (custom actions set)
+- Settled today (completed, rejected — collapsed by default)
+- Watching (meetings + bundles)
 
-- **Type:** Fraunces (authored voice — sentence, alert titles), IBM Plex Sans (body), IBM Plex Mono (numbers, metadata, timestamps). Replaces Satoshi/Noto within the Living OS scope only.
-- **Color:** warm paper `#F5F1E8` / graphite `#1C1A17`. Ink `#1A1815`. Muted `#6B6558`. Dollar-impact colors become desaturated (`--los-loss`, `--los-gain`, `--los-info`) — no bright brand red/green.
-- **Motion:** 260–450ms, cubic-bezier(0.2, 0, 0, 1). No bounces. Resolves to stillness. Expanded rows breathe open; approvals fade the row to a settled state.
-- Grain overlay on the workspace surface, subtle.
+Rendering: reuse `StackRow` / `GridCard` verbatim; only the tab layer + counts change. Money value stays the leading token per row. Tabs become quiet register labels, not pill buttons.
 
-### Alerts re-authored as judgment objects
+### 1.4 Workspace in place (replaces right-side `AlertDetailPanel`)
+Selecting a row no longer opens a right sheet. It expands the row into a **workspace block** that pushes the list down. Inside the block:
+- Narrative (`ExpandedAlertBody` reused).
+- Evidence chain, source, related decisions.
+- Action rail (Approve · Modify · Reject · Delegate · Simulate · Compare) with the 12s cooling window we already have.
+- Close returns to the inbox without losing scroll.
 
-Each alert row (currently `StackRow` / `GridCard`) becomes a **Judgment Object** with three affordances:
+The right sheet is kept only for `Ask Aan` invoked from `⌥Space`.
 
-1. **Approve** (primary) — commits the proposed action.
-2. **Modify** (secondary) — opens the existing `ActionChoiceRow` dropdown, re-styled as a quiet inline sheet under the row rather than a floating menu.
-3. **Reject** — dismisses with reason capture (light, one-line).
+### 1.5 Universal Command (`⌘K`)
+Centered palette. Natural-language input plus grouped results: Domains · Proposals · Memory · Signals · People. Phase 1 delivers the palette shell + local search across current decisions/meetings/questions and view/sort/filter commands. LLM routing is out of scope for phase 1.
 
-Once approved, the alert enters the **12-second cooling window** (reused from previous Phase 2 work — same `CoolingWindow` primitive, restyled). Undo is a single sentence in the Ambient Strip, not a toast. If it lapses without undo, the row settles into the "Done" tab with a monospace timestamp and an "authored by you" byline.
+### 1.6 Context Dock (bottom, 72px)
+Persistent dock:
+- Recently opened decisions/meetings
+- Pinned items (bookmark from row menu)
+- Running agents (mirrors ambient strip, expanded)
+- Notifications become **state changes** here, not toasts.
 
-### Tabs → Registers
+### 1.7 Cleanups inside `src/livingos/`
+- Remove Anarix-styled taskbar/date-picker leftovers in `AlertsToolbar` (already partially done).
+- `EmptyState` uses Fraunces/Plex, no Sparkles.
+- Drop `Aan: Assisted` badge, "Last synced" chip, mascot header — the Standing sentence is the identity.
+- Keep `actionsStore`, `selectionStore`, keyboard shortcuts, undo, mock data files untouched.
 
-The tab bar (All / Needs approval / Morning brief / From meetings / FYI / Done) is re-authored as **Registers** — quiet horizontal text links, no pill background, current register underlined with a hair-line. Counts render in mono, right-aligned.
+---
 
-- "Needs approval" → **Judgment**
-- "Morning brief" → **Standing brief**
-- "From meetings" → **From the room**
-- "FYI" → **For your notice**
-- "Done" → **Settled**
+## Phase 2 — Domains, Tools, Memory, Delegation
 
-### Sort, filter, view mode
+Goal: turn the inbox item into a real operating object with the universal behaviors the PDF requires.
 
-- Sort/filter/view controls move off a visible toolbar into a **Command bar** invoked by `⌘K` (Living OS never shows chrome it doesn't need). Filter still uses the existing `FilterSheet` logic, restyled.
-- Stack vs Grid stays as the two view modes but re-labeled **Stream** vs **Field**. Stream is default; Field is a spatial layout where alerts cluster by dollar impact.
+### 2.1 Domain surface
+Each decision belongs to a Domain (Advertising / Inventory / Cash / Customers / Operations). Derive from `decision.domain` field already present in mock data. Domain view is a full-workspace mode reachable from any row or `⌘K`:
+- Top: Standing for that domain (one sentence + counts).
+- Body: proposal list, running actions, running agents, evidence.
+- Right rail (integrated, no sidebar chrome): Relationships, Delegations, Recent memory.
 
-### Meeting bundles & questions
+### 2.2 Tools bar (universal, inside any Domain / open item)
+Row of quiet verbs: **Inspect · Compare · Replay · Simulate · Present · Share · Watch · Bookmark**. Implemented as small overlays over the workspace:
+- **Replay**: dissolve current state, step through prior versions of the same domain/decision using `actionsStore` history.
+- **Compare**: pick two decisions or two moments; workspace splits adaptively.
+- **Simulate**: renders projected Standing + tradeoffs; nothing executes.
+- **Present**: read-only, typography scaled up, chrome hidden.
+- **Inspect**: click any value/sentence → opens reasoning inline (no navigation).
+- **Watch / Bookmark / Share**: persistent flags on the decision.
 
-- `MeetingBundleCard` / `MeetingWorkspace` re-skinned as **Rooms** — a bundle is a room you enter; action items inside are individual judgment objects.
-- `QuestionCard` becomes a **Question in the margin** — italic Fraunces, right-aligned, no button chrome. Answer inline.
+### 2.3 Proposal object (upgrade of current row action)
+Every actionable decision is a Proposal supporting: Accept · Modify · Reject · Simulate · Explain · Compare Alternatives · Delegate · Cooling · Undo. Rebuild `ActionChoiceRow` into a `ProposalRail` component used both inline and inside Domain view.
 
-### Aan presence
+### 2.4 Memory / Timeline
+`DomainTimeline` component driven by decision + meeting history. Not always visible; opens via Replay tool or `⌘K → "history of …"`. Vertical list of past decisions, meetings, executions, learnings.
 
-- No AI panel, no chat bubble. Aan speaks through:
-  - The **Standing sentence** in the Ambient Strip (updates on approval).
-  - **Marginalia** on alerts — a short authored line under the dollar impact ("This is the third time Winter Push has drifted this month.").
-  - `⌥Space` opens a focused **Aan sheet** (reuses the existing `AanCopilotPanel` logic but restyled to the paper aesthetic and scoped to the current alert).
+### 2.5 Delegation face
+"Flip" on a Domain/Proposal: front = business, back = delegation rules, authority, confidence, history, undo. Persists to `actionsStore`.
 
-### What we keep from the existing system, unchanged in logic
+### 2.6 Constellation (demoted)
+Small "Spatial view" tool inside the Tools bar. Not the home. Purely visual — grouped domains + gravity between related ones. Read-only.
 
-- `actionsStore` state model — approve/reject/snooze/undo transitions, counts per tab
-- Keyboard shortcuts (`useDecideKeyboard`) — J/K nav, A approve, X reject, U undo
-- Undo window + `useUndoFor` hook
-- Bulk selection + bulk action logic
-- All mock data — same alerts, same meetings, same questions, same numbers
+### 2.7 Motion & language rules (enforced project-wide inside `[data-livingos]`)
+- Motion only communicates thinking, working, confidence. No decorative animation.
+- 120–240ms max. Fade + subtle translate/scale. No bounce, parallax, or persistent glow (except one Aan breathing dot in the strip).
+- Copy tone: authored, terse, first-person from Aan when explaining. Never marketing.
 
-### What we drop
+---
 
-- The "Aan: Assisted" badge, "DESKTOP" badge, "Last synced" chip in the header
-- The date-range picker at the top (Living OS doesn't have a date frame — it has *now*)
-- The left icon rail (no cross-app navigation from Living OS)
-- Grid view's rounded card shadows and colored left borders
-- Toast notifications (replaced by Standing sentence updates)
+## Explicitly not doing
 
-## Technical notes
+- No new pages in `src/pages/`; single `/livingos` route stays.
+- No changes to Anarix Alerts, sidebar entry text, or any file outside `src/livingos/` and `src/pages/livingos/`.
+- No new mock data; derive everything from existing `mockDecisions/mockMeetings/mockQuestions`.
+- No backend, no AI calls in phase 1. `⌘K` search is local. LLM standing-sentence generation is deferred.
 
-- All Phase 1 & 2 work is contained in `src/livingos/`. Zero edits to files outside that directory except `src/App.tsx` (route registration) and `src/components/layout/AppSidebar.tsx` (profile menu entry).
-- Tokens scoped via `[data-livingos]` attribute on the shell root so paper/graphite/Fraunces never bleed into the rest of Anarix.
-- Fraunces + IBM Plex loaded via `@import` in `src/livingos/tokens.css` (Google Fonts), only fetched when a Living OS route is active (the CSS file is imported only from `LivingOSShell`).
-- The duplicated `actionsStore` keeps its own provider tree — Living OS Alerts and Anarix Alerts do not share state. Approving in one has no effect in the other. This is intentional: Living OS is its own room.
+## Deliverable checkpoints
 
-## Deliverables
-
-**Phase 1 — Import (verbatim duplication)**
-- `/livingos` route renders the full existing Alerts UI, identical to `/alerts`
-- All alerts sub-components duplicated under `src/livingos/`
-- Legacy Living OS constellation code removed
-- Sidebar profile menu links to `/livingos`
-
-**Phase 2 — Re-author (philosophy applied)**
-- New shell (Ambient Strip + Workspace + Context Dock), no Anarix chrome
-- Warm paper / graphite tokens, Fraunces + Plex typography, scoped
-- Registers replace tabs; Stream/Field replace Stack/Grid
-- Judgment objects with Approve / Modify / Reject + 12s cooling window
-- Standing sentence in Ambient Strip; Aan speaks through marginalia
-- `⌘K` command bar for sort/filter/view; `⌥Space` for focused Aan sheet
-- Keyboard shortcuts and undo behavior preserved
+- **End of Phase 1**: open `/livingos` → strip + standing + operational inbox + inline workspace expand + `⌘K` + context dock, all working over existing store.
+- **End of Phase 2**: any inbox item can be opened as a Domain with the full Tools bar, Proposal rail, Replay, Compare, Simulate, Delegation face, Memory timeline.
