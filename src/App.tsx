@@ -203,6 +203,16 @@ function AppRoutes() {
       <Route path="/mobile" element={<MobileRedirect />} />
       <Route path="/mobile/*" element={<MobileRedirect />} />
 
+      {/* Living OS — visual language exploration. Fully isolated: no app chrome, no providers. */}
+      <Route path="/livingos/directions" element={<DirectionsIndex />} />
+      <Route path="/livingos/directions/quiet-architecture" element={<QuietArchitecture />} />
+      <Route path="/livingos/directions/gravity-field" element={<GravityField />} />
+      <Route path="/livingos/directions/living-canvas" element={<LivingCanvas />} />
+      <Route path="/livingos/directions/command-surface" element={<CommandSurface />} />
+      <Route path="/livingos/directions/ambient-room" element={<AmbientRoom />} />
+      <Route path="/livingos/directions/editorial-intelligence" element={<EditorialIntelligence />} />
+
+
 
       {/* Hidden dev utility: pin a trial state and render any nav-bar page underneath */}
       <Route path="/_state/:state/*" element={<TrialStateRoute />} />
