@@ -1,230 +1,186 @@
-// /alerts — final rebuild. Stack + Grid views share tabs, filters, sort,
-// selection, bulk bar, and a single right-side Aan chat panel.
+// /alerts — Decision OS. Lifecycle-grouped queue + in-pane Review Workspace.
+// No ViewSwitcher, no SortMenu, no severity dots, no AanMascot header.
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AanMascot } from "@/components/aan/AanMascot";
+import { Button } from "@/components/ui/button";
 import { ActionsProvider, useActionsStore } from "@/state/actionsStore";
-import { SelectionProvider } from "@/state/selectionStore";
+import { SelectionProvider, useSelection } from "@/state/selectionStore";
 import { EmptyState } from "@/components/actions/EmptyState";
 import { EMPTY_FILTER, type FilterState } from "@/components/actions/FilterSheet";
-import { type SortKey } from "@/components/actions/SortMenu";
 import { KeyboardHelpOverlay } from "@/components/actions/KeyboardHelpOverlay";
 import { UndoToast } from "@/components/actions/UndoToast";
 import { AlertsToolbar } from "@/components/actions/AlertsToolbar";
 import { BulkBar } from "@/components/actions/BulkBar";
-import { StackRow } from "@/components/actions/StackRow";
-import { GridCard } from "@/components/actions/GridCard";
-import { AlertDetailPanel, CLOSED_PANEL, type PanelState, type PanelMode } from "@/components/actions/AlertDetailPanel";
-import type { ViewMode } from "@/components/actions/ViewSwitcher";
+import { GreetingHeader } from "@/components/actions/GreetingHeader";
+import { QueueSection, MAX_VISIBLE } from "@/components/actions/QueueSection";
+import { DecisionRowLite } from "@/components/actions/DecisionRowLite";
+import { ReviewWorkspace } from "@/components/actions/ReviewWorkspace";
+import { AlertDetailPanel, CLOSED_PANEL, type PanelState } from "@/components/actions/AlertDetailPanel";
 import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
-import { valueMagnitude } from "@/lib/decisions/valueFormat";
+import { useDecideKeyboard } from "@/components/actions/useDecideKeyboard";
+import {
+  lifecycleFor, LIFECYCLE_ORDER, LIFECYCLE_DEFAULT_EXPANDED, importanceScore, type Lifecycle,
+} from "@/lib/decisions/lifecycle";
 import type { Decision } from "@/data/mockDecisions";
 
-function useTab(): [AlertTabKey, (t: AlertTabKey) => void] {
-  const [tab, setTab] = useState<AlertTabKey>(() => {
-    if (typeof window === "undefined") return "all";
-    return (sessionStorage.getItem("alerts:tab") as AlertTabKey) || "all";
+function usePersistedState<T>(key: string, initial: T): [T, (v: T) => void] {
+  const [v, setV] = useState<T>(() => {
+    if (typeof window === "undefined") return initial;
+    try { const raw = sessionStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : initial; }
+    catch { return initial; }
   });
-  return [tab, (t) => { setTab(t); sessionStorage.setItem("alerts:tab", t); }];
-}
-
-
-function bucketLabel(ts: number): string {
-  const d = new Date(ts);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) return "Today";
-  const y = new Date(now); y.setDate(now.getDate() - 1);
-  if (d.toDateString() === y.toDateString()) return "Yesterday";
-  return "Earlier";
-}
-
-const severityRank: Record<Decision["severity"], number> = { critical: 0, opportunity: 1, fyi: 2 };
-const sourceRank: Record<Decision["source"], number> = { meeting: 0, email: 1, slack: 2, teams: 3, anarix: 4, aan: 5 };
-
-function inWindow(ts: number, win: FilterState["window"]): boolean {
-  if (win === "any") return true;
-  const now = new Date();
-  const d = new Date(ts);
-  if (win === "today") return d.toDateString() === now.toDateString();
-  if (win === "yesterday") {
-    const y = new Date(now); y.setDate(now.getDate() - 1);
-    return d.toDateString() === y.toDateString();
-  }
-  if (win === "week") return Date.now() - ts < 7 * 24 * 3600 * 1000;
-  return true;
-}
-
-function useAlertsDateRange(): [{ from: Date; to: Date }, (r: { from: Date; to: Date }) => void] {
-  const [range, setRange] = useState<{ from: Date; to: Date }>(() => {
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem("alerts:date-range");
-      if (stored) {
-        try {
-          const p = JSON.parse(stored);
-          return { from: new Date(p.from), to: new Date(p.to) };
-        } catch { /* fall through */ }
-      }
-    }
-    const to = new Date();
-    const from = new Date();
-    from.setDate(from.getDate() - 29);
-    return { from, to };
-  });
-  return [
-    range,
-    (r) => {
-      setRange(r);
-      sessionStorage.setItem("alerts:date-range", JSON.stringify({ from: r.from.toISOString(), to: r.to.toISOString() }));
-    },
-  ];
+  return [v, (n) => { setV(n); sessionStorage.setItem(key, JSON.stringify(n)); }];
 }
 
 function AlertsInner() {
   const { decisions } = useActionsStore();
-  const params = useParams<{ viewMode?: string }>();
-  const navigate = useNavigate();
-  const viewMode: ViewMode = params.viewMode === "grid" ? "grid" : "stack";
-  const setViewMode = useCallback((m: ViewMode) => navigate(`/alerts/${m}`), [navigate]);
-  const [alertsDateRange, setAlertsDateRange] = useAlertsDateRange();
+  const { clear, selected } = useSelection();
 
-
-  const [tab, setTab] = useTab();
-  const [sort, setSort] = useState<SortKey>("value");
+  const [tab, setTab] = usePersistedState<AlertTabKey>("alerts:tab", "needs_me");
+  const [query, setQuery] = usePersistedState<string>("alerts:query", "");
+  const [density, setDensity] = usePersistedState<"comfortable" | "compact">("alerts:density", "comfortable");
   const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panel, setPanel] = useState<PanelState>(CLOSED_PANEL);
-
-  // Grid expanded ids
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  const openDetail = useCallback((id: string, mode: PanelMode = "custom") => {
-    setPanel({ decisionId: id, mode });
-  }, []);
   const closePanel = useCallback(() => setPanel(CLOSED_PANEL), []);
+
+  useDecideKeyboard(true);
 
   const counts = useMemo(() => computeTabCounts(decisions), [decisions]);
   const pool = useMemo(() => filterByTab(decisions, tab), [decisions, tab]);
 
-  const dateFrom = alertsDateRange.from.getTime();
-  const dateToEnd = (() => {
-    const d = new Date(alertsDateRange.to);
-    d.setHours(23, 59, 59, 999);
-    return d.getTime();
-  })();
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return pool.filter((d) => {
+      if (filter.sources.size && !filter.sources.has(d.source)) return false;
+      if (filter.domains.size && !filter.domains.has(d.domain)) return false;
+      if (q && !(`${d.insight} ${d.sourceRef.label} ${d.domain}`).toLowerCase().includes(q)) return false;
+      return true;
+    }).sort((a, b) => importanceScore(b) - importanceScore(a));
+  }, [pool, filter, query]);
 
-  const filtered = useMemo(() => pool.filter((d) => {
-    if (d.createdAt < dateFrom || d.createdAt > dateToEnd) return false;
-    if (filter.sources.size && !filter.sources.has(d.source)) return false;
-    if (filter.domains.size && !filter.domains.has(d.domain)) return false;
-    if (!inWindow(d.createdAt, filter.window)) return false;
-    return true;
-  }), [pool, filter, dateFrom, dateToEnd]);
-
-  const sorted = useMemo(() => {
-    const s = [...filtered];
-    s.sort((a, b) => {
-      if (sort === "value") return valueMagnitude(b.valueKind, b.valueCents) - valueMagnitude(a.valueKind, a.valueCents);
-      if (sort === "critical") {
-        const r = severityRank[a.severity] - severityRank[b.severity];
-        if (r !== 0) return r;
-        return b.updatedAt - a.updatedAt;
-      }
-      if (sort === "source") return sourceRank[a.source] - sourceRank[b.source];
-      return b.updatedAt - a.updatedAt;
-    });
-    return s;
-  }, [filtered, sort]);
-
-  const bucketed = useMemo(() => {
-    const m = new Map<string, Decision[]>();
-    for (const d of sorted) {
-      const b = bucketLabel(d.createdAt);
-      if (!m.has(b)) m.set(b, []);
-      m.get(b)!.push(d);
+  const groups = useMemo(() => {
+    const m = new Map<Lifecycle, Decision[]>();
+    for (const d of filtered) {
+      const lc = lifecycleFor(d);
+      if (!m.has(lc)) m.set(lc, []);
+      m.get(lc)!.push(d);
     }
-    return Array.from(m.entries());
-  }, [sorted]);
+    return m;
+  }, [filtered]);
 
-  const toggleExpand = useCallback((id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
+  const selectedDecision = useMemo(
+    () => decisions.find((d) => d.id === selectedId) ?? null,
+    [decisions, selectedId],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && panel.decisionId) closePanel();
+      if (e.key === "Escape") {
+        if (panel.decisionId) closePanel();
+        else if (selected.size > 0) clear();
+        else if (selectedId) setSelectedId(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [panel.decisionId, closePanel]);
+  }, [panel.decisionId, closePanel, selected.size, clear, selectedId]);
+
+  const total = filtered.length;
+  const isSearchEmpty = query.trim().length > 0 && total === 0;
+  const isEmpty = total === 0;
 
   return (
     <AppLayout>
-      <AppTaskbar
-        breadcrumbItems={[{ label: "Alerts" }]}
-        showDateRange
-        dateRangeOverride={alertsDateRange}
-        onDateRangeOverrideChange={setAlertsDateRange}
-      />
-      <div className="px-3 py-4 max-w-[1480px] mx-auto w-full">
-        <header className="mb-4 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-md bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center shrink-0">
-            <AanMascot size={24} state="idle" interactive={false} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground">
-              Anarix · Aan
-            </div>
-            <h1 className="font-heading text-[20px] font-semibold text-foreground leading-tight">
-              Alerts
-            </h1>
-          </div>
-        </header>
+      <AppTaskbar breadcrumbItems={[{ label: "Alerts" }]} />
+
+      <div className={`px-4 py-5 max-w-[1600px] mx-auto w-full ${density === "compact" ? "text-[13px]" : ""}`}>
+        <GreetingHeader name="Tushar" />
 
         <AlertsToolbar
           tab={tab}
           onTabChange={setTab}
           counts={counts}
-          viewMode={viewMode}
-          onViewChange={setViewMode}
+          query={query}
+          onQueryChange={setQuery}
+          density={density}
+          onDensityChange={setDensity}
           filter={filter}
           onFilterChange={setFilter}
-          sort={sort}
-          onSortChange={setSort}
           filterSheetOpen={filterSheetOpen}
           onFilterSheetOpenChange={setFilterSheetOpen}
         />
 
         <BulkBar />
 
-        <ScrollArea className="h-[calc(100vh-240px)] pr-2">
-          {sorted.length === 0 ? (
-            <EmptyState
-              headline={tab === "all" ? "You're clear." : "Nothing in this view."}
-              body={tab === "all"
-                ? "Aan will surface something the moment it matters."
-                : "Try a different tab, Aan is still watching."}
+        <div className="grid gap-4 grid-cols-1 xl:grid-cols-[minmax(0,34fr)_minmax(0,66fr)] items-start">
+          {/* Queue column */}
+          <ScrollArea className="h-[calc(100vh-260px)] pr-2">
+            {isEmpty ? (
+              <EmptyState
+                variant={isSearchEmpty ? "search" : tab === "needs_me" ? "needs_me" : tab === "watching" ? "watching" : "none"}
+              />
+            ) : (
+              LIFECYCLE_ORDER.map((lc) => {
+                const list = groups.get(lc) || [];
+                if (list.length === 0) return null;
+                const max = MAX_VISIBLE[lc];
+                const visible = list.slice(0, max);
+                const hidden = list.length - visible.length;
+                return (
+                  <QueueSection
+                    key={lc}
+                    lifecycle={lc}
+                    count={list.length}
+                    defaultOpen={LIFECYCLE_DEFAULT_EXPANDED[lc]}
+                  >
+                    {visible.map((d) => (
+                      <DecisionRowLite
+                        key={d.id}
+                        decision={d}
+                        selected={selectedId === d.id}
+                        onSelect={() => setSelectedId(d.id)}
+                        onReview={() => setSelectedId(d.id)}
+                      />
+                    ))}
+                    {hidden > 0 && (
+                      <div className="px-4 py-2 border-t border-border/50 bg-muted/20">
+                        <Button variant="ghost" size="sm" className="h-7 text-[12px] text-muted-foreground">
+                          Show {hidden} more
+                        </Button>
+                      </div>
+                    )}
+                  </QueueSection>
+                );
+              })
+            )}
+          </ScrollArea>
+
+          {/* Review Workspace column — desktop */}
+          <div className="hidden xl:flex flex-col h-[calc(100vh-260px)] sticky top-4">
+            <ReviewWorkspace
+              decision={selectedDecision}
+              onClose={() => setSelectedId(null)}
+              onDiscussAan={(id) => setPanel({ decisionId: id, mode: "custom" })}
             />
-          ) : viewMode === "stack" ? (
-            <StackBody bucketed={bucketed} onOpenDetail={openDetail} />
-          ) : (
-            <GridBody
-              bucketed={bucketed}
-              expandedIds={expandedIds}
-              onToggleExpand={toggleExpand}
-              onOpenDetail={openDetail}
-            />
-          )}
-        </ScrollArea>
+          </div>
+        </div>
       </div>
+
+      {/* Below xl: Review Workspace opens as a full-screen sheet */}
+      {selectedDecision && (
+        <div className="xl:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col p-3 animate-in fade-in duration-150">
+          <ReviewWorkspace
+            decision={selectedDecision}
+            onClose={() => setSelectedId(null)}
+            onDiscussAan={(id) => setPanel({ decisionId: id, mode: "custom" })}
+          />
+        </div>
+      )}
 
       <AlertDetailPanel
         state={panel}
@@ -236,81 +192,6 @@ function AlertsInner() {
     </AppLayout>
   );
 }
-
-function BucketHeader({ label }: { label: string }) {
-  return (
-    <div className="mb-2 mt-1 flex items-center gap-2">
-      <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-        {label}
-      </span>
-      <span className="h-px flex-1 bg-border/60" />
-    </div>
-  );
-}
-
-function StackBody({
-  bucketed, onOpenDetail,
-}: {
-  bucketed: [string, Decision[]][];
-  onOpenDetail: (id: string, mode?: PanelMode) => void;
-}) {
-  return (
-    <div className="space-y-5">
-      {bucketed.map(([bucket, list]) => (
-        <section key={bucket}>
-          <BucketHeader label={bucket} />
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            {list.map((d) => (
-              <StackRow key={d.id} decision={d} onOpenDetail={onOpenDetail} />
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-function GridBody({
-  bucketed, expandedIds, onToggleExpand, onOpenDetail,
-}: {
-  bucketed: [string, Decision[]][];
-  expandedIds: Set<string>;
-  onToggleExpand: (id: string) => void;
-  onOpenDetail: (id: string, mode?: PanelMode) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      {bucketed.map(([bucket, list]) => {
-        const left = list.filter((_, i) => i % 2 === 0);
-        const right = list.filter((_, i) => i % 2 === 1);
-        const renderCol = (col: Decision[]) => (
-          <div className="flex-1 min-w-0 flex flex-col gap-3">
-            {col.map((d) => (
-              <GridCard
-                key={d.id}
-                decision={d}
-                expanded={expandedIds.has(d.id)}
-                onToggleExpand={() => onToggleExpand(d.id)}
-                onOpenDetail={onOpenDetail}
-              />
-            ))}
-          </div>
-        );
-        return (
-          <section key={bucket}>
-            <BucketHeader label={bucket} />
-            {/* Two independent columns: expanding a card only pushes cards below it in the same column. */}
-            <div className="flex gap-3 items-start">
-              {renderCol(left)}
-              {renderCol(right)}
-            </div>
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
 
 export default function AlertsPage() {
   return (
