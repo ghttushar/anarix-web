@@ -232,7 +232,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
   };
 
   const hasRow1 = true; // always show account/sync info
-  const hasRow2 = showAdType || showFrequency || showDateRange || showRunButton || children || true;
+  const hasRow2 = showAdType || showFrequency || showDateRange || showRunButton || !!children || (islandOff && !hideUtilityCluster);
 
   return (
     <div data-app-taskbar data-tour-id="taskbar" className="flex flex-col rounded-lg border bg-card shrink-0 sticky top-0 z-30 border-primary">
