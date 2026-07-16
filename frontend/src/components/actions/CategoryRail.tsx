@@ -41,6 +41,7 @@ interface Props {
 
 export function CategoryRail({ items, activeKey, onSelect }: Props) {
   if (!items.length) return null;
+  const totalCount = items.reduce((n, it) => n + it.count, 0);
   return (
     <nav
       aria-label="Categories"
@@ -49,6 +50,24 @@ export function CategoryRail({ items, activeKey, onSelect }: Props) {
       <div className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground px-2 pb-1.5">
         Categories
       </div>
+      <button
+        onClick={() => onSelect("__all__")}
+        className={cn(
+          "group flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors",
+          activeKey === null || activeKey === "__all__"
+            ? "bg-primary/10 text-primary"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+        )}
+      >
+        <Folder className="h-3.5 w-3.5 shrink-0" />
+        <span className="text-[12.5px] font-medium truncate flex-1">All</span>
+        <span className={cn(
+          "text-[10.5px] font-semibold tabular-nums h-[18px] min-w-[20px] px-1.5 rounded-full flex items-center justify-center",
+          (activeKey === null || activeKey === "__all__") ? "bg-primary/20 text-primary" : "bg-muted/70 text-muted-foreground",
+        )}>
+          {totalCount}
+        </span>
+      </button>
       {items.map((it) => {
         const Icon = ICON_FOR[it.label] ?? Folder;
         const active = activeKey === it.key;
