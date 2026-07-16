@@ -1,5 +1,5 @@
 import { useState, useEffect, ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { CalendarIcon, Play, Bell, Lightbulb, RefreshCw, Clock, ChevronRight, Inbox } from "lucide-react";
 import { AanGlyph } from "@/components/aan/AanGlyph";
 import { format, subDays, startOfWeek, endOfWeek, subWeeks, startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters } from "date-fns";
@@ -134,6 +134,11 @@ interface AppTaskbarProps {
 
 export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems, dateRangeOverride, onDateRangeOverrideChange, hideUtilityCluster = false }: AppTaskbarProps) {
   const { view } = useViewport();
+  const location = useLocation();
+  // Hide the app taskbar entirely on the Signals page.
+  if (location.pathname.startsWith("/alerts")) {
+    return null;
+  }
   // Mobile delegates to a purpose-built taskbar.
   if (view === "mobile") {
     return (
