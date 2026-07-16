@@ -5,7 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { SCENARIOS } from "@/data/mockAanScenarios";
 import { useAanEvents } from "@/components/aan/autonomous/AanEventsContext";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
-import { Zap, Copy, Radio } from "lucide-react";
+import { useAanPanel } from "@/contexts/AanPanelContext";
+import { Zap, Copy, Radio, PanelRight, LayoutPanelTop } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
