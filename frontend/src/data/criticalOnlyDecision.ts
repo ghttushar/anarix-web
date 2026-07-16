@@ -26,7 +26,7 @@ export const CRITICAL_ONLY_DECISION: Decision = {
     "ASIN B0CSH8TCC6 · Sampler – Decaf 40 Count lost advertising eligibility on 07 Jun 2026.",
   insightDetail:
     "Amazon disabled ads on this ASIN, citing a listing-content issue. Inventory is healthy (140+ days), so the fix is content — not stock.",
-  actionVerb: "Approve Recommendations",
+  actionVerb: "Analyze Listing",
   domain: "retail",
   severity: "critical",
   status: "open",

@@ -37,7 +37,7 @@ export function strategiesFor(d: Decision): Strategy[] {
     return [
       {
         id: `${d.id}:recommended`,
-        title: "Approve Recommendations",
+        title: "Analyze Listing",
         detail:
           "Aan reviews the listing, diffs the historical changes, reads sentiment on the currently eligible version, identifies the failing field, drafts the fix, and asks for your approval before publishing.",
         valueCents: d.valueCents,
