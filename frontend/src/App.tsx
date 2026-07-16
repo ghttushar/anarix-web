@@ -19,6 +19,7 @@ import { BillingFlowProvider } from "@/contexts/BillingFlowContext";
 import { TrialProvider } from "@/contexts/TrialContext";
 import { ActivePanelProvider } from "@/contexts/ActivePanelContext";
 import { AanProvider } from "@/components/aan";
+import { AanPanelProvider } from "@/contexts/AanPanelContext";
 import { InsightsProvider } from "@/components/insights";
 import { CreativeFeatures } from "@/features/creative";
 import { ViewportProvider } from "@/contexts/ViewportContext";
@@ -354,6 +355,7 @@ const App = () => (
               <ActivePanelProvider>
                 <AanProvider>
                   <AanEventsProvider>
+                  <AanPanelProvider>
                   <InsightsProvider>
                     <VisualEffectsProvider>
                       <FeatureToggleProvider>
@@ -383,6 +385,7 @@ const App = () => (
                       </FeatureToggleProvider>
                     </VisualEffectsProvider>
                   </InsightsProvider>
+                  </AanPanelProvider>
                   </AanEventsProvider>
                 </AanProvider>
               </ActivePanelProvider>

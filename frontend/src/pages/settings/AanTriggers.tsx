@@ -5,13 +5,16 @@ import { Switch } from "@/components/ui/switch";
 import { SCENARIOS } from "@/data/mockAanScenarios";
 import { useAanEvents } from "@/components/aan/autonomous/AanEventsContext";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
-import { Zap, Copy, Radio } from "lucide-react";
+import { useAanPanel } from "@/contexts/AanPanelContext";
+import { Zap, Copy, Radio, PanelRight, LayoutPanelTop } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export default function AanTriggersPage() {
   const { fireScenario, liveMode, setLiveMode } = useAanEvents();
   const { setDataPanel } = useActivePanel();
+  const { mode: panelMode, setMode: setPanelMode } = useAanPanel();
+
 
   const fire = (id: string) => {
     fireScenario(id);
@@ -47,6 +50,47 @@ export default function AanTriggersPage() {
             <Switch checked={liveMode} onCheckedChange={setLiveMode} />
           </div>
         </header>
+
+        {/* AI Panel — where Aan drafts appear when triggered from Signals */}
+        <section className="mb-6 rounded-lg border border-border bg-card p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-primary">AI Panel</div>
+              <h2 className="font-heading text-[15px] font-semibold text-foreground mt-0.5">Where Aan's drafts appear</h2>
+              <p className="text-[12px] text-muted-foreground mt-1 max-w-xl">
+                When you trigger actions like <em>Notify Vendor Manager</em>, <em>Draft Amazon Support Ticket</em>, or <em>Analyze Listing</em> from Signals, choose whether Aan's draft opens in the right-side copilot or replaces the review card in the main view.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {([
+              { id: "side" as const, icon: PanelRight, label: "Side panel", desc: "Draft opens in the Aan copilot on the right side." },
+              { id: "main" as const, icon: LayoutPanelTop, label: "Main view", desc: "Draft appears inline inside the review card — no side panel." },
+            ]).map(({ id, icon: Icon, label, desc }) => {
+              const active = panelMode === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPanelMode(id)}
+                  className={cn(
+                    "text-left rounded-lg border p-3 transition-colors",
+                    active ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-muted/40"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("text-[13px] font-medium", active ? "text-primary" : "text-foreground")}>{label}</span>
+                    {active && <span className="ml-auto text-[10px] uppercase tracking-wider font-semibold text-primary">Active</span>}
+                  </div>
+                  <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-relaxed">{desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+
 
         <div className="grid grid-cols-2 gap-3">
           {SCENARIOS.map((s) => (

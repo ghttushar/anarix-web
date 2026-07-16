@@ -23,6 +23,9 @@ import { formatValue } from "@/lib/decisions/valueFormat";
 import { livingStatusPhrase } from "@/lib/decisions/lifecycle";
 import { useLivingTick } from "@/hooks/useLivingClock";
 import { useAan } from "@/components/aan/AanContext";
+import { useAanPanel } from "@/contexts/AanPanelContext";
+import { InlineEmailCompose, type EmailDraft } from "./review/inline/InlineEmailCompose";
+import { InlineDraftChat } from "./review/inline/InlineDraftChat";
 import type { Decision } from "@/data/mockDecisions";
 import { toast } from "sonner";
 
@@ -69,7 +72,36 @@ const AAN_SEEDS: Record<string, { prompt: string; reply: string }> = {
     reply:
       "Here's a draft support ticket. Review and approve before I file it:\n\n**Subject:** Reinstate advertising eligibility – ASIN B0CSH8TCC6\n\n**Case type:** Advertising / Product eligibility\n\nHello Seller Support,\n\nOn 07 Jun 2026, ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) was flagged as ineligible for advertising with the reason: *\"This product is either missing important information or contains incorrect information.\"*\n\nOn our end, the listing contains all required attributes and matches the last known-eligible version. We believe this flag was raised in error and request a manual review.\n\n- Business impact: estimated **$6,885 in ad-driven revenue at risk** over the next 7 days (300 units).\n- Inventory on hand: 2,810 units, ~140 days of coverage — this is not a stock issue.\n\nPlease reinstate advertising eligibility or share the specific attribute that triggered the flag so we can correct it.\n\nThank you,\nTushar",
   },
+  "recommended": {
+    prompt:
+      "Analyze the listing for ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count). Diff against the last known-eligible version, identify the failing field Amazon flagged, and draft the compliant edit for my approval.",
+    reply:
+      "Here's what I found and the proposed fix. Approve before I publish:\n\n**ASIN:** B0CSH8TCC6 (Sampler – Decaf 40 Count)\n\n**Likely failing field:** `bullet_point_3` — currently reads *\"Best decaf coffee — cures fatigue and boosts energy\"*. Amazon's compliance model flagged this as an unsupported medical/functional claim.\n\n**Proposed edit:**\n> Smooth, low-acidity decaf blend — 40 single-serve pods per box, compatible with most single-serve brewers.\n\nOther fields (title, images, attributes) match the last eligible snapshot. Confidence: 84%.\n\nWant me to publish this edit, or should I tweak the wording first?",
+  },
 };
+
+// Pre-parsed email draft used when AI Panel mode = "main" and the user picks Notify VM.
+const NOTIFY_VM_EMAIL: EmailDraft = {
+  to: "vendor.manager@amazon.com",
+  cc: "",
+  bcc: "",
+  subject: "ASIN B0CSH8TCC6 – Advertising eligibility lost (action needed)",
+  body:
+`Hi [VM name],
+
+Amazon disabled advertising eligibility on ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) on 07 Jun 2026, citing missing or incorrect listing information.
+
+- Estimated revenue at risk (next 7 days): $6,885
+- Estimated units at risk: 300
+- Inventory available: 2,810 units (~140 days of coverage)
+- Confidence: 82%
+
+Could you confirm whether a recent content change on your side triggered this, and share the last known-good listing snapshot so we can restore eligibility quickly?
+
+Thanks,
+Tushar`,
+};
+
 
 function Block({ eyebrow, children }: { eyebrow: string; children: React.ReactNode }) {
   return (
@@ -85,7 +117,13 @@ function Block({ eyebrow, children }: { eyebrow: string; children: React.ReactNo
 export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props) {
   const { decisions, approve, reject, delegateToAan, snooze, rollback } = useActionsStore();
   const { openCopilot, addMessage } = useAan();
+  const { mode: panelMode } = useAanPanel();
   const [discuss, setDiscuss] = useState(false);
+  const [inlineDraft, setInlineDraft] = useState<
+    | { kind: "email"; strategyTitle: string; draft: EmailDraft }
+    | { kind: "chat"; strategyTitle: string; title: string; approveLabel: string; approveSuccess: string; draft: string }
+    | null
+  >(null);
   const tick = useLivingTick();
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +151,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
     countdownRef.current = null;
     setExecuted(null);
     setCountdown(COUNTDOWN_SECONDS);
+    setInlineDraft(null);
   }, [d?.id]);
 
   const relationships = useMemo(
@@ -149,6 +188,37 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
     let verifyMsg = "Change applied. Verifying downstream metrics…";
     let canUndo = true;
 
+    const isInlineDraftAction =
+      shortId === "notify-vm" ||
+      shortId === "draft-ticket" ||
+      (shortId === "recommended" && d.id === "critical-b0csh8tcc6");
+
+    if (isInlineDraftAction && panelMode === "main") {
+      // Render Aan's draft inline inside this review card — do not open the side panel.
+      if (shortId === "notify-vm") {
+        setInlineDraft({ kind: "email", strategyTitle: selectedStrategy.title, draft: NOTIFY_VM_EMAIL });
+      } else if (shortId === "draft-ticket") {
+        setInlineDraft({
+          kind: "chat",
+          strategyTitle: selectedStrategy.title,
+          title: "Aan drafted this support ticket",
+          approveLabel: "Approve & file ticket",
+          approveSuccess: "Support ticket filed with Amazon Seller Support.",
+          draft: AAN_SEEDS["draft-ticket"].reply,
+        });
+      } else {
+        setInlineDraft({
+          kind: "chat",
+          strategyTitle: selectedStrategy.title,
+          title: "Aan analyzed the listing",
+          approveLabel: "Approve & publish edit",
+          approveSuccess: "Listing edit published for review.",
+          draft: AAN_SEEDS["recommended"].reply,
+        });
+      }
+      return;
+    }
+
     if (shortId === "notify-vm" || shortId === "draft-ticket") {
       const seed = AAN_SEEDS[shortId];
       openCopilot();
@@ -172,6 +242,18 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
     }
 
     setExecuted({ strategyTitle: selectedStrategy.title, verifyMsg, canUndo });
+    startCountdown();
+  }
+
+  function completeInlineDraft() {
+    if (!inlineDraft) return;
+    const strategyTitle = inlineDraft.strategyTitle;
+    const verifyMsg =
+      inlineDraft.kind === "email"
+        ? "Email sent. Aan is monitoring for a reply."
+        : "Draft approved. Aan is tracking follow-up.";
+    setInlineDraft(null);
+    setExecuted({ strategyTitle, verifyMsg, canUndo: false });
     startCountdown();
   }
 
@@ -339,16 +421,35 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
                 </Block>
               )}
 
-              {/* Strategy — hidden after execute */}
-              <Block eyebrow="Choose your strategy">
-                <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent p-3 shadow-[0_1px_0_hsl(var(--border)/0.5),0_20px_50px_-30px_hsl(var(--primary)/0.35)]">
-                  <StrategyPicker
-                    strategies={strategies}
-                    selectedId={selectedStrategyId}
-                    onSelect={setSelectedStrategyId}
+              {/* Strategy OR inline Aan draft — hidden after execute */}
+              {inlineDraft ? (
+                inlineDraft.kind === "email" ? (
+                  <InlineEmailCompose
+                    initial={inlineDraft.draft}
+                    onCancel={() => setInlineDraft(null)}
+                    onSent={completeInlineDraft}
                   />
-                </div>
-              </Block>
+                ) : (
+                  <InlineDraftChat
+                    title={inlineDraft.title}
+                    approveLabel={inlineDraft.approveLabel}
+                    approveSuccess={inlineDraft.approveSuccess}
+                    initialDraft={inlineDraft.draft}
+                    onCancel={() => setInlineDraft(null)}
+                    onApprove={completeInlineDraft}
+                  />
+                )
+              ) : (
+                <Block eyebrow="Choose your strategy">
+                  <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent p-3 shadow-[0_1px_0_hsl(var(--border)/0.5),0_20px_50px_-30px_hsl(var(--primary)/0.35)]">
+                    <StrategyPicker
+                      strategies={strategies}
+                      selectedId={selectedStrategyId}
+                      onSelect={setSelectedStrategyId}
+                    />
+                  </div>
+                </Block>
+              )}
 
               {/* Collapsed extras */}
               <Accordion type="multiple" className="border-t border-border/60 pt-2">
@@ -392,7 +493,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
       </ScrollArea>
 
       {/* Footer — hidden after execute (in-body confirmation handles CTAs) */}
-      {!executed && (
+      {!executed && !inlineDraft && (
         <footer className="border-t border-border p-3 flex flex-wrap items-center gap-2 bg-gradient-to-t from-muted/20 to-transparent shrink-0 min-h-[68px]">
           {isTerminal ? (
             <span className="text-[12.5px] text-muted-foreground px-1">This decision is closed.</span>
