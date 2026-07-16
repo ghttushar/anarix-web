@@ -151,6 +151,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
     countdownRef.current = null;
     setExecuted(null);
     setCountdown(COUNTDOWN_SECONDS);
+    setInlineDraft(null);
   }, [d?.id]);
 
   const relationships = useMemo(
