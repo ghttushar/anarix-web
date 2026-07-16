@@ -15,6 +15,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react(), mcpPlugin(), mode === "development" && componentTagger()].filter(Boolean),
+  build: {
+    outDir: path.resolve(__dirname, "../dist"),
+    emptyOutDir: true,
+  },
 
   resolve: {
     // Critical: ensure a single React instance across all deps.
