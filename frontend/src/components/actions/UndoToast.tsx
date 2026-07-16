@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { Undo2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { CountdownRing } from "./CountdownRing";
+
 
 /**
  * Bottom-center undo pill. Listens for `action-item:undoable` CustomEvents
