@@ -182,7 +182,7 @@ function AlertsInner() {
     <AppLayout>
       <AppTaskbar breadcrumbItems={[{ label: "Signals" }]} hideUtilityCluster />
 
-      <div className="px-4 pt-4 pb-4 w-full">
+      <div className="px-4 pt-4 w-full">
         <GreetingHeader name="Tushar" />
 
         <AlertsToolbar
