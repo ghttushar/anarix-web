@@ -8,7 +8,7 @@ export const CRITICAL_ONLY_ID = "critical-b0csh8tcc6";
 
 export const CRITICAL_ONLY_DECISION: Decision = {
   id: CRITICAL_ONLY_ID,
-  source: "amazon",
+  source: "anarix",
   sourceRef: { label: "Amazon · Inventory", ts: now - 30 * 60 * 1000 },
   valueCents: 688_500,
   valueKind: "at_risk",
