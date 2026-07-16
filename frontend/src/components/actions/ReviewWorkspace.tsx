@@ -1,8 +1,10 @@
 // Review Workspace — single merged panel (no carousel).
 // Hierarchy: title → current state → why it matters → evidence → strategy
 // → collapsed { Related signals, Execution plan }.
+// After Execute: the primary action position swaps to a completion +
+// 5-second undo card; the card auto-closes when the countdown ends.
 import { useMemo, useState, useEffect, useRef } from "react";
-import { X, Check, Ban, Clock, Share2, Sparkles, Activity, TrendingUp, CornerDownLeft } from "lucide-react";
+import { X, Check, Ban, Clock, Share2, Sparkles, Activity, TrendingUp, CornerDownLeft, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -20,6 +22,7 @@ import { sourcePillFor, PILL_TONE_CLASS } from "@/lib/decisions/sourcePill";
 import { formatValue } from "@/lib/decisions/valueFormat";
 import { livingStatusPhrase } from "@/lib/decisions/lifecycle";
 import { useLivingTick } from "@/hooks/useLivingClock";
+import { useAan } from "@/components/aan/AanContext";
 import type { Decision } from "@/data/mockDecisions";
 import { toast } from "sonner";
 
@@ -51,6 +54,23 @@ const STATE_TONE: Record<State, string> = {
   recovering: "bg-warning/10 text-warning border-warning/25",
 };
 
+const COUNTDOWN_SECONDS = 5;
+
+const AAN_SEEDS: Record<string, { prompt: string; reply: string }> = {
+  "notify-vm": {
+    prompt:
+      "Draft an email to the Vendor Manager about ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) losing advertising eligibility on 07 Jun 2026. Include revenue-at-risk ($6,885 over 7 days) and ask them to confirm listing status.",
+    reply:
+      "Here's a draft email for the Vendor Manager. Review and approve before I send it:\n\n**Subject:** ASIN B0CSH8TCC6 – Advertising eligibility lost (action needed)\n\nHi [VM name],\n\nAmazon disabled advertising eligibility on ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) on 07 Jun 2026, citing missing or incorrect listing information.\n\n- Estimated revenue at risk (next 7 days): **$6,885**\n- Estimated units at risk: **300**\n- Inventory available: **2,810 units** (~140 days of coverage)\n- Confidence: 82%\n\nCould you confirm whether a recent content change on your side triggered this, and share the last known-good listing snapshot so we can restore eligibility quickly?\n\nThanks,\nTushar",
+  },
+  "draft-ticket": {
+    prompt:
+      "Draft an Amazon Seller Support ticket disputing the loss of advertising eligibility on ASIN B0CSH8TCC6 on 07 Jun 2026. The listing has no known compliance issues; include the revenue at risk and ask for a manual review.",
+    reply:
+      "Here's a draft support ticket. Review and approve before I file it:\n\n**Subject:** Reinstate advertising eligibility – ASIN B0CSH8TCC6\n\n**Case type:** Advertising / Product eligibility\n\nHello Seller Support,\n\nOn 07 Jun 2026, ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) was flagged as ineligible for advertising with the reason: *\"This product is either missing important information or contains incorrect information.\"*\n\nOn our end, the listing contains all required attributes and matches the last known-eligible version. We believe this flag was raised in error and request a manual review.\n\n- Business impact: estimated **$6,885 in ad-driven revenue at risk** over the next 7 days (300 units).\n- Inventory on hand: 2,810 units, ~140 days of coverage — this is not a stock issue.\n\nPlease reinstate advertising eligibility or share the specific attribute that triggered the flag so we can correct it.\n\nThank you,\nTushar",
+  },
+};
+
 function Block({ eyebrow, children }: { eyebrow: string; children: React.ReactNode }) {
   return (
     <section>
@@ -63,7 +83,8 @@ function Block({ eyebrow, children }: { eyebrow: string; children: React.ReactNo
 }
 
 export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props) {
-  const { decisions, approve, reject, delegateToAan, snooze } = useActionsStore();
+  const { decisions, approve, reject, delegateToAan, snooze, rollback } = useActionsStore();
+  const { openCopilot, addMessage } = useAan();
   const [discuss, setDiscuss] = useState(false);
   const tick = useLivingTick();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -71,11 +92,28 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
   const strategies = useMemo(() => (d ? strategiesFor(d) : []), [d]);
   const [selectedStrategyId, setSelectedStrategyId] = useState<string>("");
 
+  // Post-execute state — replaces the primary action button with an Undo card.
+  const [executed, setExecuted] = useState<{
+    strategyTitle: string;
+    verifyMsg: string;
+    canUndo: boolean;
+  } | null>(null);
+  const [countdown, setCountdown] = useState<number>(COUNTDOWN_SECONDS);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (!d) return;
     const recommended = strategies.find((s) => s.recommended) || strategies[0];
     if (recommended) setSelectedStrategyId(recommended.id);
   }, [d?.id, strategies]);
+
+  // Reset execution state when the decision changes.
+  useEffect(() => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = null;
+    setExecuted(null);
+    setCountdown(COUNTDOWN_SECONDS);
+  }, [d?.id]);
 
   const relationships = useMemo(
     () => (d ? relationshipsFor(d, decisions) : []),
@@ -88,10 +126,68 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
 
   const selectedStrategy = strategies.find((s) => s.id === selectedStrategyId);
 
-  // Enter → execute (default action). Ignore when typing.
+  function startCountdown() {
+    setCountdown(COUNTDOWN_SECONDS);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          countdownRef.current = null;
+          // Auto-close after countdown finishes.
+          setTimeout(() => onClose(), 100);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  }
+
+  function onExecute() {
+    if (!d || !selectedStrategy || executed) return;
+    const shortId = selectedStrategy.id.split(":").pop() ?? "";
+    let verifyMsg = "Change applied. Verifying downstream metrics…";
+    let canUndo = true;
+
+    if (shortId === "notify-vm" || shortId === "draft-ticket") {
+      const seed = AAN_SEEDS[shortId];
+      openCopilot();
+      addMessage(seed.prompt, "user");
+      // Small delay so the assistant reply reads as a fresh response.
+      setTimeout(() => addMessage(seed.reply, "assistant"), 400);
+      verifyMsg =
+        shortId === "notify-vm"
+          ? "Aan drafted the email in the side panel. Review before it sends."
+          : "Aan drafted the support ticket in the side panel. Review before it's filed.";
+      canUndo = false;
+    } else if (selectedStrategy.id.endsWith(":wait")) {
+      snooze(d.id, "tomorrow");
+      verifyMsg = "Queued for tomorrow 8am. Aan will re-check with fresh data.";
+    } else if (selectedStrategy.id.endsWith(":aan")) {
+      delegateToAan(d.id);
+      verifyMsg = "Aan is executing within its policy budget.";
+    } else {
+      approve(d.id);
+      verifyMsg = "Change applied. Verifying downstream metrics…";
+    }
+
+    setExecuted({ strategyTitle: selectedStrategy.title, verifyMsg, canUndo });
+    startCountdown();
+  }
+
+  function onUndo() {
+    if (!d || !executed) return;
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = null;
+    rollback(d.id);
+    setExecuted(null);
+    setCountdown(COUNTDOWN_SECONDS);
+  }
+
+  // Enter → execute (default action). Ignore when typing or after execute.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!d || e.key !== "Enter") return;
+      if (!d || e.key !== "Enter" || executed) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (t && t.closest("[role='dialog']")) return;
@@ -101,7 +197,11 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [d?.id, selectedStrategyId]);
+  }, [d?.id, selectedStrategyId, executed]);
+
+  useEffect(() => () => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  }, []);
 
   if (!d) return null;
 
@@ -111,12 +211,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
   const state = quickState(d);
   const val = formatValue({ cents: d.valueCents, kind: d.valueKind, cadence: d.cadence });
 
-  function onExecute() {
-    if (!selectedStrategy) return;
-    if (selectedStrategy.id.endsWith(":wait")) snooze(d!.id, "tomorrow");
-    else if (selectedStrategy.id.endsWith(":aan")) delegateToAan(d!.id);
-    else approve(d!.id);
-  }
+  const progressPct = ((COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS) * 100;
 
   return (
     <div
@@ -124,7 +219,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
       className="flex flex-col flex-1 min-h-0 rounded-xl border border-border/70 bg-card overflow-hidden shadow-[0_1px_0_hsl(var(--border)/0.5),0_30px_60px_-30px_hsl(var(--primary)/0.25)]"
     >
       {/* Header */}
-      <header className="relative px-5 pt-4 pb-3 border-b border-border">
+      <header className="relative px-5 pt-4 pb-3 border-b border-border shrink-0">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/[0.04] to-transparent" />
         <div className="relative flex items-start gap-3">
           <div className="flex-1 min-w-0">
@@ -153,7 +248,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
         </div>
       </header>
 
-      {/* Body — single merged view */}
+      {/* Body */}
       <ScrollArea className="flex-1 min-h-0">
         <div className="px-5 py-5 space-y-6">
           {/* Current state */}
@@ -203,7 +298,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
             <Block eyebrow="Evidence">
               <ul className="space-y-1.5">
                 {d.valueInputs.map((line, i) => (
-                  <li key={i} className="flex items-start gap-2 text-[12.5px] text-muted-foreground">
+                  <li key={i} className="flex items-start gap-2 text-[13px] text-foreground/85">
                     <SourceGlyph source={d.source} refLabel={d.sourceRef.label} size={12} />
                     <span>{line}</span>
                   </li>
@@ -263,12 +358,54 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
       </ScrollArea>
 
       {/* Footer */}
-      <footer className="border-t border-border p-3 flex flex-wrap items-center gap-2 bg-gradient-to-t from-muted/20 to-transparent">
+      <footer className="border-t border-border p-3 flex flex-wrap items-center gap-2 bg-gradient-to-t from-muted/20 to-transparent shrink-0 min-h-[68px]">
         {isTerminal ? (
           <span className="text-[12.5px] text-muted-foreground px-1">This decision is closed.</span>
+        ) : executed ? (
+          // ——— Post-execute: Undo + verification message, occupies the primary action spot ———
+          <div className="w-full flex items-center gap-3 rounded-lg border border-success/30 bg-success/[0.06] px-3 py-2">
+            <div
+              className="relative shrink-0 h-9 w-9 rounded-full flex items-center justify-center"
+              style={{
+                background: `conic-gradient(hsl(var(--success)) ${progressPct}%, hsl(var(--muted)) 0)`,
+              }}
+              title={`Auto-closing in ${countdown}s`}
+            >
+              <div className="absolute inset-[3px] rounded-full bg-card flex items-center justify-center">
+                <span className="text-[12px] font-semibold tabular-nums text-foreground">{countdown}</span>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                <Check className="h-3.5 w-3.5 text-success" />
+                <span className="truncate">Executed: {executed.strategyTitle}</span>
+              </div>
+              <div className="text-[12px] text-muted-foreground truncate">
+                {executed.verifyMsg}
+              </div>
+            </div>
+            {executed.canUndo ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onUndo}
+                className="h-9 gap-1.5 text-[13px] shrink-0"
+              >
+                <Undo2 className="h-3.5 w-3.5" /> Undo
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onClose}
+                className="h-9 gap-1.5 text-[13px] shrink-0 text-muted-foreground"
+              >
+                Close
+              </Button>
+            )}
+          </div>
         ) : (
           <>
-            {/* Spotlight wrapper — animated ring draws the eye without resizing/recoloring the button */}
             <div className="relative max-w-[60%]">
               <span
                 aria-hidden
