@@ -275,7 +275,9 @@ function AppRoutes() {
       {/* Reports */}
       <Route path="/reports/client-portal" element={<ClientPortal />} />
 
-      {/* Alerts (full-screen) — URL-driven stack/grid views */}
+      {/* Signals (formerly Alerts) — full-screen workspace */}
+      <Route path="/signals" element={<Navigate to="/alerts/stack" replace />} />
+      <Route path="/signals/*" element={<Navigate to="/alerts/stack" replace />} />
       <Route path="/alerts" element={<Navigate to="/alerts/stack" replace />} />
       <Route path="/alerts/:viewMode" element={<AlertsPage />} />
 
