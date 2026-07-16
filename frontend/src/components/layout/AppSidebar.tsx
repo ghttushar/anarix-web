@@ -363,6 +363,9 @@ export function AppSidebar() {
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/component-library")}>
                     <Layers className="h-4 w-4" /><span>Component Library</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/aan-triggers")}>
+                    <Wrench className="h-4 w-4" /><span>Aan Triggers</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/billing")}>
                     <CreditCard className="h-4 w-4" /><span>Billing</span>
                   </DropdownMenuItem>
