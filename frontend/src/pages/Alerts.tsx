@@ -1,9 +1,11 @@
-// /alerts \u2014 Decision Workspace.
-// New: 4 tabs (All / From Meetings / FYI / Done), category sections per tab,
-// value-headlined cards, meeting-aware right pane, 3-page carousel with
-// daily briefing as default. No Watching, no Stack/Grid, no severity dots.
+// /alerts — Signals workspace.
+// Sticky category rail (left), accordion sections (center), review pane (right).
+// - All sections collapsed by default; single-open accordion.
+// - "From Meetings" tab renders meeting cards (one per bundle), not per-signal.
+// - No app-level KPI metric bar; greeting is minimal.
+// - Tightened vertical rhythm; no wasted bottom space.
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,16 +20,15 @@ import { BulkBar } from "@/components/actions/BulkBar";
 import { GreetingHeader } from "@/components/actions/GreetingHeader";
 import { DailyBriefing } from "@/components/actions/DailyBriefing";
 import { CategorySection } from "@/components/actions/CategorySection";
+import { CategoryRail } from "@/components/actions/CategoryRail";
 import { DecisionValueCard } from "@/components/actions/DecisionValueCard";
+import { MeetingCard } from "@/components/actions/MeetingCard";
 import { ReviewWorkspace } from "@/components/actions/ReviewWorkspace";
 import { MeetingReviewView } from "@/components/actions/review/MeetingReviewView";
-import { AlertDetailPanel, CLOSED_PANEL, type PanelState } from "@/components/actions/AlertDetailPanel";
 import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
 import { categorize } from "@/lib/decisions/categories";
 import { importanceScore } from "@/lib/decisions/lifecycle";
 import type { Decision } from "@/data/mockDecisions";
-
-const MAX_PER_CATEGORY = 8;
 
 function usePersistedState<T>(key: string, initial: T): [T, (v: T) => void] {
   const [v, setV] = useState<T>(() => {
@@ -48,6 +49,27 @@ function usePersistedState<T>(key: string, initial: T): [T, (v: T) => void] {
   ];
 }
 
+interface MeetingGroup {
+  bundleId: string;
+  title: string;
+  signals: Decision[];
+}
+
+function groupByMeeting(list: Decision[]): MeetingGroup[] {
+  const map = new Map<string, MeetingGroup>();
+  for (const d of list) {
+    const ref = d.meetingRef;
+    if (!ref) continue;
+    let g = map.get(ref.bundleId);
+    if (!g) {
+      g = { bundleId: ref.bundleId, title: ref.title, signals: [] };
+      map.set(ref.bundleId, g);
+    }
+    g.signals.push(d);
+  }
+  return [...map.values()].sort((a, b) => b.signals.length - a.signals.length);
+}
+
 function AlertsInner() {
   const { decisions } = useActionsStore();
   const { clear, selected } = useSelection();
@@ -61,17 +83,11 @@ function AlertsInner() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
-  const [panel, setPanel] = useState<PanelState>(CLOSED_PANEL);
-  const closePanel = useCallback(() => setPanel(CLOSED_PANEL), []);
 
-  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
-  const toggleExpanded = useCallback((k: string) => {
-    setExpandedCats((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k); else next.add(k);
-      return next;
-    });
-  }, []);
+  // Accordion: only one category expanded at a time. Collapsed by default.
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const counts = useMemo(() => computeTabCounts(decisions), [decisions]);
   const pool = useMemo(() => filterByTab(decisions, tab), [decisions, tab]);
@@ -95,6 +111,25 @@ function AlertsInner() {
   }, [pool, filter, query]);
 
   const categoryGroups = useMemo(() => categorize(tab, filtered), [tab, filtered]);
+  const meetingGroups = useMemo(() => groupByMeeting(filtered), [filtered]);
+  const isMeetingsTab = tab === "meetings";
+
+  const railItems = useMemo(
+    () => categoryGroups.map((c) => ({ key: c.key, label: c.label, count: c.items.length })),
+    [categoryGroups],
+  );
+
+  // Reset accordion when tab changes.
+  useEffect(() => { setOpenCategory(null); }, [tab]);
+
+  const handleRailSelect = useCallback((key: string) => {
+    setOpenCategory((cur) => (cur === key ? cur : key));
+    // Scroll section into view after expand.
+    requestAnimationFrame(() => {
+      const el = sectionRefs.current.get(key);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   const selectedDecision = useMemo(
     () => decisions.find((d) => d.id === selectedId) ?? null,
@@ -122,17 +157,16 @@ function AlertsInner() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (panel.decisionId) closePanel();
-        else if (selected.size > 0) clear();
+        if (selected.size > 0) clear();
         else if (selectedId) setSelectedId(null);
         else if (selectedMeetingId) setSelectedMeetingId(null);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [panel.decisionId, closePanel, selected.size, clear, selectedId, selectedMeetingId]);
+  }, [clear, selected.size, selectedId, selectedMeetingId]);
 
-  const total = filtered.length;
+  const total = isMeetingsTab ? meetingGroups.length : filtered.length;
   const isSearchEmpty = query.trim().length > 0 && total === 0;
   const isEmpty = total === 0;
 
@@ -140,12 +174,7 @@ function AlertsInner() {
     <AppLayout>
       <AppTaskbar breadcrumbItems={[{ label: "Signals" }]} />
 
-      {/* Ambient background — dimmed for lower visual load */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-[520px] w-[520px] rounded-full bg-primary/[0.03] blur-[140px]" />
-      </div>
-
-      <div className={`px-4 py-5 max-w-[1600px] mx-auto w-full ${density === "compact" ? "text-[13px]" : ""}`}>
+      <div className={`px-4 pt-4 pb-4 max-w-[1600px] mx-auto w-full ${density === "compact" ? "text-[13px]" : ""}`}>
         <GreetingHeader name="Tushar" />
 
         <AlertsToolbar
@@ -164,9 +193,20 @@ function AlertsInner() {
 
         <BulkBar />
 
-        <div className="grid gap-4 grid-cols-1 xl:grid-cols-[minmax(0,42fr)_minmax(0,58fr)] items-start">
-          {/* Left: category-grouped queue */}
-          <ScrollArea className="h-[calc(100vh-300px)] pr-2">
+        <div className="grid gap-4 grid-cols-1 xl:grid-cols-[180px_minmax(0,1fr)_minmax(0,58fr)] items-start">
+          {/* Category rail — hidden on meetings tab (grouped by meeting instead) */}
+          <div className="hidden xl:block">
+            {!isMeetingsTab && (
+              <CategoryRail
+                items={railItems}
+                activeKey={openCategory}
+                onSelect={handleRailSelect}
+              />
+            )}
+          </div>
+
+          {/* Center: queue */}
+          <ScrollArea className="max-h-[calc(100vh-220px)] pr-2" ref={scrollAreaRef as never}>
             {isEmpty ? (
               <EmptyState
                 variant={
@@ -175,61 +215,49 @@ function AlertsInner() {
                   : "needs_me"
                 }
               />
+            ) : isMeetingsTab ? (
+              <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
+                {meetingGroups.map((m) => (
+                  <MeetingCard
+                    key={m.bundleId}
+                    bundleId={m.bundleId}
+                    title={m.title}
+                    signals={m.signals}
+                    selected={selectedMeetingId === m.bundleId}
+                    onSelect={() => onSelectMeeting(m.bundleId)}
+                  />
+                ))}
+              </div>
             ) : (
-              categoryGroups.map((cat) => {
-                const showAll = expandedCats.has(cat.key);
-                const visible = showAll ? cat.items : cat.items.slice(0, MAX_PER_CATEGORY);
-                const hidden = cat.items.length - visible.length;
-                return (
-                  <CategorySection
-                    key={cat.key}
-                    label={cat.label}
-                    count={cat.items.length}
-                    defaultOpen={cat.defaultOpen}
-                  >
-                    {visible.map((d: Decision) => (
-                      <DecisionValueCard
-                        key={d.id}
-                        decision={d}
-                        selected={selectedId === d.id || (d.meetingRef?.bundleId === selectedMeetingId)}
-                        onSelect={() => onSelectDecision(d.id)}
-                        onSelectMeeting={
-                          d.meetingRef ? (bundleId) => onSelectMeeting(bundleId) : undefined
-                        }
-                      />
-                    ))}
-                    {hidden > 0 && (
-                      <div className="px-4 py-2 border-t border-border/40 bg-muted/10">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-[12px] text-muted-foreground hover:text-foreground"
-                          onClick={() => toggleExpanded(cat.key)}
-                        >
-                          Show {hidden} more
-                        </Button>
-                      </div>
-                    )}
-                    {showAll && cat.items.length > MAX_PER_CATEGORY && (
-                      <div className="px-4 py-2 border-t border-border/40 bg-muted/10">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-[12px] text-muted-foreground hover:text-foreground"
-                          onClick={() => toggleExpanded(cat.key)}
-                        >
-                          Collapse
-                        </Button>
-                      </div>
-                    )}
-                  </CategorySection>
-                );
-              })
+              categoryGroups.map((cat) => (
+                <CategorySection
+                  key={cat.key}
+                  label={cat.label}
+                  count={cat.items.length}
+                  open={openCategory === cat.key}
+                  onToggle={() =>
+                    setOpenCategory((cur) => (cur === cat.key ? null : cat.key))
+                  }
+                  ref={(el) => {
+                    if (el) sectionRefs.current.set(cat.key, el);
+                    else sectionRefs.current.delete(cat.key);
+                  }}
+                >
+                  {cat.items.map((d: Decision) => (
+                    <DecisionValueCard
+                      key={d.id}
+                      decision={d}
+                      selected={selectedId === d.id || (d.meetingRef?.bundleId === selectedMeetingId)}
+                      onSelect={() => onSelectDecision(d.id)}
+                    />
+                  ))}
+                </CategorySection>
+              ))
             )}
           </ScrollArea>
 
-          {/* Right: workspace \u2014 daily briefing / meeting view / review workspace */}
-          <div className="hidden xl:flex flex-col h-[calc(100vh-300px)] sticky top-4">
+          {/* Right: workspace — daily briefing / meeting view / review workspace */}
+          <div className="hidden xl:flex flex-col max-h-[calc(100vh-220px)] sticky top-4">
             {selectedDecision ? (
               <ReviewWorkspace
                 decision={selectedDecision}
@@ -279,7 +307,6 @@ function AlertsInner() {
         </div>
       )}
 
-      <AlertDetailPanel state={panel} onOpenChange={(o) => { if (!o) closePanel(); }} />
       <UndoToast />
     </AppLayout>
   );

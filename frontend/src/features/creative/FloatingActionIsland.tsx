@@ -139,13 +139,11 @@ export function FloatingActionIsland() {
     onClick: () => setTheme(isDark ? "light" : "dark"),
   };
 
-  const inboxBadge = aanPendingCount;
-  const alertsLabel = aanCriticalCount > 0
-    ? `Action Items (${aanPendingCount} · ${aanCriticalCount} critical)`
-    : aanPendingCount > 0 ? `Action Items (${aanPendingCount})` : "Action Items";
+  // Signals moved out of the Floating Action Island; the global SignalsWidget
+  // now owns that surface across every screen.
+  void aanPendingCount; void aanCriticalCount;
 
   const appActions: ActionItem[] = [
-    { icon: Bell, label: alertsLabel, onClick: () => navigate("/alerts"), highlight: aanCriticalCount > 0, badge: inboxBadge > 0 ? inboxBadge : undefined },
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
     { icon: Download, label: "Export", onClick: () => toast.success("Export started") },
     themeAction,

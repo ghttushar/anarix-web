@@ -32,6 +32,7 @@ import MobileGate from "@/views/mobile/MobileGate";
 import { toast } from "sonner";
 import NotFound from "./pages/NotFound";
 import AlertsPage from "./pages/Alerts";
+import { SignalsWidget } from "@/components/widgets/SignalsWidget";
 
 // Living OS — supervisory workspace (isolated, no app chrome)
 import LivingOSWorkspace from "./pages/livingos/Workspace";
@@ -274,7 +275,9 @@ function AppRoutes() {
       {/* Reports */}
       <Route path="/reports/client-portal" element={<ClientPortal />} />
 
-      {/* Alerts (full-screen) — URL-driven stack/grid views */}
+      {/* Signals (formerly Alerts) — full-screen workspace */}
+      <Route path="/signals" element={<Navigate to="/alerts/stack" replace />} />
+      <Route path="/signals/*" element={<Navigate to="/alerts/stack" replace />} />
       <Route path="/alerts" element={<Navigate to="/alerts/stack" replace />} />
       <Route path="/alerts/:viewMode" element={<AlertsPage />} />
 
@@ -366,6 +369,7 @@ const App = () => (
                                 <CreativeFeatures>
                                   <WelcomeToasts />
                                   <AppRoutes />
+                                  <SignalsWidget />
                                   <GestureFeedback />
                                   <OnboardingTutorial />
                                 </CreativeFeatures>
