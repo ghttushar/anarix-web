@@ -212,7 +212,7 @@ function AlertsInner() {
           </div>
 
           {/* Center: queue */}
-          <ScrollArea className="h-[calc(100vh-220px)] pr-2" ref={scrollAreaRef as never}>
+          <ScrollArea className="h-[calc(100vh-190px)] pr-2" ref={scrollAreaRef as never}>
             {isEmpty ? (
               <EmptyState
                 variant={
@@ -259,7 +259,7 @@ function AlertsInner() {
           </ScrollArea>
 
           {/* Right: workspace */}
-          <div className="hidden xl:flex flex-col h-[calc(100vh-220px)] min-h-0 sticky top-4">
+          <div className="hidden xl:flex flex-col h-[calc(100vh-190px)] min-h-0 sticky top-4">
             {selectedDecision ? (
               <ReviewWorkspace
                 decision={selectedDecision}
