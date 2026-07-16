@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
  * Monochrome Anarix mark for use as a source glyph.
  * Forces the SVG to render in currentColor so it inherits row text color.
  */
-export function AnarixMark({ className, size = 14 }: { className?: string; size?: number }) {
+export function AnarixMark({ className, size = 14 }: { className?: string; size?: string | number }) {
   return (
     <svg
       viewBox="0 0 693.98 427.16"

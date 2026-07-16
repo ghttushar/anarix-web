@@ -9,7 +9,7 @@ import type { DecisionSource } from "@/lib/decisions/sourceRegistry";
 export interface SourcePill {
   label: string;
   tone: "amazon" | "walmart" | "agent" | "meeting" | "slack" | "teams" | "email" | "forecast" | "aan";
-  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  Icon: React.ComponentType<{ size?: string | number; className?: string }>;
 }
 
 function guessAgent(label: string): string | null {

@@ -5,9 +5,9 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "bun --cwd frontend run dev",
-    "build": "bun --cwd frontend run build",
-    "build:dev": "bun --cwd frontend run build:dev",
-    "typecheck": "bun --cwd frontend x tsc -b"
+    "dev": "bun run --cwd frontend dev",
+    "build": "bun run --cwd frontend build",
+    "build:dev": "bun run --cwd frontend build:dev",
+    "typecheck": "bun x tsc -b"
   }
 }
