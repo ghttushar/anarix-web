@@ -13,8 +13,8 @@ export function GreetingHeader({ name = "Tushar" }: Props) {
   const b = briefingFor(decisions);
 
   return (
-    <header className="mb-4">
-      <div className="flex items-baseline gap-3 flex-wrap">
+    <header className="mb-2">
+      <div className="flex items-center gap-3 flex-wrap">
         <h1 className="font-heading text-[24px] font-semibold text-foreground leading-tight tracking-tight">
           {b.greeting.replace(/\.$/, "")}, {name}.
         </h1>
