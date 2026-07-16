@@ -385,6 +385,7 @@ const App = () => (
                       </FeatureToggleProvider>
                     </VisualEffectsProvider>
                   </InsightsProvider>
+                  </AanPanelProvider>
                   </AanEventsProvider>
                 </AanProvider>
               </ActivePanelProvider>
