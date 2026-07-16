@@ -32,7 +32,7 @@ import MobileGate from "@/views/mobile/MobileGate";
 import { toast } from "sonner";
 import NotFound from "./pages/NotFound";
 import AlertsPage from "./pages/Alerts";
-import { SignalsWidget } from "@/components/widgets/SignalsWidget";
+
 
 // Living OS — supervisory workspace (isolated, no app chrome)
 import LivingOSWorkspace from "./pages/livingos/Workspace";
@@ -369,7 +369,7 @@ const App = () => (
                                 <CreativeFeatures>
                                   <WelcomeToasts />
                                   <AppRoutes />
-                                  <SignalsWidget />
+                                  
                                   <GestureFeedback />
                                   <OnboardingTutorial />
                                 </CreativeFeatures>

@@ -128,9 +128,11 @@ interface AppTaskbarProps {
    *  these instead of the global FilterContext (used by /alerts). */
   dateRangeOverride?: { from: Date; to: Date };
   onDateRangeOverrideChange?: (r: { from: Date; to: Date }) => void;
+  /** Hide the right-side utility cluster (Insights/Signals/Aan/Refresh) that appears when the FAI is off. */
+  hideUtilityCluster?: boolean;
 }
 
-export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems, dateRangeOverride, onDateRangeOverrideChange }: AppTaskbarProps) {
+export function AppTaskbar({ showAdType = false, showFrequency = false, showDateRange = false, showRunButton = false, onRun, children, breadcrumbItems, dateRangeOverride, onDateRangeOverrideChange, hideUtilityCluster = false }: AppTaskbarProps) {
   const { view } = useViewport();
   // Mobile delegates to a purpose-built taskbar.
   if (view === "mobile") {
@@ -380,7 +382,7 @@ export function AppTaskbar({ showAdType = false, showFrequency = false, showDate
           </div>
 
           {/* Right: utility cluster — only when the Floating Action Island is off, to keep parity without duplication */}
-          {islandOff && (
+          {islandOff && !hideUtilityCluster && (
             <div className="flex items-center gap-0.5 ml-auto shrink-0">
               <Tooltip>
                 <TooltipTrigger asChild>

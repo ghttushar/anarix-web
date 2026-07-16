@@ -139,11 +139,16 @@ export function FloatingActionIsland() {
     onClick: () => setTheme(isDark ? "light" : "dark"),
   };
 
-  // Signals moved out of the Floating Action Island; the global SignalsWidget
-  // now owns that surface across every screen.
-  void aanPendingCount; void aanCriticalCount;
+  const signalsAction: ActionItem = {
+    icon: Bell,
+    label: "Signals",
+    onClick: () => navigate("/alerts"),
+    badge: aanPendingCount,
+    highlight: aanCriticalCount > 0,
+  };
 
   const appActions: ActionItem[] = [
+    signalsAction,
     { icon: RefreshCw, label: "Refresh", onClick: () => toast.info("Refreshing data...") },
     { icon: Download, label: "Export", onClick: () => toast.success("Export started") },
     themeAction,

@@ -1,9 +1,7 @@
 // /alerts — Signals workspace.
-// Sticky category rail (left), accordion sections (center), review pane (right).
-// - All sections collapsed by default; single-open accordion.
-// - "From Meetings" tab renders meeting cards (one per bundle), not per-signal.
-// - No app-level KPI metric bar; greeting is minimal.
-// - Tightened vertical rhythm; no wasted bottom space.
+// Left rail (category jump) · center (queue) · right (review workspace).
+// No accordion — sections are always open; the rail scrolls into view.
+// When Aan Live mode is off, only the ASIN B0CSH8TCC6 critical alert is shown.
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -28,6 +26,8 @@ import { MeetingReviewView } from "@/components/actions/review/MeetingReviewView
 import { filterByTab, computeTabCounts, type AlertTabKey } from "@/components/actions/tabs";
 import { categorize } from "@/lib/decisions/categories";
 import { importanceScore } from "@/lib/decisions/lifecycle";
+import { useAanEvents } from "@/components/aan/autonomous/AanEventsContext";
+import { CRITICAL_ONLY_DECISION } from "@/data/criticalOnlyDecision";
 import type { Decision } from "@/data/mockDecisions";
 
 function usePersistedState<T>(key: string, initial: T): [T, (v: T) => void] {
@@ -73,24 +73,27 @@ function groupByMeeting(list: Decision[]): MeetingGroup[] {
 function AlertsInner() {
   const { decisions } = useActionsStore();
   const { clear, selected } = useSelection();
+  const { liveMode } = useAanEvents();
+
+  // When Live/Assisted mode is off, restrict the feed to the single critical alert.
+  const activeDecisions = useMemo<Decision[]>(
+    () => (liveMode ? decisions : [CRITICAL_ONLY_DECISION]),
+    [liveMode, decisions],
+  );
 
   const [tab, setTab] = usePersistedState<AlertTabKey>("alerts:tab", "all");
   const [query, setQuery] = usePersistedState<string>("alerts:query", "");
-  const [density, setDensity] = usePersistedState<"comfortable" | "compact">(
-    "alerts:density", "comfortable",
-  );
   const [filter, setFilter] = useState<FilterState>(EMPTY_FILTER);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
 
-  // Accordion: only one category expanded at a time. Collapsed by default.
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [activeRailKey, setActiveRailKey] = useState<string | null>(null);
 
-  const counts = useMemo(() => computeTabCounts(decisions), [decisions]);
-  const pool = useMemo(() => filterByTab(decisions, tab), [decisions, tab]);
+  const counts = useMemo(() => computeTabCounts(activeDecisions), [activeDecisions]);
+  const pool = useMemo(() => filterByTab(activeDecisions, tab), [activeDecisions, tab]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -119,12 +122,16 @@ function AlertsInner() {
     [categoryGroups],
   );
 
-  // Reset accordion when tab changes.
-  useEffect(() => { setOpenCategory(null); }, [tab]);
+  // Auto-select the single alert when running in restricted mode so the user
+  // lands directly on the ReviewWorkspace.
+  useEffect(() => {
+    if (!liveMode && !selectedId) setSelectedId(CRITICAL_ONLY_DECISION.id);
+    if (liveMode && selectedId === CRITICAL_ONLY_DECISION.id) setSelectedId(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveMode]);
 
   const handleRailSelect = useCallback((key: string) => {
-    setOpenCategory((cur) => (cur === key ? cur : key));
-    // Scroll section into view after expand.
+    setActiveRailKey(key);
     requestAnimationFrame(() => {
       const el = sectionRefs.current.get(key);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -132,17 +139,17 @@ function AlertsInner() {
   }, []);
 
   const selectedDecision = useMemo(
-    () => decisions.find((d) => d.id === selectedId) ?? null,
-    [decisions, selectedId],
+    () => activeDecisions.find((d) => d.id === selectedId) ?? null,
+    [activeDecisions, selectedId],
   );
 
   const selectedMeetingBundle = useMemo(() => {
     if (!selectedMeetingId) return null;
-    const first = decisions.find((d) => d.meetingRef?.bundleId === selectedMeetingId);
+    const first = activeDecisions.find((d) => d.meetingRef?.bundleId === selectedMeetingId);
     return first
       ? { bundleId: selectedMeetingId, title: first.meetingRef!.title }
       : null;
-  }, [decisions, selectedMeetingId]);
+  }, [activeDecisions, selectedMeetingId]);
 
   const onSelectDecision = useCallback((id: string) => {
     setSelectedId(id);
@@ -172,9 +179,9 @@ function AlertsInner() {
 
   return (
     <AppLayout>
-      <AppTaskbar breadcrumbItems={[{ label: "Signals" }]} />
+      <AppTaskbar breadcrumbItems={[{ label: "Signals" }]} hideUtilityCluster />
 
-      <div className={`px-4 pt-4 pb-4 w-full ${density === "compact" ? "text-[13px]" : ""}`}>
+      <div className="px-4 pt-4 pb-4 w-full">
         <GreetingHeader name="Tushar" />
 
         <AlertsToolbar
@@ -183,8 +190,6 @@ function AlertsInner() {
           counts={counts}
           query={query}
           onQueryChange={setQuery}
-          density={density}
-          onDensityChange={setDensity}
           filter={filter}
           onFilterChange={setFilter}
           filterSheetOpen={filterSheetOpen}
@@ -194,19 +199,19 @@ function AlertsInner() {
         <BulkBar />
 
         <div className="grid gap-4 grid-cols-1 xl:grid-cols-[176px_minmax(340px,1fr)_minmax(520px,1.35fr)] items-start">
-          {/* Category rail — hidden on meetings tab (grouped by meeting instead) */}
+          {/* Category rail */}
           <div className="hidden xl:block">
             {!isMeetingsTab && (
               <CategoryRail
                 items={railItems}
-                activeKey={openCategory}
+                activeKey={activeRailKey}
                 onSelect={handleRailSelect}
               />
             )}
           </div>
 
           {/* Center: queue */}
-          <ScrollArea className="max-h-[calc(100vh-220px)] pr-2" ref={scrollAreaRef as never}>
+          <ScrollArea className="h-[calc(100vh-220px)] pr-2" ref={scrollAreaRef as never}>
             {isEmpty ? (
               <EmptyState
                 variant={
@@ -234,10 +239,6 @@ function AlertsInner() {
                   key={cat.key}
                   label={cat.label}
                   count={cat.items.length}
-                  open={openCategory === cat.key}
-                  onToggle={() =>
-                    setOpenCategory((cur) => (cur === cat.key ? null : cat.key))
-                  }
                   ref={(el) => {
                     if (el) sectionRefs.current.set(cat.key, el);
                     else sectionRefs.current.delete(cat.key);
@@ -256,21 +257,20 @@ function AlertsInner() {
             )}
           </ScrollArea>
 
-          {/* Right: workspace — daily briefing / meeting view / review workspace */}
-          <div className="hidden xl:flex flex-col max-h-[calc(100vh-220px)] sticky top-4">
+          {/* Right: workspace */}
+          <div className="hidden xl:flex flex-col h-[calc(100vh-220px)] min-h-0 sticky top-4">
             {selectedDecision ? (
               <ReviewWorkspace
                 decision={selectedDecision}
                 onClose={() => setSelectedId(null)}
                 onOpenDecision={(id) => onSelectDecision(id)}
-                defaultPage={1}
               />
             ) : selectedMeetingBundle ? (
               <div className="flex-1 min-h-0 overflow-auto rounded-xl border border-border/70 bg-card p-5">
                 <MeetingReviewView
                   bundleId={selectedMeetingBundle.bundleId}
                   bundleTitle={selectedMeetingBundle.title}
-                  all={decisions}
+                  all={activeDecisions}
                   onOpen={onSelectDecision}
                 />
               </div>
@@ -289,14 +289,13 @@ function AlertsInner() {
               decision={selectedDecision}
               onClose={() => setSelectedId(null)}
               onOpenDecision={(id) => onSelectDecision(id)}
-              defaultPage={1}
             />
           ) : selectedMeetingBundle ? (
             <div className="rounded-xl border border-border/70 bg-card p-5">
               <MeetingReviewView
                 bundleId={selectedMeetingBundle.bundleId}
                 bundleTitle={selectedMeetingBundle.title}
-                all={decisions}
+                all={activeDecisions}
                 onOpen={onSelectDecision}
               />
               <div className="mt-4">

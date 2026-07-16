@@ -40,6 +40,8 @@ interface ActionsStore {
   delegateToAan: (id: string) => void;
   snooze: (id: string, choice: SnoozeChoice) => void;
   bulkApprove: (ids: string[]) => void;
+  /** Roll a decision back to its previous status (undo). */
+  rollback: (id: string) => void;
 
   /** Decisions above digest threshold — belong on Decide. */
   aboveThreshold: Decision[];
@@ -281,14 +283,14 @@ export function ActionsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ActionsStore>(() => ({
     decisions, digestItems, digestThresholdCents, setDigestThresholdCents,
-    approve, reject, delegateToAan, snooze, bulkApprove,
+    approve, reject, delegateToAan, snooze, bulkApprove, rollback,
     aboveThreshold, belowThreshold,
     meetings, meetingTasks, tasksForBundle, bundleValueCents, bundleOpenCount,
     markTaskCompleted, markTaskNotCompleted, delegateTaskToAan, bulkCompleteBundle,
     questions, openQuestionsCount, answerQuestion, skipQuestion,
   }), [
     decisions, digestItems, digestThresholdCents,
-    approve, reject, delegateToAan, snooze, bulkApprove,
+    approve, reject, delegateToAan, snooze, bulkApprove, rollback,
     aboveThreshold, belowThreshold,
     meetings, meetingTasks, tasksForBundle, bundleValueCents, bundleOpenCount,
     markTaskCompleted, markTaskNotCompleted, delegateTaskToAan, bulkCompleteBundle,

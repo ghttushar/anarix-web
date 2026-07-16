@@ -1,52 +1,102 @@
-## Goal
-Rework the `/alerts` (Signals) three-column layout and the right-hand Review Workspace so the overview isn't hidden, the carousel is gone, hierarchy is cleaner, and the primary action is unmistakable — without moving it.
+## Signals page cleanup + FAI/Signals widget + Execute→Undo + Live-mode filter
 
-## 1. Fix 3-column layout (nav | list | detail)
-`frontend/src/pages/Alerts.tsx`
-- Current grid `grid-cols-[180px_minmax(0,1fr)_minmax(0,58fr)]` makes the detail column enormously wide and forces the middle overview list to collapse behind it at 1274px.
-- Change to a balanced 3-pane layout that keeps all three visible side-by-side on desktop:
-  - `xl:grid-cols-[180px_minmax(360px,1fr)_minmax(520px,1.4fr)]`
-  - Raise the page container from `max-w-[1600px]` — allow it to fill viewport so the detail column has room.
-  - Ensure the middle ScrollArea has `min-w-0` so it doesn't get squeezed to zero.
-- Keep sticky right column, keep mobile modal fallback.
+Scope: `/alerts` page and Floating Action Island only. No data/schema changes beyond swapping mock decisions when Live mode is off.
 
-## 2. Remove carousel in ReviewWorkspace
-`frontend/src/components/actions/ReviewWorkspace.tsx`
-- Delete the PageIndicator + Prev/Next chevrons + arrow-key page nav + `page` state + `defaultPage` prop usage.
-- Render one merged body (Summary + Details combined). Drop `SummaryPage` and `MetricsPage` imports.
-- Remove metrics entirely (no MetricsPage render, no metrics section).
+### 1. Remove duplicated "Categories" (heading shown twice)
 
-## 3. New merged detail hierarchy
-Create a single scrollable body inside ReviewWorkspace with this exact order:
+`CategorySection.tsx`
+- Drop the section header row (chevron + icon + label + count pill) entirely. Keep only the panel body; sections become always‑expanded. Category label already lives in the left rail, so the header is redundant.
+- Remove the `open/onToggle/defaultOpen/aggregate` props from the render path (keep prop signature but no‑op) so `Alerts.tsx` callers keep compiling.
 
-1. **Title** — already in header (h2 with `d.insight`). Keep.
-2. **Current state** — pills row (state pill + source pill + live "Aan working" pill) moved from SummaryPage. Always visible.
-3. **Why it matters** — `d.valueBasis` paragraph + the value/impact block (from SummaryPage's value card). Always visible.
-4. **Evidence** — the `d.valueInputs` list from DetailsPage. Always visible.
-5. **Choose your strategy** — the StrategyPicker (kept prominent, always visible — required to pick the action being executed).
-6. **Collapsed sections** (accordion, closed by default):
-   - **Related signals** (renamed from "Related work") — RelatedDecisionChip list.
-   - **Execution plan** — ExecutionPlan for selected strategy.
-7. Drop Timeline and Metrics entirely (per "remove metrics" — Timeline wasn't requested to keep; remove to reduce noise; if user objects we add back).
+`Alerts.tsx`
+- Remove the accordion behaviour: `openCategory` state, `handleRailSelect` collapse toggle, `useEffect` reset on tab change. Rail click just scrolls the section into view (already keyed via `sectionRefs`).
+- Remove the redundant page heading duplication is not present in code — only the section header is duplicated, already handled above.
 
-Implementation: build the merged view inline in ReviewWorkspace (or new `ReviewBody.tsx`) using shadcn `Accordion` for the two collapsible sections. Keep StrategyPicker + steps 2–5 always visible so the execute button has context.
+### 2. Remove Compact/Comfortable density toggle
 
-## 4. Highlight the primary action (no size/color/position change)
-Footer keeps position and size. Add non-color/non-size affordances that make it pop:
-- Wrap the Execute button in a subtle "spotlight" container: a soft animated ring (`ring-2 ring-primary/40` + slow `animate-pulse` on the ring only, not the button), plus a small **↵ Enter** keyboard hint chip inside the button on the right.
-- Add global `Enter` keybinding in ReviewWorkspace that triggers `onExecute` (ignored when focus is in input/textarea) — makes it the default action.
-- Slightly de-emphasize sibling footer buttons (Modify/Assign/Reject) to `variant="ghost"` with muted text so Execute becomes the clear focal point through contrast in weight, not size/color of the button itself.
+`AlertsToolbar.tsx`
+- Delete the density segmented control and its props.
 
-## 5. Cleanup
-- Files to delete: `frontend/src/components/actions/review/SummaryPage.tsx`, `MetricsPage.tsx`, `PageIndicator.tsx` (no longer referenced).
-- Remove `defaultPage` prop from ReviewWorkspace callers in `frontend/src/pages/Alerts.tsx`.
-- No changes to store, data, routing, or naming (Signals rename was done previously).
+`Alerts.tsx`
+- Remove `density` state, `usePersistedState("alerts:density", …)`, the `text-[13px]` class hook, and the two props passed to `AlertsToolbar`.
 
-## Technical notes
-- Enter-to-execute: attach on the workspace root div via `onKeyDown` with `e.key === 'Enter' && !e.target matches input,textarea,[contenteditable]`.
-- Accordion: use existing `@/components/ui/accordion` (shadcn). Both items `type="multiple"` with empty `defaultValue`.
-- Layout math verified for 1274px viewport: 180 + 360 + 520 + gaps (~32) = ~1092px, fits with padding.
+### 3. Remove app‑level utility cluster on `/alerts`, restore Signals to FAI
 
-## Out of scope
-- Category rail behavior, meetings tab, toolbar, mobile sheet.
-- Any data or business-logic changes.
+`AppTaskbar.tsx`
+- Add an optional `hideUtilityCluster?: boolean` prop; when true skip the entire `{islandOff && (…)}` right‑side cluster.
+- Keep the cluster elsewhere unchanged. Signals (Bell) inside that cluster continues to represent the Signals widget when FAI is off, matching the user's rule.
+
+`Alerts.tsx`
+- Pass `hideUtilityCluster` to `<AppTaskbar />`.
+
+`FloatingActionIsland.tsx`
+- Reintroduce a Signals action (Bell + `aanPendingCount` badge, `highlight` when `aanCriticalCount > 0`, click → `navigate("/alerts")`). Insert it at the top of `appActions` so it renders on every non‑website route.
+- Remove the `void aanPendingCount; void aanCriticalCount;` no‑op.
+
+`SignalsWidget.tsx` + `App.tsx`
+- Delete the standalone `<SignalsWidget />` mount from `App.tsx` and the file itself. Signals now lives in FAI (when FAI is on) and in the AppTaskbar utility cluster (when FAI is off) — no third surface.
+
+### 4. Execute → Undo with 5 s countdown + auto‑close
+
+`ReviewWorkspace.tsx`
+- Add local state: `executed: { strategyTitle: string; verifyMsg: string } | null` and `countdown: number`.
+- On `onExecute()`: run current logic (`approve/delegate/snooze`), then set `executed` and start a 5 s interval that decrements `countdown`; at 0 call `onClose()`.
+- Replace the Execute button (same wrapper, same position, same size) with an Undo card while `executed` is set:
+  - Line 1 (success): `✓ Executed: {strategy title}`
+  - Line 2 (verification, muted 12 px): e.g. "Change applied. Verifying downstream metrics…"
+  - Right side: circular ring showing `countdown`s + an `Undo` ghost button that clears `executed`, cancels the interval, and calls the store's `rollback` via the existing `publishUndoable` toast (call `useActionsStore().rollbackLast?.(id)` — since we don't have a public rollback, trigger via a new lightweight approach: emit a custom event that the store already registers on `publishUndoable` undo — simplest: call the store action's inverse; use `snooze("1h")` → no. Instead, expose `rollback(id)` from `actionsStore.tsx` in the returned value and consume it here).
+- Disable the surrounding footer actions (Modify/Assign/Reject/Snooze/Share) while `executed` is set to prevent conflicting input.
+
+`actionsStore.tsx`
+- Export `rollback(id: string)` on the store (it already exists internally); just add to the interface + `value` object so the review card can call it.
+
+### 5. Right column scroll fix
+
+`Alerts.tsx`
+- Right column wrapper currently is `flex flex-col max-h-[calc(100vh-220px)] sticky top-4`; the child `ReviewWorkspace` is `flex flex-col flex-1 min-h-0 …`. Sticky + max-h prevents proper inner scroll. Change to `h-[calc(100vh-140px)] sticky top-4 min-h-0` and ensure the `ScrollArea` inside ReviewWorkspace already uses `flex-1 min-h-0` (it does). This gives ReviewWorkspace a real bounded height so its internal ScrollArea takes over.
+
+### 6. Live/Assisted toggle: filter mock alerts
+
+New `frontend/src/data/criticalOnlyDecision.ts`
+- Export a single `Decision` matching the ASIN B0CSH8TCC6 spec from the message (title, insightDetail, value $6,885 at_risk/7d, valueInputs = the 4 evidence lines, valueBasis paragraph, three strategies via a targeted override in `strategiesFor` — see below).
+
+`Alerts.tsx`
+- Read `liveMode` from `useAanEvents()` inside `AlertsInner`.
+- When `liveMode` is `false`, replace the working decision list with `[CRITICAL_ONLY]` before `filterByTab`. When `true`, use `decisions` as today.
+
+`strategies.ts`
+- If `d.id === "critical-b0csh8tcc6"`, return exactly three strategies:
+  1. `approve` — "Approve Recommendations" (recommended). Runs the existing approve path.
+  2. `notify-vm` — "Notify Vendor Manager".
+  3. `draft-ticket` — "Draft Amazon Support Ticket".
+
+`ReviewWorkspace.tsx`
+- When the selected strategy id ends in `:notify-vm` or `:draft-ticket`, do NOT call approve/delegate/snooze on Execute. Instead:
+  - Open Aan Copilot (left‑side panel) via `useAan().openCopilot()`.
+  - Seed the composer with a canned prompt: for `notify-vm` — "Draft an email to the Vendor Manager about ASIN B0CSH8TCC6 losing advertising eligibility…"; for `draft-ticket` — "Draft an Amazon support ticket disputing the eligibility loss on ASIN B0CSH8TCC6…".
+  - Aan replies with a canned mock draft (email or ticket) rendered as the assistant message.
+  - Still trigger the executed/Undo card in the review panel so the user sees confirmation + 5 s auto‑close.
+
+Requires a small helper in `AanContext` (or the existing openCopilot signature) to accept an optional `seedPrompt` and `seedResponse`; if such a hook doesn't exist we add it (2–3 lines).
+
+### 7. Layout consistency (no shrinking cards, no crowding)
+
+`DecisionValueCard`
+- Add `min-h-[140px]` and consistent internal padding so cards keep height with sparse data.
+
+`DailyBriefing` and the right column
+- Give the right container a fixed `h-[calc(100vh-140px)]` so switching between DailyBriefing / MeetingReviewView / ReviewWorkspace doesn't cause vertical jitter.
+
+Typography/spacing sweep in the touched files only: 14 px body min, generous line‑height (already `leading-relaxed`), no additional micro‑copy added.
+
+### Files touched
+
+Edited: `frontend/src/pages/Alerts.tsx`, `frontend/src/components/actions/AlertsToolbar.tsx`, `frontend/src/components/actions/CategorySection.tsx`, `frontend/src/components/actions/ReviewWorkspace.tsx`, `frontend/src/components/actions/DecisionValueCard.tsx`, `frontend/src/components/layout/AppTaskbar.tsx`, `frontend/src/features/creative/FloatingActionIsland.tsx`, `frontend/src/state/actionsStore.tsx`, `frontend/src/lib/decisions/strategies.ts`, `frontend/src/App.tsx`, `frontend/src/components/aan/AanContext.tsx` (seed prompt param — if not present).
+
+Created: `frontend/src/data/criticalOnlyDecision.ts`.
+
+Deleted: `frontend/src/components/widgets/SignalsWidget.tsx`.
+
+### Out of scope
+
+Backend/data schema, other pages (Dashboard, Profitability, etc.), mobile shell, autonomy‑mode display in `AanEventsContext`.

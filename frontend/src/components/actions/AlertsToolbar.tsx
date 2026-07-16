@@ -10,8 +10,6 @@ interface Props {
   counts: Record<AlertTabKey, number>;
   query: string;
   onQueryChange: (q: string) => void;
-  density: "comfortable" | "compact";
-  onDensityChange: (d: "comfortable" | "compact") => void;
   filter: FilterState;
   onFilterChange: (f: FilterState) => void;
   filterSheetOpen: boolean;
@@ -69,23 +67,6 @@ export function AlertsToolbar(p: Props) {
           externalOpen={p.filterSheetOpen}
           onExternalOpenChange={p.onFilterSheetOpenChange}
         />
-        <div className="inline-flex items-center rounded-md border border-border p-0.5">
-          {(["comfortable", "compact"] as const).map((d) => (
-            <button
-              key={d}
-              onClick={() => p.onDensityChange(d)}
-              className={cn(
-                "h-6 px-2 text-[11.5px] rounded-[4px] capitalize transition-colors",
-                p.density === d
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              title={`${d} density`}
-            >
-              {d[0].toUpperCase()}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
