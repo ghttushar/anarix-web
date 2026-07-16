@@ -191,7 +191,7 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
     const isInlineDraftAction =
       shortId === "notify-vm" ||
       shortId === "draft-ticket" ||
-      (shortId === "recommended" && d.id === "critical-listing-eligibility-b0csh8tcc6");
+      (shortId === "recommended" && d.id === "critical-b0csh8tcc6");
 
     if (isInlineDraftAction && panelMode === "main") {
       // Render Aan's draft inline inside this review card — do not open the side panel.
