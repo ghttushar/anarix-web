@@ -421,16 +421,35 @@ export function ReviewWorkspace({ decision: d, onClose, onOpenDecision }: Props)
                 </Block>
               )}
 
-              {/* Strategy — hidden after execute */}
-              <Block eyebrow="Choose your strategy">
-                <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent p-3 shadow-[0_1px_0_hsl(var(--border)/0.5),0_20px_50px_-30px_hsl(var(--primary)/0.35)]">
-                  <StrategyPicker
-                    strategies={strategies}
-                    selectedId={selectedStrategyId}
-                    onSelect={setSelectedStrategyId}
+              {/* Strategy OR inline Aan draft — hidden after execute */}
+              {inlineDraft ? (
+                inlineDraft.kind === "email" ? (
+                  <InlineEmailCompose
+                    initial={inlineDraft.draft}
+                    onCancel={() => setInlineDraft(null)}
+                    onSent={completeInlineDraft}
                   />
-                </div>
-              </Block>
+                ) : (
+                  <InlineDraftChat
+                    title={inlineDraft.title}
+                    approveLabel={inlineDraft.approveLabel}
+                    approveSuccess={inlineDraft.approveSuccess}
+                    initialDraft={inlineDraft.draft}
+                    onCancel={() => setInlineDraft(null)}
+                    onApprove={completeInlineDraft}
+                  />
+                )
+              ) : (
+                <Block eyebrow="Choose your strategy">
+                  <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent p-3 shadow-[0_1px_0_hsl(var(--border)/0.5),0_20px_50px_-30px_hsl(var(--primary)/0.35)]">
+                    <StrategyPicker
+                      strategies={strategies}
+                      selectedId={selectedStrategyId}
+                      onSelect={setSelectedStrategyId}
+                    />
+                  </div>
+                </Block>
+              )}
 
               {/* Collapsed extras */}
               <Accordion type="multiple" className="border-t border-border/60 pt-2">
