@@ -72,7 +72,36 @@ const AAN_SEEDS: Record<string, { prompt: string; reply: string }> = {
     reply:
       "Here's a draft support ticket. Review and approve before I file it:\n\n**Subject:** Reinstate advertising eligibility – ASIN B0CSH8TCC6\n\n**Case type:** Advertising / Product eligibility\n\nHello Seller Support,\n\nOn 07 Jun 2026, ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) was flagged as ineligible for advertising with the reason: *\"This product is either missing important information or contains incorrect information.\"*\n\nOn our end, the listing contains all required attributes and matches the last known-eligible version. We believe this flag was raised in error and request a manual review.\n\n- Business impact: estimated **$6,885 in ad-driven revenue at risk** over the next 7 days (300 units).\n- Inventory on hand: 2,810 units, ~140 days of coverage — this is not a stock issue.\n\nPlease reinstate advertising eligibility or share the specific attribute that triggered the flag so we can correct it.\n\nThank you,\nTushar",
   },
+  "recommended": {
+    prompt:
+      "Analyze the listing for ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count). Diff against the last known-eligible version, identify the failing field Amazon flagged, and draft the compliant edit for my approval.",
+    reply:
+      "Here's what I found and the proposed fix. Approve before I publish:\n\n**ASIN:** B0CSH8TCC6 (Sampler – Decaf 40 Count)\n\n**Likely failing field:** `bullet_point_3` — currently reads *\"Best decaf coffee — cures fatigue and boosts energy\"*. Amazon's compliance model flagged this as an unsupported medical/functional claim.\n\n**Proposed edit:**\n> Smooth, low-acidity decaf blend — 40 single-serve pods per box, compatible with most single-serve brewers.\n\nOther fields (title, images, attributes) match the last eligible snapshot. Confidence: 84%.\n\nWant me to publish this edit, or should I tweak the wording first?",
+  },
 };
+
+// Pre-parsed email draft used when AI Panel mode = "main" and the user picks Notify VM.
+const NOTIFY_VM_EMAIL: EmailDraft = {
+  to: "vendor.manager@amazon.com",
+  cc: "",
+  bcc: "",
+  subject: "ASIN B0CSH8TCC6 – Advertising eligibility lost (action needed)",
+  body:
+`Hi [VM name],
+
+Amazon disabled advertising eligibility on ASIN B0CSH8TCC6 (Sampler – Decaf 40 Count) on 07 Jun 2026, citing missing or incorrect listing information.
+
+- Estimated revenue at risk (next 7 days): $6,885
+- Estimated units at risk: 300
+- Inventory available: 2,810 units (~140 days of coverage)
+- Confidence: 82%
+
+Could you confirm whether a recent content change on your side triggered this, and share the last known-good listing snapshot so we can restore eligibility quickly?
+
+Thanks,
+Tushar`,
+};
+
 
 function Block({ eyebrow, children }: { eyebrow: string; children: React.ReactNode }) {
   return (
