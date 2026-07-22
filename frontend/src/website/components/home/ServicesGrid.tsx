@@ -38,7 +38,7 @@ const ServicesGrid = () => {
         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
       />
 
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4">
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 16, scale: 0.97 }}

@@ -12,7 +12,6 @@ import ScrollProgress from "@/website/components/ScrollProgress";
 import Footer from "@/website/components/Footer";
 import ScrollToTop from "@/website/components/ScrollToTop";
 import { ArrowRight } from "lucide-react";
-import { AanMascot } from "@/components/aan/AanMascot";
 
 const Home = () => {
   return (
@@ -33,8 +32,8 @@ const Home = () => {
       <ServicesGrid />
 
       {/* CTA Section */}
-      <section className="relative py-28 overflow-hidden">
-        <div className="max-w-3xl mx-auto px-6 text-center">
+      <section className="relative py-24 overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.97 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -51,7 +50,7 @@ const Home = () => {
             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
               Start with a free audit. We&apos;ll show you what your account is losing before you pay a thing.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/website/demo">
                 <Button size="lg" className="rounded-pill px-8 h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90 btn-shine group">
                   Hand it over
@@ -64,16 +63,6 @@ const Home = () => {
                 </Button>
               </Link>
             </div>
-
-            <motion.div
-              className="flex justify-center"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <AanMascot state="speaking" size={72} interactive floating layoutId="cta-mascot" />
-            </motion.div>
           </motion.div>
         </div>
       </section>

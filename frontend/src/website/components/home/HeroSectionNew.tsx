@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { AanMascot } from "@/components/aan/AanMascot";
 import { ArrowRight } from "lucide-react";
+import HeroDataViz from "./HeroDataViz";
 
 const brands = [
   "Mount-It!", "Drive Medical", "Karma Organics",
@@ -11,36 +12,13 @@ const brands = [
 ];
 
 const HeroSectionNew = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const bgHue = useTransform(scrollYProgress, [0, 1], [0, 5]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
   const [mascotSize, setMascotSize] = useState<"large" | "companion">("large");
 
-  useEffect(() => {
-    const h = bgHue.get();
-    if (h !== undefined) {
-      document.documentElement.style.setProperty("--hero-hue", `${h}`);
-    }
-    const unsub = bgHue.on("change", (v) => {
-      document.documentElement.style.setProperty("--hero-hue", `${Math.round(v)}`);
-    });
-    return unsub;
-  }, [bgHue]);
-
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-16">
-      <motion.div className="absolute inset-0 pointer-events-none" style={{ scale, opacity: scrollYProgress }}>
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse 80% 60% at 50% 40%, hsl(240 60% 60% / 0.08), transparent)`,
-            filter: "hue-rotate(var(--hero-hue, 0deg))",
-          }}
-        />
-      </motion.div>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28 pb-16">
+      <HeroDataViz />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">
         <div className="grid lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-8 text-left">
             <motion.div
@@ -112,7 +90,7 @@ const HeroSectionNew = () => {
                   className="relative cursor-pointer bg-transparent border-none"
                   title="Switch to companion size"
                 >
-                  <AanMascot state="idle" size={140} interactive floating layoutId="hero-mascot" />
+                  <AanMascot state="idle" size={120} interactive floating layoutId="hero-mascot" />
                 </button>
                 <p className="text-[10px] text-muted-foreground/40 text-center mt-2">Click to see companion size</p>
               </div>
@@ -123,7 +101,7 @@ const HeroSectionNew = () => {
                   className="cursor-pointer bg-transparent border-none"
                   title="Switch to large size"
                 >
-                  <AanMascot state="idle" size={64} interactive floating layoutId="hero-mascot" />
+                  <AanMascot state="idle" size={56} interactive floating layoutId="hero-mascot" />
                 </button>
                 <p className="text-[10px] text-muted-foreground/40 text-center mt-2">Click for large size</p>
               </div>

@@ -20,7 +20,7 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
 const Footer = () => {
   return (
     <footer className="px-6 pb-6">
-      <div className="max-w-6xl mx-auto bg-card rounded-3xl border border-border shadow-soft p-10 sm:p-14">
+      <div className="max-w-7xl mx-auto bg-card rounded-3xl border border-border shadow-soft p-10 sm:p-14">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
             <Link to="/website" className="text-2xl font-display font-semibold text-foreground tracking-tight">

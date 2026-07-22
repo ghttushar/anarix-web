@@ -5,7 +5,7 @@ import ScrollToTop from "@/website/components/ScrollToTop";
 const PageLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <main className="pt-28 pb-16">{children}</main>
+    <main className="pt-24 pb-12">{children}</main>
     <Footer />
     <ScrollToTop />
   </div>

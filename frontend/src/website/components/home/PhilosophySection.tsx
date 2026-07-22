@@ -10,7 +10,7 @@ const PhilosophySection = () => {
 
   return (
     <section ref={ref} className="relative py-28 overflow-hidden border-t border-border/40">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div style={{ x: textX }}>
             <motion.div

@@ -23,7 +23,7 @@ const PainPointsSection = () => {
         }}
       />
 
-      <div className="relative max-w-3xl mx-auto px-6">
+      <div className="relative max-w-5xl mx-auto px-4">
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 16, scale: 0.97 }}

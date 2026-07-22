@@ -52,7 +52,7 @@ const Navbar = () => {
         style={{ scaleX }}
       />
       <nav
-        className={`grid grid-cols-[auto_1fr_auto] items-center px-6 py-3 w-full max-w-6xl rounded-pill border backdrop-blur-xl transition-all duration-500 ${
+        className={`grid grid-cols-[auto_1fr_auto] items-center px-6 py-3 w-full max-w-7xl rounded-pill border backdrop-blur-xl transition-all duration-500 ${
           scrolled
             ? "bg-surface-elevated/95 shadow-medium border-border/80"
             : "bg-surface-elevated/60 shadow-soft border-border/30"

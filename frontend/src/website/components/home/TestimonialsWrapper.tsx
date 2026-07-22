@@ -51,9 +51,9 @@ const TestimonialsWrapper = () => {
     <section className="relative py-28 px-6 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-accent/20 via-background to-accent/10" />
 
-      <div className="relative max-w-6xl mx-auto">
+      <div className="relative max-w-7xl mx-auto px-4">
         <motion.div
-          className="mb-16 max-w-3xl"
+          className="mb-16 max-w-4xl"
           initial={{ opacity: 0, y: 16, scale: 0.97 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, margin: "-80px" }}
