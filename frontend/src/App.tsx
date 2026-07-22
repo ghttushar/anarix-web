@@ -128,17 +128,13 @@ import AanMascotShowcase from "./pages/brand/AanMascotShowcase";
 // Website
 import WebsiteLayout from "./website/WebsiteLayout";
 import WebsiteHome from "./website/pages/Home";
-import WebsiteAanAI from "./website/pages/AanAI";
+import WebsiteProduct from "./website/pages/Product";
 import WebsitePricing from "./website/pages/Pricing";
 import WebsiteDocumentation from "./website/pages/Documentation";
 import WebsiteAbout from "./website/pages/company/About";
 import WebsiteCareer from "./website/pages/company/Career";
 import WebsiteContact from "./website/pages/company/Contact";
 import WebsiteDemo from "./website/pages/Demo";
-import WebsiteProductProfitability from "./website/pages/products/Profitability";
-import WebsiteProductAdvertising from "./website/pages/products/Advertising";
-import WebsiteProductAutomation from "./website/pages/products/Automation";
-import WebsiteProductManagedServices from "./website/pages/products/ManagedServices";
 import WebsitePrivacyPolicy from "./website/pages/legal/PrivacyPolicy";
 import WebsiteTermsAndConditions from "./website/pages/legal/TermsAndConditions";
 import WebsiteCancelPlan from "./website/pages/CancelPlan";
@@ -318,7 +314,8 @@ function AppRoutes() {
       {/* Marketing website */}
       <Route path="/website" element={<WebsiteLayout />}>
         <Route index element={<WebsiteHome />} />
-        <Route path="aan-ai" element={<WebsiteAanAI />} />
+        <Route path="product" element={<WebsiteProduct />} />
+        <Route path="aan-ai" element={<Navigate to="/website/product" replace />} />
         <Route path="pricing" element={<WebsitePricing />} />
         <Route path="documentation" element={<WebsiteDocumentation />} />
         <Route path="company" element={<Navigate to="/website/company/about" replace />} />
@@ -326,10 +323,10 @@ function AppRoutes() {
         <Route path="company/career" element={<WebsiteCareer />} />
         <Route path="company/contact" element={<WebsiteContact />} />
         <Route path="demo" element={<WebsiteDemo />} />
-        <Route path="products/profitability" element={<WebsiteProductProfitability />} />
-        <Route path="products/advertising" element={<WebsiteProductAdvertising />} />
-        <Route path="products/automation" element={<WebsiteProductAutomation />} />
-        <Route path="products/managed-services" element={<WebsiteProductManagedServices />} />
+        <Route path="products/profitability" element={<Navigate to="/website/product" replace />} />
+        <Route path="products/advertising" element={<Navigate to="/website/product" replace />} />
+        <Route path="products/automation" element={<Navigate to="/website/product" replace />} />
+        <Route path="products/managed-services" element={<Navigate to="/website/product" replace />} />
         <Route path="privacy-policy" element={<WebsitePrivacyPolicy />} />
         <Route path="terms-and-conditions" element={<WebsiteTermsAndConditions />} />
         <Route path="cancel-plan" element={<WebsiteCancelPlan />} />

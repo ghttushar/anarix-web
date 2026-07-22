@@ -25,11 +25,7 @@ const SUGGESTED = [
 
 const PAGE_LABELS: Record<string, string> = {
   "/website": "Home",
-  "/website/products/profitability": "Profitability",
-  "/website/products/advertising": "Advertising",
-  "/website/products/automation": "Automation",
-  "/website/products/managed-services": "Managed Services",
-  "/website/aan-ai": "Aan AI",
+  "/website/product": "Anarix Insight Engine",
   "/website/pricing": "Pricing",
   "/website/about": "About",
   "/website/contact": "Contact",

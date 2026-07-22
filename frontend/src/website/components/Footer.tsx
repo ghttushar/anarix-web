@@ -1,14 +1,8 @@
 import { Link } from "react-router-dom";
 
 const footerLinks: Record<string, { label: string; href: string }[]> = {
-  Products: [
-    { label: "Profitability", href: "/website/products/profitability" },
-    { label: "Advertising", href: "/website/products/advertising" },
-    { label: "Automation", href: "/website/products/automation" },
-    { label: "Managed Services", href: "/website/products/managed-services" },
-  ],
-  Platform: [
-    { label: "Aan AI", href: "/website/aan-ai" },
+  Product: [
+    { label: "Anarix Insight Engine", href: "/website/product" },
     { label: "Pricing", href: "/website/pricing" },
     { label: "Documentation", href: "/website/documentation" },
   ],
@@ -23,18 +17,17 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
   ],
 };
 
-
 const Footer = () => {
   return (
     <footer className="px-6 pb-6">
       <div className="max-w-6xl mx-auto bg-card rounded-3xl border border-border shadow-soft p-10 sm:p-14">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
             <Link to="/website" className="text-2xl font-display font-semibold text-foreground tracking-tight">
-              Anarix<span className="text-coral">.</span>ai
+              Anarix<span className="text-primary">.</span>ai
             </Link>
             <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-              The complete growth platform for marketplace profitability.
+              Expert-managed marketplace growth powered by the Anarix Insight Engine.
             </p>
           </div>
 
@@ -59,7 +52,7 @@ const Footer = () => {
 
         <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Anarix. All rights reserved.
+            &copy; {new Date().getFullYear()} Anarix. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link to="/website/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">

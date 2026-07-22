@@ -4,32 +4,21 @@ import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 
-
 const navItems: Array<{
   label: string;
   href?: string;
   dropdown?: { label: string; href: string }[];
 }> = [
-  {
-    label: "Products",
-    dropdown: [
-      { label: "Profitability", href: "/website/products/profitability" },
-      { label: "Advertising", href: "/website/products/advertising" },
-      { label: "Automation", href: "/website/products/automation" },
-      { label: "Managed Services", href: "/website/products/managed-services" },
-    ],
-  },
-  { label: "Aan AI", href: "/website/aan-ai" },
+  { label: "Product", href: "/website/product" },
   { label: "Pricing", href: "/website/pricing" },
-  { label: "Documentation", href: "/website/documentation" },
   {
     label: "Company",
     dropdown: [
       { label: "About", href: "/website/company/about" },
       { label: "Careers", href: "/website/company/career" },
-      { label: "Contact", href: "/website/company/contact" },
     ],
   },
+  { label: "Contact Us", href: "/website/company/contact" },
 ];
 
 const Navbar = () => {
