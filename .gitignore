@@ -61,6 +61,9 @@ chainlit.md
 # Deployment
 .vercel
 
+# Figma sync
+figma-sync/
+
 # Data and databases
 agenthub/agents/youtube/db
 
