@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import PageLayout from "@/website/components/PageLayout";
 import CapabilityGrid from "@/website/components/product/CapabilityGrid";
+import DashboardPreview from "@/website/components/product/DashboardPreview";
+import PlatformCharts from "@/website/components/product/PlatformCharts";
 import { AanMascot } from "@/components/aan/AanMascot";
 
 const realtimeActions = [
@@ -95,6 +97,9 @@ const Product = () => {
         {/* 9-Card Capability Grid */}
         <CapabilityGrid />
 
+        {/* Live Dashboard Preview */}
+        <DashboardPreview />
+
         {/* Real-time execution */}
         <motion.div
           className="mb-24 p-6 sm:p-8 rounded-2xl border border-border/40 bg-card/30"
@@ -168,6 +173,9 @@ const Product = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Interactive Charts */}
+        <PlatformCharts />
 
         {/* Aan AI Section */}
         <motion.div

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Megaphone, TrendingUp, Search, Route,
   Shield, BarChart3, Eye, BrainCircuit,
@@ -21,8 +21,23 @@ const cards = [
 const baseRows = [0, 0, 0, 0, 0, 1, 1, 1, 1];
 const baseCols = [0, 1, 2, 3, 4, 0, 1, 2, 3];
 
+const nodeCenters = [
+  { cx: "10%", cy: "15%" }, { cx: "30%", cy: "15%" }, { cx: "50%", cy: "15%" }, { cx: "70%", cy: "15%" }, { cx: "90%", cy: "15%" },
+  { cx: "10%", cy: "75%" }, { cx: "30%", cy: "75%" }, { cx: "50%", cy: "75%" }, { cx: "70%", cy: "75%" },
+];
+
+const connectionPaths = [
+  "M10,15 L30,15", "M30,15 L50,15", "M50,15 L70,15", "M70,15 L90,15",
+  "M10,15 L10,75", "M30,15 L30,75", "M50,15 L50,75", "M70,15 L70,75",
+  "M10,75 L30,75", "M30,75 L50,75", "M50,75 L70,75",
+  "M10,15 L30,75", "M30,15 L10,75",
+  "M50,15 L30,75", "M70,15 L50,75", "M90,15 L70,75",
+];
+
 const CapabilityGrid = () => {
   const [activeCard, setActiveCard] = useState(0);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
   const getCardPosition = (i: number) => {
     const row = baseRows[i];
@@ -51,7 +66,7 @@ const CapabilityGrid = () => {
   };
 
   return (
-    <section className="py-24">
+    <section ref={sectionRef} className="py-24">
       <div className="max-w-7xl mx-auto px-4">
         <motion.div
           className="text-center mb-16"
@@ -72,13 +87,46 @@ const CapabilityGrid = () => {
           </p>
         </motion.div>
 
-        <div
-          className="grid gap-3"
-          style={{
-            gridTemplateColumns: "repeat(5, 1fr)",
-            gridTemplateRows: "repeat(2, auto)",
-          }}
-        >
+        <div className="relative">
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            {connectionPaths.map((d, i) => (
+              <motion.path
+                key={d}
+                d={d}
+                stroke="hsl(var(--primary) / 0.08)"
+                strokeWidth="0.15"
+                fill="none"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={isInView ? { pathLength: 1 } : { pathLength: 0 }}
+                transition={{ delay: 0.3 + i * 0.04, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              />
+            ))}
+            {nodeCenters.map((n, i) => (
+              <motion.circle
+                key={n.cx}
+                cx={n.cx}
+                cy={n.cy}
+                r="0.8"
+                fill="hsl(var(--primary) / 0.12)"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+                transition={{ delay: 0.5 + i * 0.05, duration: 0.4 }}
+              />
+            ))}
+          </svg>
+
+          <div
+            className="grid gap-3 relative z-10"
+            style={{
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gridTemplateRows: "repeat(2, auto)",
+            }}
+          >
           {cards.map((card, i) => {
             const pos = getCardPosition(i);
             const isActive = i === activeCard;
@@ -149,6 +197,7 @@ const CapabilityGrid = () => {
             style={{ gridRow: "2 / 3", gridColumn: "5 / 6" }}
           />
         </div>
+      </div>
 
         <motion.p
           className="text-center text-xs text-muted-foreground/40 mt-6"
