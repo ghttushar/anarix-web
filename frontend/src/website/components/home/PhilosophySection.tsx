@@ -1,12 +1,17 @@
-import { useRef } from "react";
+import { lazy, Suspense, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { AanMascot } from "@/components/aan/AanMascot";
+
+const LottiePlayer = lazy(() =>
+  import("lottie-react").then((mod) => ({ default: mod.default }))
+);
+
+import loaderBlue from "@/assets/lottie/loader-blue.json";
 
 const PhilosophySection = () => {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const textX = useTransform(scrollYProgress, [0, 0.5, 1], [-20, 0, 10]);
-  const mascotScale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.85, 1, 1, 0.9]);
+  const animScale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.85, 1, 1, 0.9]);
 
   return (
     <section ref={ref} className="relative py-28 overflow-hidden border-t border-border/40">
@@ -80,11 +85,13 @@ const PhilosophySection = () => {
 
           <motion.div
             className="flex justify-center"
-            style={{ scale: mascotScale }}
+            style={{ scale: animScale }}
           >
             <div className="relative">
               <div className="absolute inset-0 rounded-full bg-primary/5 blur-3xl scale-150" />
-              <AanMascot state="thinking" size={160} interactive floating layoutId="philosophy-mascot" />
+              <Suspense fallback={<div className="w-64 h-64" />}>
+                <LottiePlayer animationData={loaderBlue} loop className="w-64 h-64" />
+              </Suspense>
             </div>
           </motion.div>
         </div>

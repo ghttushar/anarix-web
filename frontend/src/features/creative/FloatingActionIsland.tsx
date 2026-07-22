@@ -157,7 +157,7 @@ export function FloatingActionIsland() {
 
 
   const websiteActions: ActionItem[] = [
-    { icon: CalendarPlus, label: "Book a demo", onClick: () => navigate("/website/demo") },
+    { icon: CalendarPlus, label: "Book a demo", onClick: () => window.open("https://calendly.com/sunil-anarix/30min", "_blank") },
     themeAction,
     ...(scrolled ? [{ icon: ArrowUp, label: "Top", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) }] : []),
   ];

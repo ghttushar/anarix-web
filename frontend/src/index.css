@@ -193,7 +193,7 @@
   }
 
   html {
-    font-size: 14px; /* Minimum body size as per requirements */
+    font-size: 18px; /* Scaled up ~25% for better readability */
   }
 
   body {
@@ -301,7 +301,7 @@
 
   .density-compact html,
   html.density-compact {
-    font-size: 13px;
+    font-size: 17px;
   }
 
   .density-compact h1 { font-size: 1.75rem; }

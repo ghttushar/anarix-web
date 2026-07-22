@@ -132,13 +132,13 @@ const Navbar = () => {
             Sign In
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
-          <Link to="/website/demo">
+          <a href="https://calendly.com/sunil-anarix/30min" target="_blank" rel="noopener noreferrer">
             <Button
               className="rounded-pill px-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-strong active:translate-y-0 active:scale-[0.97] will-change-transform btn-shine"
             >
               Schedule Demo
             </Button>
-          </Link>
+          </a>
         </div>
 
         {/* Mobile hamburger */}
@@ -216,11 +216,11 @@ const Navbar = () => {
                 <Link to="/login" className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground">
                   Sign In <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
-                <Link to="/website/demo">
+                <a href="https://calendly.com/sunil-anarix/30min" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full rounded-pill bg-primary text-primary-foreground">
                     Schedule Demo
                   </Button>
-                </Link>
+                </a>
               </div>
             </div>
           </motion.div>

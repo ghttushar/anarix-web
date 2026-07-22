@@ -149,11 +149,11 @@ export default function TeamsSection() {
               <p className="text-xs text-[hsl(0_0%_60%)] mt-2 tracking-wide uppercase">Built by operators, for operators.</p>
             </div>
             <div className="lg:justify-self-end">
-              <Link to="/website/demo">
+              <a href="https://calendly.com/sunil-anarix/30min" target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="rounded-pill h-12 px-7 bg-white text-[hsl(240_30%_8%)] hover:bg-white/90">
                   Talk to an Expert <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>

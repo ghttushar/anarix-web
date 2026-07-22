@@ -6,6 +6,72 @@ import {
   Bell, Sparkles,
 } from "lucide-react";
 
+const MiniBar = () => (
+  <svg viewBox="0 0 24 16" className="w-6 h-4 opacity-40">
+    <rect x="1" y="8" width="4" height="8" rx="1" fill="currentColor" />
+    <rect x="7" y="4" width="4" height="12" rx="1" fill="currentColor" />
+    <rect x="13" y="6" width="4" height="10" rx="1" fill="currentColor" />
+    <rect x="19" y="2" width="4" height="14" rx="1" fill="currentColor" />
+  </svg>
+);
+const MiniArrow = () => (
+  <svg viewBox="0 0 24 16" className="w-6 h-4 opacity-40">
+    <path d="M2 14 L10 4 L16 9 L22 2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M18 2 L22 2 L22 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+const MiniWave = () => (
+  <svg viewBox="0 0 24 16" className="w-6 h-4 opacity-40">
+    <path d="M2 8 Q6 2, 8 8 T14 8 T20 8 T24 8" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.5" />
+    <circle cx="16" cy="6" r="1.5" fill="currentColor" opacity="0.5" />
+  </svg>
+);
+const MiniFlow = () => (
+  <svg viewBox="0 0 24 16" className="w-6 h-4 opacity-40">
+    <rect x="1" y="1" width="8" height="5" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <rect x="15" y="1" width="8" height="5" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <rect x="8" y="10" width="8" height="5" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M5 6 L5 10 L12 10" fill="none" stroke="currentColor" strokeWidth="1" />
+    <path d="M19 6 L19 10 L16 10" fill="none" stroke="currentColor" strokeWidth="1" />
+  </svg>
+);
+const MiniShield = () => (
+  <svg viewBox="0 0 24 20" className="w-6 h-5 opacity-40">
+    <path d="M12 2 L22 6 L22 12 Q22 18, 12 20 Q2 18, 2 12 L2 6 Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M9 10 L11 12 L15 8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const MiniPie = () => (
+  <svg viewBox="0 0 20 20" className="w-5 h-5 opacity-40">
+    <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
+    <path d="M10 2 A8 8 0 0 1 18 10 L10 10 Z" fill="currentColor" opacity="0.5" />
+  </svg>
+);
+const MiniRadar = () => (
+  <svg viewBox="0 0 24 24" className="w-6 h-6 opacity-40">
+    <polygon points="12,2 20,8 18,18 6,18 4,8" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <polygon points="12,6 16,10 14,15 10,15 8,10" fill="currentColor" opacity="0.2" />
+  </svg>
+);
+const MiniBubble = () => (
+  <svg viewBox="0 0 24 20" className="w-6 h-5 opacity-40">
+    <rect x="2" y="1" width="20" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M8 13 L6 18 L12 13" fill="currentColor" opacity="0.4" />
+    <circle cx="8" cy="7" r="1" fill="currentColor" />
+    <circle cx="12" cy="7" r="1" fill="currentColor" />
+    <circle cx="16" cy="7" r="1" fill="currentColor" />
+  </svg>
+);
+const MiniBell = () => (
+  <svg viewBox="0 0 24 24" className="w-6 h-6 opacity-40">
+    <path d="M12 3 Q8 3, 6 8 L6 14 L4 16 L20 16 L18 14 L18 8 Q16 3, 12 3 Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="12" cy="19" r="2" fill="currentColor" opacity="0.4" />
+  </svg>
+);
+
+const cardGraphics = [MiniBar, MiniArrow, MiniWave, MiniFlow, MiniShield, MiniPie, MiniRadar, MiniBubble, MiniBell];
+
 const cards = [
   { icon: Megaphone, title: "Campaign Management", desc: "Create, manage, and optimize campaigns across Amazon and Walmart. Unified interface for SP, SB, SD, and DSP with bulk operations and templates.", features: ["Multi-marketplace campaign creation", "Bulk operations and saved templates", "Budget pacing with real-time alerts", "Cross-platform performance comparison"] },
   { icon: TrendingUp, title: "Bid Intelligence & Automation", desc: "AI-powered bidder agents that adjust bids in real time based on inventory levels, product ranking, customer demand, and competitor activity.", features: ["Real-time bid adjustments by signal", "Portfolio-level budget allocation", "Day parting by hour and day of week", "Automated bidder agents with guardrails"] },
@@ -46,15 +112,12 @@ const CapabilityGrid = () => {
     let gridCol: string;
 
     if (i === activeCard) {
-      // Active card spans both rows in its column
       gridRow = "1 / 3";
       gridCol = `${col + 1} / ${col + 2}`;
     } else if (baseRows[activeCard] === 0 && col === baseCols[activeCard] && row === 1) {
-      // Card is in the same column as active (row 1 active), this is the displaced bottom card
       gridRow = "2 / 3";
       gridCol = "5 / 6";
     } else if (baseRows[activeCard] === 1 && col === baseCols[activeCard] && row === 0) {
-      // Card is in the same column as active (row 2 active), this is the displaced top card
       gridRow = "2 / 3";
       gridCol = "5 / 6";
     } else {
@@ -130,6 +193,7 @@ const CapabilityGrid = () => {
           {cards.map((card, i) => {
             const pos = getCardPosition(i);
             const isActive = i === activeCard;
+            const Graphic = cardGraphics[i];
 
             return (
               <motion.button
@@ -147,7 +211,7 @@ const CapabilityGrid = () => {
                 }}
                 initial={false}
                 animate={{ opacity: 1 }}
-                transition={{ layout: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } }}
+                transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
               >
                 <div className="p-4 sm:p-5">
                   <div className="flex items-start gap-3 mb-3">
@@ -156,23 +220,26 @@ const CapabilityGrid = () => {
                     }`}>
                       <card.icon className="w-4 h-4 text-primary" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className={`text-sm font-semibold transition-colors ${
                         isActive ? "text-foreground" : "text-foreground/80"
                       }`}>{card.title}</h3>
                     </div>
+                    <div className="text-primary">
+                      <Graphic />
+                    </div>
                   </div>
-                  <p className={`text-xs leading-relaxed transition-all duration-300 ${
+                  <p className={`text-xs leading-relaxed transition-all duration-500 ${
                     isActive ? "text-foreground/80" : "text-muted-foreground"
                   }`}>{card.desc}</p>
 
-                  <AnimatePresence>
+                  <AnimatePresence mode="wait">
                     {isActive && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                         className="overflow-hidden"
                       >
                         <ul className="mt-4 pt-4 border-t border-border/40 space-y-1.5">

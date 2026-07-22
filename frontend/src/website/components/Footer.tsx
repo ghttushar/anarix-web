@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-const footerLinks: Record<string, { label: string; href: string }[]> = {
+const footerLinks: Record<string, { label: string; href: string; external?: boolean }[]> = {
   Product: [
     { label: "Anarix Insight Engine", href: "/website/product" },
     { label: "Pricing", href: "/website/pricing" },
@@ -13,7 +13,7 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
   ],
   Account: [
     { label: "Sign In", href: "/login" },
-    { label: "Schedule Demo", href: "/website/demo" },
+    { label: "Schedule Demo", href: "https://calendly.com/sunil-anarix/30min", external: true },
   ],
 };
 
@@ -37,12 +37,23 @@ const Footer = () => {
               <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

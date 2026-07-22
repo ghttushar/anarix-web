@@ -59,15 +59,15 @@ const PainPointsSection = () => {
         </div>
 
         <motion.div
-          className="mt-12 p-6 rounded-2xl border border-border/40 bg-card/30 backdrop-blur-sm"
+          className="mt-12 p-8 sm:p-10 rounded-2xl border-l-4 border-primary bg-gradient-to-br from-primary/10 via-card/40 to-periwinkle/10 backdrop-blur-sm"
           initial={{ opacity: 0, y: 12, scale: 0.97 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="text-sm sm:text-base text-foreground leading-relaxed">
+          <p className="text-lg sm:text-xl text-foreground leading-relaxed">
             We built Anarix because brand owners kept telling us the same thing — not &ldquo;I need better software,&rdquo; but{" "}
-            <span className="text-primary font-semibold">&ldquo;I need someone to just handle this.&rdquo;</span>
+            <span className="text-primary font-bold">&ldquo;I need someone to just handle this.&rdquo;</span>
           </p>
         </motion.div>
       </div>

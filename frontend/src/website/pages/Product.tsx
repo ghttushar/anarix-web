@@ -223,11 +223,11 @@ const Product = () => {
           <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
             Get a personalized walkthrough of the Anarix Insight Engine with your marketplace data.
           </p>
-          <Link to="/website/demo">
+          <a href="https://calendly.com/sunil-anarix/30min" target="_blank" rel="noopener noreferrer">
             <Button size="lg" className="rounded-pill px-8 h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90 btn-shine">
               Schedule a Demo
             </Button>
-          </Link>
+          </a>
         </motion.div>
       </div>
     </PageLayout>
