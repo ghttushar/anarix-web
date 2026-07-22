@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -26,6 +26,8 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -40,11 +42,15 @@ const Navbar = () => {
 
   return (
     <motion.header
-      className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4"
+      className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center px-4 pt-4"
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent origin-left"
+        style={{ scaleX }}
+      />
       <nav
         className={`grid grid-cols-[auto_1fr_auto] items-center px-6 py-3 w-full max-w-6xl rounded-pill border backdrop-blur-xl transition-all duration-500 ${
           scrolled
