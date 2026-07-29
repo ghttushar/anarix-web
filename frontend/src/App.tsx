@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AccountProvider, useAccounts } from "@/contexts/AccountContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { IntegrationsProvider } from "@/contexts/IntegrationsContext";
 import { VisualEffectsProvider } from "@/contexts/VisualEffectsContext";
 import { FeatureToggleProvider } from "@/contexts/FeatureToggleContext";
@@ -289,6 +290,7 @@ const App = () => (
     <ThemeProvider>
       <ColorSchemeProvider>
         <CurrencyProvider>
+        <AuthProvider>
         <AccountProvider>
           <IntegrationsProvider>
           <MarketplaceProvider defaultMarketplace="walmart">
@@ -328,6 +330,7 @@ const App = () => (
           </MarketplaceProvider>
           </IntegrationsProvider>
         </AccountProvider>
+        </AuthProvider>
         </CurrencyProvider>
       </ColorSchemeProvider>
     </ThemeProvider>

@@ -4,8 +4,9 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAccounts } from "@/contexts/AccountContext";
-
+import { authService } from "@/services/auth.service";
 
 import { AnarixLogo } from "@/components/branding/AnarixLogo";
 import { useBranding } from "@/contexts/BrandingContext";
@@ -14,48 +15,76 @@ import newLogoFullDark from "@/assets/branding/anarix-full-dark.svg";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { clearAccounts } = useAccounts();
+  const { login: authLogin } = useAuth();
+  const { clearAccounts, addAccountGroup, addRegionToGroup, completeOnboarding } = useAccounts();
   const { newBranding } = useBranding();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Brand panel always uses the dark/white-on-color logo
   const brandPanelLogo = newBranding ? newLogoFullDark : legacyLogoWhite;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
 
-    // Clear any existing accounts for fresh demo experience
-    clearAccounts();
+    try {
+      await authLogin(email, password);
 
-    // Simulate login delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      const mapping = await authService.getUserAccountMapping();
+      const accounts = Array.isArray(mapping) ? mapping : mapping.accounts || mapping.data || [];
 
-    // Navigate to onboarding/connect accounts
-    navigate("/onboarding/connect");
-    setIsLoading(false);
+      if (accounts.length > 0) {
+        const first = accounts[0];
+        const accountId = first.accountId || first.id;
+
+        await authService.switchAccount(accountId);
+
+        const settings = await authService.getAccountSettings("all");
+
+        clearAccounts();
+
+        if (first.marketplace === "amazon" || first.type === "amazon") {
+          const group = addAccountGroup({
+            marketplace: "amazon",
+            name: first.accountName || first.name || "Account",
+            accountType: first.accountType || "seller",
+          });
+          addRegionToGroup({
+            groupId: group.id,
+            region: first.region || first.marketplace || "US",
+            merchantName: first.accountName || first.name || "Account",
+            merchantId: accountId,
+            status: "connected",
+          });
+        }
+      }
+
+      completeOnboarding();
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen">
-      {/* Left panel - Brand */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary/90 to-accent relative overflow-hidden">
-        {/* Decorative elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-white/20 blur-3xl" />
           <div className="absolute bottom-40 right-20 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
-          {/* White logo for brand panel */}
           <img
             src={brandPanelLogo}
             alt="Anarix"
             className="h-12 w-auto mb-12 object-contain" />
-          
 
           <h1 className="text-4xl font-heading font-bold mb-4 leading-tight">
             The intelligence layer
@@ -86,10 +115,8 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right panel - Login form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
-          {/* Mobile logo - theme-aware */}
           <div className="lg:hidden mb-8">
             <AnarixLogo variant="full" className="h-10 w-auto" />
           </div>
@@ -114,7 +141,6 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required />
-                
               </div>
             </div>
 
@@ -124,7 +150,6 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-sm text-primary hover:text-primary/80 transition-colors">
-                  
                   Forgot Password?
                 </button>
               </div>
@@ -138,16 +163,20 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required />
-                
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
+
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md px-4 py-3">
+                {error}
+              </div>
+            )}
 
             <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign In"}
@@ -178,5 +207,4 @@ export default function Login() {
         </div>
       </div>
     </div>);
-
 }
