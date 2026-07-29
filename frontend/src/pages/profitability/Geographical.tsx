@@ -13,14 +13,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
-const regionLookup: Record<string, typeof geographicalData[0]> = {
-  US: geographicalData[0],
-  CA: geographicalData[0].children?.[0] || geographicalData[0],
-  TX: geographicalData[0].children?.[1] || geographicalData[0],
-  NY: geographicalData[0].children?.[2] || geographicalData[0],
-  FL: geographicalData[0].children?.[3] || geographicalData[0],
-};
-
 const COLUMN_DEFS = [
   { id: "stocks", label: "Stocks", visible: true },
   { id: "orders", label: "Orders", visible: true },
