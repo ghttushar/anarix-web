@@ -22,6 +22,7 @@ import { AanPanelProvider } from "@/contexts/AanPanelContext";
 import { InsightsProvider } from "@/components/insights";
 import { CreativeFeatures } from "@/features/creative";
 import { toast } from "sonner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 import SignalsPage from "./pages/SignalsPage";
 
@@ -283,6 +284,7 @@ function AppRoutes() {
 }
 
 const App = () => (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <ColorSchemeProvider>
@@ -330,6 +332,7 @@ const App = () => (
       </ColorSchemeProvider>
     </ThemeProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
