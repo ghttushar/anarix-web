@@ -19,17 +19,17 @@ export interface DayPartingService {
 }
 
 const realService: DayPartingService = {
-  getHourlyData: () => api.get<HourlyDataPoint[]>("/day-parting/hourly"),
-  getHourlySummary: () => api.get<HourlyMetricsSummary>("/day-parting/summary"),
-  getCampaigns: () => api.get<DayPartingCampaign[]>("/day-parting/campaigns"),
-  getSchedules: () => api.get<DayPartingSchedule[]>("/day-parting/schedules"),
-  getExecutionHistory: () => api.get<ExecutionHistory[]>("/day-parting/history"),
+  getHourlyData: () => api.post<HourlyDataPoint[]>("/day-parting/jobs/metrics", {}),
+  getHourlySummary: () => api.post<HourlyMetricsSummary>("/day-parting/jobs/metrics", {}),
+  getCampaigns: () => api.post<DayPartingCampaign[]>("/day-parting/jobs/campaigns/part-of-dayparting", {}),
+  getSchedules: () => api.get<DayPartingSchedule[]>("/day-parting/jobs/jobs"),
+  getExecutionHistory: () => api.post<ExecutionHistory[]>("/day-parting/jobs/history", {}),
   createSchedule: (schedule) =>
-    api.post<DayPartingSchedule>("/day-parting/schedules", schedule),
+    api.post<DayPartingSchedule>("/day-parting/jobs/create", schedule),
   updateSchedule: (id, schedule) =>
-    api.put<void>(`/day-parting/schedules/${id}`, schedule),
+    api.post<void>(`/day-parting/jobs/update/${id}`, schedule),
   deleteSchedule: (id) =>
-    api.delete<void>(`/day-parting/schedules/${id}`),
+    api.post<void>(`/day-parting/jobs/archive/${id}`, {}),
 };
 
 let currentService: DayPartingService = realService;

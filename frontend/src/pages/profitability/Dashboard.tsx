@@ -78,18 +78,23 @@ export default function ProfitabilityDashboard() {
     let cancelled = false;
     setLoading(true);
     async function load() {
-      const [s, p, o, t] = await Promise.all([
-        getSummaries(),
-        getProducts(),
-        getOrders(),
-        getTrendDataByPeriod(),
-      ]);
-      if (cancelled) return;
-      setSummaries(s);
-      setProducts(p);
-      setOrders(o);
-      setTrendDataByPeriod_(t);
-      setLoading(false);
+      try {
+        const [s, p, o, t] = await Promise.all([
+          getSummaries().catch(() => [] as ProfitabilitySummary[]),
+          getProducts().catch(() => [] as ProfitabilityProduct[]),
+          getOrders().catch(() => [] as ProfitabilityOrder[]),
+          getTrendDataByPeriod().catch(() => ({}) as Record<string, TrendDataPoint[]>),
+        ]);
+        if (cancelled) return;
+        setSummaries(s);
+        setProducts(p);
+        setOrders(o);
+        setTrendDataByPeriod_(t);
+      } catch {
+        // all individual catches should handle this
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
     load();
     return () => { cancelled = true; };

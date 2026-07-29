@@ -15,7 +15,7 @@ export interface ClientReportsService {
 }
 
 const realService: ClientReportsService = {
-  getReports: () => api.get<ClientReport[]>("/client-reports"),
+  getReports: () => api.get<ClientReport[]>("/advertising/reports/embed/access-token"),
 };
 
 let currentService: ClientReportsService = realService;

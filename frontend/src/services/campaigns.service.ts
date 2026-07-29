@@ -12,12 +12,12 @@ export interface CampaignsService {
 }
 
 const realService: CampaignsService = {
-  getCampaigns: () => api.get<Campaign[]>("/campaigns"),
-  getChartData: () => api.get<ChartDataPoint[]>("/chart-data"),
-  getKPIData: () => api.get<KPIData[]>("/kpi-data"),
-  getCampaignById: (id) => api.get<Campaign | undefined>(`/campaigns/${id}`),
-  getAdGroups: (campaignId) => api.get<AdGroup[]>(`/ad-groups${campaignId ? `?campaignId=${campaignId}` : ""}`),
-  getProductAds: (adGroupId) => api.get<ProductAd[]>(`/product-ads${adGroupId ? `?adGroupId=${adGroupId}` : ""}`),
+  getCampaigns: () => api.get<Campaign[]>("/advertising/v2/amazon/sp/table"),
+  getChartData: () => api.get<ChartDataPoint[]>("/advertising/v2/amazon/sp/graph"),
+  getKPIData: () => api.get<KPIData[]>("/advertising/v2/amazon/sp/performance"),
+  getCampaignById: (id) => api.get<Campaign | undefined>(`/advertising/v2/amazon/sp/campaigns/${id}`),
+  getAdGroups: (campaignId) => api.get<AdGroup[]>(`/advertising/v2/amazon/sp/ad-groups${campaignId ? `/${campaignId}` : ""}`),
+  getProductAds: (adGroupId) => api.get<ProductAd[]>(`/advertising/v2/amazon/sp/table${adGroupId ? `?adGroupId=${adGroupId}` : ""}`),
 };
 
 let currentService: CampaignsService = realService;

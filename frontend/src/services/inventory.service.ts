@@ -25,7 +25,7 @@ export interface InventoryService {
 }
 
 const realService: InventoryService = {
-  getProducts: () => api.get<InventoryProduct[]>("/inventory/products"),
+  getProducts: () => api.post<InventoryProduct[]>("/amazon-ads/catalog", {}),
 };
 
 let currentService: InventoryService = realService;

@@ -13,7 +13,7 @@ export interface HealthService {
 }
 
 const realService: HealthService = {
-  getHealthScore: () => api.get<{ overall: number; dimensions: HealthDimension[] }>("/health/score"),
+  getHealthScore: () => api.get<{ overall: number; dimensions: HealthDimension[] }>("/monitoring/data"),
 };
 
 let currentService: HealthService = realService;

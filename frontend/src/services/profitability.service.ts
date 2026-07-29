@@ -32,10 +32,6 @@ function baseBody(range: string, overrides: Partial<ProfitabilityRequestBody> = 
     searchColumns: ["itemName", "asin", "sku"],
     range,
     sortCriteria: [],
-    isDownload: false,
-    downloadWithFilter: true,
-    executionMode: "PUBLISH",
-    version: "v2",
     ...overrides,
   };
 }
@@ -192,7 +188,7 @@ export async function getTrendDataByPeriod(): Promise<Record<string, TrendDataPo
         week: d.label || "",
         orders: d.totalOrders || 0,
         units: d.totalUnits || 0,
-      })))
+      }))).catch(() => [] as GraphDataPoint[])
     )
   );
 

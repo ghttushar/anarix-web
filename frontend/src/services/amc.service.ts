@@ -64,11 +64,11 @@ export interface AMCService {
 }
 
 const realService: AMCService = {
-  getQueries: () => api.get<AMCQuery[]>("/amc/queries"),
-  getExecutedQueries: () => api.get<AMCExecutedQuery[]>("/amc/executed"),
-  getSchedules: () => api.get<AMCSchedule[]>("/amc/schedules"),
-  getAudiences: () => api.get<AMCAudience[]>("/amc/audiences"),
-  getCreatedAudiences: () => api.get<AMCCreatedAudience[]>("/amc/created-audiences"),
+  getQueries: () => api.get<AMCQuery[]>("/amc/query"),
+  getExecutedQueries: () => api.get<AMCExecutedQuery[]>("/amc/workflow-execution/{instanceId}/workflows"),
+  getSchedules: () => api.get<AMCSchedule[]>("/amc/schedule/{instanceId}"),
+  getAudiences: () => api.get<AMCAudience[]>("/amc/audience/{instanceId}/default"),
+  getCreatedAudiences: () => api.get<AMCCreatedAudience[]>("/amc/audience/{instanceId}/custom"),
   getInstances: () => api.get<AMCInstance[]>("/amc/instances"),
 };
 

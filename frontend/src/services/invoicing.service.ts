@@ -6,7 +6,7 @@ export interface InvoicingService {
 }
 
 const realService: InvoicingService = {
-  getInvoices: () => api.get<Invoice[]>("/invoicing/invoices"),
+  getInvoices: () => api.get<Invoice[]>("/amazon-ads/catalog"),
 };
 
 let currentService: InvoicingService = realService;

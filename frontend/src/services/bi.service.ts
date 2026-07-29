@@ -18,12 +18,12 @@ export interface BIService {
 }
 
 const realService: BIService = {
-  getSOVMetrics: () => api.get<SOVMetrics>("/bi/sov-metrics"),
-  getBrands: () => api.get<Brand[]>("/bi/brands"),
-  getSOVTrendData: () => api.get<SOVDataPoint[]>("/bi/sov-trend"),
-  getTrackedKeywords: () => api.get<TrackedKeyword[]>("/bi/keywords"),
-  getKeywordSOVData: () => api.get<KeywordSOVData[]>("/bi/keyword-sov"),
-  getProductSOVData: () => api.get<ProductSOVData[]>("/bi/product-sov"),
+  getSOVMetrics: () => api.get<SOVMetrics>("/market-intelligence/serp/sov"),
+  getBrands: () => api.get<Brand[]>("/market-intelligence/serp/analytics/{brandName}"),
+  getSOVTrendData: () => api.get<SOVDataPoint[]>("/market-intelligence/serp/sov"),
+  getTrackedKeywords: () => api.get<TrackedKeyword[]>("/market-intelligence/serp/keywords"),
+  getKeywordSOVData: () => api.post<KeywordSOVData[]>("/market-intelligence/serp/keyword-sov", {}),
+  getProductSOVData: () => api.post<ProductSOVData[]>("/market-intelligence/serp/product-sov", {}),
 };
 
 let currentService: BIService = realService;

@@ -10,13 +10,13 @@ export interface TagsService {
 }
 
 const realService: TagsService = {
-  getAllTags: () => api.get<string[]>("/tags"),
-  createTag: (name) => api.post<string>("/tags", { name }),
-  renameTag: (oldName, newName) => api.put<void>("/tags", { oldName, newName }),
-  deleteTag: (name) => api.delete<void>(`/tags/${encodeURIComponent(name)}`),
-  getCampaignTags: (campaignId) => api.get<string[]>(`/campaigns/${campaignId}/tags`),
+  getAllTags: () => api.get<string[]>("/advertising/v2/tags"),
+  createTag: (name) => api.post<string>("/advertising/v2/tags", { name }),
+  renameTag: (oldName, newName) => api.put<void>("/advertising/v2/tags", { oldName, newName }),
+  deleteTag: (name) => api.delete<void>(`/advertising/v2/tags/${encodeURIComponent(name)}`),
+  getCampaignTags: (campaignId) => api.get<string[]>(`/advertising/v2/tags/campaign/${campaignId}`),
   setCampaignTags: (campaignId, tags) =>
-    api.put<void>(`/campaigns/${campaignId}/tags`, { tags }),
+    api.put<void>(`/advertising/v2/tags/campaign/${campaignId}`, { tags }),
 };
 
 let currentService: TagsService = realService;

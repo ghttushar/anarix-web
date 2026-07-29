@@ -17,18 +17,18 @@ export interface AdvertisingService {
 }
 
 const realService: AdvertisingService = {
-  getTargetingActions: () => api.get<TargetingAction[]>("/advertising/targeting-actions"),
-  getTargetingCampaigns: () => api.get<{ id: string; name: string }[]>("/advertising/targeting-campaigns"),
-  getTargetingAdGroups: () => api.get<{ id: string; name: string; campaignId: string }[]>("/advertising/targeting-ad-groups"),
-  getSearchHarvesting: () => api.get<HarvestCandidate[]>("/advertising/search-harvesting"),
-  getPacingCampaigns: () => api.get<PacingCampaign[]>("/advertising/pacing-campaigns"),
-  getPacingAlerts: () => api.get<{ id: string; campaignId: string; message: string; severity: string; timestamp: string }[]>("/advertising/pacing-alerts"),
-  getAnomalyAlerts: () => api.get<AnomalyAlert[]>("/advertising/anomaly-alerts"),
-  getImpactCampaigns: () => api.get<ImpactComparison[]>("/advertising/impact-campaigns"),
-  getImpactAdGroups: () => api.get<ImpactComparison[]>("/advertising/impact-ad-groups"),
-  getImpactProducts: () => api.get<ImpactComparison[]>("/advertising/impact-products"),
-  getCreativeAssets: () => api.get<{ id: string; name: string; type: string; thumbnail?: string }[]>("/advertising/creative-assets"),
-  getCreativeInsights: () => api.get<{ id: string; assetId: string; metric: string; value: number; benchmark: number }[]>("/advertising/creative-insights"),
+  getTargetingActions: () => api.get<TargetingAction[]>("/targeting-action/amazon/data"),
+  getTargetingCampaigns: () => api.get<{ id: string; name: string }[]>("/advertising/v2/amazon/sp/campaigns"),
+  getTargetingAdGroups: () => api.get<{ id: string; name: string; campaignId: string }[]>("/advertising/v2/amazon/sp/ad-groups"),
+  getSearchHarvesting: () => api.get<HarvestCandidate[]>("/targeting-action/amazon/search-term"),
+  getPacingCampaigns: () => api.get<PacingCampaign[]>("/bidder/amazon/job"),
+  getPacingAlerts: () => api.get<{ id: string; campaignId: string; message: string; severity: string; timestamp: string }[]>("/monitoring/data"),
+  getAnomalyAlerts: () => api.get<AnomalyAlert[]>("/monitoring/data"),
+  getImpactCampaigns: () => api.get<ImpactComparison[]>("/advertising/v2/impact-analysis/amazon/all/graph"),
+  getImpactAdGroups: () => api.get<ImpactComparison[]>("/advertising/v2/impact-analysis/amazon/all/graph"),
+  getImpactProducts: () => api.get<ImpactComparison[]>("/advertising/v2/impact-analysis/amazon/all/graph"),
+  getCreativeAssets: () => api.get<{ id: string; name: string; type: string; thumbnail?: string }[]>("/advertising/v2/amazon/sb/assets"),
+  getCreativeInsights: () => api.get<{ id: string; assetId: string; metric: string; value: number; benchmark: number }[]>("/advertising/v2/amazon/sb/performance"),
 };
 
 let currentService: AdvertisingService = realService;

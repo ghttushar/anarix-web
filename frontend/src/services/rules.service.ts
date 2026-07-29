@@ -34,9 +34,9 @@ export interface RulesService {
 }
 
 const realService: RulesService = {
-  getTemplates: () => api.get<RuleTemplate[]>("/rules/templates"),
-  getAppliedRules: () => api.get<AppliedRule[]>("/rules/applied"),
-  getMetricsMeta: () => api.get<MetricsMeta>("/rules/metrics-meta"),
+  getTemplates: () => api.get<RuleTemplate[]>("/rules/templates/{ruleType}"),
+  getAppliedRules: () => api.post<AppliedRule[]>("/rules/applied-rules", {}),
+  getMetricsMeta: () => api.get<MetricsMeta>("/rules/constraints/{ruleType}"),
 };
 
 let currentService: RulesService = realService;

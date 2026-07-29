@@ -7,8 +7,8 @@ export interface CatalogService {
 }
 
 const realService: CatalogService = {
-  getProducts: () => api.get<CatalogProduct[]>("/catalog/products"),
-  getProductById: (id) => api.get<CatalogProduct | undefined>(`/catalog/products/${id}`),
+  getProducts: () => api.post<CatalogProduct[]>("/amazon-ads/catalog", {}),
+  getProductById: (id) => api.post<CatalogProduct | undefined>("/amazon-ads/catalog", { searchText: id }),
 };
 
 let currentService: CatalogService = realService;
