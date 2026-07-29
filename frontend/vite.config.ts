@@ -21,7 +21,6 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/")) return "vendor-react";
           if (id.includes("node_modules/react-router")) return "vendor-router";
           if (id.includes("node_modules/@tanstack")) return "vendor-query";
-          if (id.includes("node_modules")) return "vendor";
         },
       },
     },
