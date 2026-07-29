@@ -8,6 +8,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import type { ScenarioTemplate } from "@/types/aan";
 import type { MeetingTaskBundle, MeetingItemStatus } from "@/types/meetings";
+import { getScenario, SCENARIOS } from "@/lib/scenarios";
 import { toast } from "sonner";
 
 export type Lifecycle =
