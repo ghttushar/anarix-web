@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAccounts } from "@/contexts/AccountContext";
-import { authService } from "@/services/auth.service";
 
 import { AnarixLogo } from "@/components/branding/AnarixLogo";
 import { useBranding } from "@/contexts/BrandingContext";
@@ -16,7 +14,6 @@ import newLogoFullDark from "@/assets/branding/anarix-full-dark.svg";
 export default function Login() {
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
-  const { clearAccounts, addAccountGroup, addRegionToGroup, completeOnboarding } = useAccounts();
   const { newBranding } = useBranding();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -33,38 +30,7 @@ export default function Login() {
 
     try {
       await authLogin(email, password);
-
-      const mapping = await authService.getUserAccountMapping();
-      const accounts = Array.isArray(mapping) ? mapping : mapping.accounts || mapping.data || [];
-
-      if (accounts.length > 0) {
-        const first = accounts[0];
-        const accountId = first.accountId || first.id;
-
-        await authService.switchAccount(accountId);
-
-        const settings = await authService.getAccountSettings("all");
-
-        clearAccounts();
-
-        if (first.marketplace === "amazon" || first.type === "amazon") {
-          const group = addAccountGroup({
-            marketplace: "amazon",
-            name: first.accountName || first.name || "Account",
-            accountType: first.accountType || "seller",
-          });
-          addRegionToGroup({
-            groupId: group.id,
-            region: first.region || first.marketplace || "US",
-            merchantName: first.accountName || first.name || "Account",
-            merchantId: accountId,
-            status: "connected",
-          });
-        }
-      }
-
-      completeOnboarding();
-      navigate("/", { replace: true });
+      navigate("/onboarding/connect", { replace: true });
     } catch (err: any) {
       setError(err.message || "Login failed. Please check your credentials.");
     } finally {

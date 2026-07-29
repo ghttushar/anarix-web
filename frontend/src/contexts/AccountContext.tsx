@@ -17,6 +17,7 @@ export interface AccountGroup {
   marketplace: "amazon";
   name: string;
   accountType: "seller" | "vendor" | "ads";
+  accountId?: string;
 }
 
 export interface AccountRegion {
@@ -28,6 +29,8 @@ export interface AccountRegion {
   status: "connected" | "syncing" | "error";
   lastSync?: string;
   bidAutomation?: "ai" | "rule" | "off";
+  amazonProfileId?: string;
+  sellingPartnerId?: string;
 }
 
 export const AMAZON_REGIONS = [
@@ -51,6 +54,14 @@ export const AMAZON_REGIONS = [
   { value: "PL", label: "Poland" },
 ];
 
+export interface SettingsEntry {
+  marketplace: string;
+  accountType: string;
+  amazonProfileId: string;
+  sellingPartnerId: string;
+  countryCode: string;
+}
+
 interface AccountContextType {
   accounts: ConnectedAccount[];
   addAccount: (account: Omit<ConnectedAccount, "id">) => void;
@@ -71,6 +82,7 @@ interface AccountContextType {
   currentRegion: AccountRegion | null;
   currentAccountGroup: AccountGroup | null;
   setCurrentRegion: (regionId: string) => void;
+  populateFromSettings: (entries: SettingsEntry[], brandName: string, accountId?: string) => AccountRegion | null;
 }
 
 const AccountContext = createContext<AccountContextType | null>(null);
@@ -196,6 +208,19 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     }
   }, [currentRegionId]);
 
+  useEffect(() => {
+    if (currentRegion?.amazonProfileId) {
+      localStorage.setItem("anarix_amazon_profile_id", currentRegion.amazonProfileId);
+    } else {
+      localStorage.removeItem("anarix_amazon_profile_id");
+    }
+    if (currentRegion?.sellingPartnerId) {
+      localStorage.setItem("anarix_selling_partner_id", currentRegion.sellingPartnerId);
+    } else {
+      localStorage.removeItem("anarix_selling_partner_id");
+    }
+  }, [currentRegion]);
+
   const addAccount = (account: Omit<ConnectedAccount, "id">) => {
     const newAccount: ConnectedAccount = {
       ...account,
@@ -286,6 +311,49 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     setCurrentRegionId(regionId);
   };
 
+  const populateFromSettings = (entries: SettingsEntry[], brandName: string, accountId?: string): AccountRegion | null => {
+    const groups: AccountGroup[] = [];
+    const regions: AccountRegion[] = [];
+
+    for (const entry of entries) {
+      let group = groups.find(
+        (g) => g.accountType === entry.accountType && g.marketplace === (entry.marketplace as "amazon")
+      );
+      if (!group) {
+        group = {
+          id: `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          marketplace: entry.marketplace as "amazon",
+          name: `${brandName} - ${entry.accountType.charAt(0).toUpperCase() + entry.accountType.slice(1)}`,
+          accountType: entry.accountType as "seller" | "vendor" | "ads",
+          accountId,
+        };
+        groups.push(group);
+      }
+
+      regions.push({
+        id: `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        groupId: group.id,
+        region: entry.countryCode,
+        merchantName: brandName,
+        merchantId: accountId || "",
+        status: "connected",
+        lastSync: new Date().toISOString(),
+        amazonProfileId: entry.amazonProfileId,
+        sellingPartnerId: entry.sellingPartnerId,
+      });
+    }
+
+    setAccountGroups(groups);
+    setAccountRegions(regions);
+
+    const firstRegion = regions.length > 0 ? regions[0] : null;
+    if (firstRegion) {
+      setCurrentRegionId(firstRegion.id);
+    }
+
+    return firstRegion;
+  };
+
   const currentAccount = accounts.find((a) => a.id === currentAccountId) || accounts[0] || null;
   const currentRegion = accountRegions.find((r) => r.id === currentRegionId) || accountRegions[0] || null;
   const currentAccountGroup = currentRegion
@@ -315,6 +383,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         currentRegion,
         currentAccountGroup,
         setCurrentRegion,
+        populateFromSettings,
       }}
     >
       {children}

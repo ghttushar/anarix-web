@@ -34,19 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const loginRes = await authService.login(email, password);
-      const jwt = loginRes.token || loginRes.accessToken || loginRes.access_token;
+      const jwt = loginRes.data?.authToken;
 
       if (!jwt) {
         throw new Error("No token in login response");
       }
 
       localStorage.setItem("anarix_auth_token", jwt);
-      if (loginRes.user) {
-        localStorage.setItem("anarix_auth_user", JSON.stringify(loginRes.user));
+      if (loginRes.data?.user) {
+        localStorage.setItem("anarix_auth_user", JSON.stringify(loginRes.data.user));
       }
 
       setToken(jwt);
-      setUser(loginRes.user || null);
+      setUser(loginRes.data?.user || null);
     } finally {
       setIsLoading(false);
     }

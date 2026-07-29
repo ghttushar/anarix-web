@@ -14,6 +14,7 @@ import { PeriodBreakdownPanel } from "@/components/profitability/PeriodBreakdown
 import { DataTableToolbar } from "@/components/advertising/DataTableToolbar";
 import { getSummaries, getProducts, getOrders, getTrendDataByPeriod, updateCogs as updateCogsService } from "@/services/profitability.service";
 import { ProfitabilityProduct, ProfitabilityOrder, ProfitabilitySummary, TrendDataPoint } from "@/types/profitability";
+import { useAccounts } from "@/contexts/AccountContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -72,6 +73,7 @@ export default function ProfitabilityDashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     async function load() {
       const [s, p, o, t] = await Promise.all([
         getSummaries(),
@@ -88,7 +90,7 @@ export default function ProfitabilityDashboard() {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [regionKey]);
 
   useEffect(() => {
     if (routeTab && validTabs.includes(routeTab as any)) {
@@ -106,6 +108,10 @@ export default function ProfitabilityDashboard() {
   const [showDeltas, setShowDeltas] = useState(false);
   const [catalogue, setCatalogue] = useState("all");
   
+  const { currentRegion } = useAccounts();
+
+  const regionKey = currentRegion?.id || "default";
+
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 

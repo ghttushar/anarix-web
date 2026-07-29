@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useMarketplace, Marketplace } from "@/contexts/MarketplaceContext";
-import { useAccounts } from "@/contexts/AccountContext";
+import { useAccounts, type SettingsEntry } from "@/contexts/AccountContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MarketplaceHoverPopup } from "./MarketplaceHoverPopup";
+import { authService } from "@/services/auth.service";
+import type { AccountSettingsEntry } from "@/types/profitability";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 
@@ -24,7 +26,7 @@ const marketplaceOptions: MarketplaceOption[] = [
 
 export function MarketplaceSelector() {
   const { marketplace, setMarketplace } = useMarketplace();
-  const { currentAccount, setCurrentAccount, currentRegion, setCurrentRegion } = useAccounts();
+  const { currentAccount, setCurrentAccount, currentRegion, setCurrentRegion, accountRegions, accountGroups, currentAccountGroup, populateFromSettings } = useAccounts();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
@@ -107,7 +109,38 @@ export function MarketplaceSelector() {
             setPinnedMp(null);
           };
 
-          const handleRegionPick = (regionId: string) => {
+          const handleRegionPick = async (regionId: string) => {
+            const targetRegion = accountRegions.find((r) => r.id === regionId);
+            const targetGroup = targetRegion
+              ? accountGroups.find((g) => g.id === targetRegion.groupId)
+              : null;
+
+            if (targetGroup && currentAccountGroup && targetGroup.id !== currentAccountGroup.id) {
+              if (targetGroup.accountId) {
+                try {
+                  await authService.switchAccount(targetGroup.accountId);
+                  const settingsRes = await authService.getAccountSettings("all");
+                  const rawEntries = settingsRes.data || [];
+                  const entries: SettingsEntry[] = rawEntries
+                    .filter((e: AccountSettingsEntry) => e.marketplace === "amazon")
+                    .map((e: AccountSettingsEntry) => ({
+                      marketplace: e.marketplace,
+                      accountType: e.accountType,
+                      amazonProfileId: e.advertising.amazonProfileId,
+                      sellingPartnerId: e.catalog.partnerDisplayName,
+                      countryCode: e.advertising.countryCode,
+                    }));
+                  const newRegion = populateFromSettings(entries, targetGroup.name, targetGroup.accountId);
+                  if (newRegion) {
+                    setCurrentRegion(newRegion.id);
+                  }
+                  setPinnedMp(null);
+                  return;
+                } catch {
+                  // fall through
+                }
+              }
+            }
             setCurrentRegion(regionId);
             setPinnedMp(null);
           };

@@ -1,8 +1,14 @@
 import { api } from "@/lib/api-client";
+import type {
+  ApiResponse,
+  LoginResponseData,
+  AccountMappingItem,
+  AccountSettingsEntry,
+} from "@/types/profitability";
 
 export const authService = {
   login: (email: string, password: string) =>
-    api.post<any>("/auth/user/login", {
+    api.post<ApiResponse<LoginResponseData>>("/auth/user/login", {
       email,
       password,
       userAgent: navigator.userAgent,
@@ -13,14 +19,14 @@ export const authService = {
     }),
 
   getUserAccountMapping: () =>
-    api.get<any>("/auth/user-account-mapping/"),
+    api.get<ApiResponse<AccountMappingItem[]>>("/auth/user-account-mapping/"),
 
   switchAccount: (accountId: string) =>
-    api.post<any>("/auth/sessions/switch-account", {
+    api.post<ApiResponse<{ currentAccountId: string }>>("/auth/sessions/switch-account", {
       accountId,
       executionMode: "PUBLISH",
     }),
 
   getAccountSettings: (marketplace = "all") =>
-    api.get<any>(`/auth/settings/account?marketplace=${marketplace}`),
+    api.get<ApiResponse<AccountSettingsEntry[]>>(`/auth/settings/account?marketplace=${marketplace}`),
 };

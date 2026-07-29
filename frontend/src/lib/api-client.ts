@@ -7,11 +7,12 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function request<T>(path: string, options?: RequestInit & { extraHeaders?: Record<string, string> }): Promise<T> {
   const token = localStorage.getItem("anarix_auth_token");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options?.extraHeaders || {}),
   };
 
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -29,10 +30,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
-  put: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
-  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  get: <T>(path: string, extraHeaders?: Record<string, string>) =>
+    request<T>(path, { method: "GET", extraHeaders }),
+  post: <T>(path: string, body?: unknown, extraHeaders?: Record<string, string>) =>
+    request<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined, extraHeaders }),
+  put: <T>(path: string, body?: unknown, extraHeaders?: Record<string, string>) =>
+    request<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined, extraHeaders }),
+  delete: <T>(path: string, extraHeaders?: Record<string, string>) =>
+    request<T>(path, { method: "DELETE", extraHeaders }),
 };

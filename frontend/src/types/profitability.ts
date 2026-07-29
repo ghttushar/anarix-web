@@ -127,3 +127,139 @@ export interface PnLLineItem {
   isTotal?: boolean;
   indent?: number;
 }
+
+/* ── Raw API response types ── */
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  description?: string;
+}
+
+export interface ApiPaginatedData<T> {
+  pagination: { page: number; pageSize: number; totalItems: number };
+  data: T[];
+}
+
+export interface ProfitabilityRequestBody {
+  frequency?: string;
+  filters: any[];
+  page: number;
+  pageSize: number;
+  searchText: string;
+  searchColumns: string[];
+  range: string;
+  sortCriteria: any[];
+  isDownload?: boolean;
+  downloadWithFilter?: boolean;
+  executionMode: string;
+  version: string;
+}
+
+export interface LoginResponseData {
+  authToken: string;
+  user: any;
+  requiresAccountSelection: boolean;
+}
+
+export interface AccountMappingItem {
+  _id: string;
+  userId: string;
+  accountId: {
+    _id: string;
+    brandName: string;
+    marketplace: string;
+    accountType: string;
+    countryCode: string;
+    email?: string;
+  };
+  roles: string[];
+  permissions: string[];
+}
+
+export interface AccountSettingsEntry {
+  marketplace: string;
+  accountType: string;
+  advertising: {
+    amazonProfileId: string;
+    countryCode: string;
+  };
+  catalog: {
+    partnerDisplayName: string;
+  };
+}
+
+export interface PerformanceDataItem {
+  totalSales: number;
+  totalOrders: number;
+  totalUnits: number;
+  totalReturns: number;
+  cancelledOrdersCount: number;
+  totalAdSpend: number;
+  tacos: number;
+  roas: number;
+  netProfit: number;
+  estimatedPayout: number;
+  cogs: number;
+  organicSales: number;
+  spAdSales: number;
+  sbAdSales: number;
+  sdAdSales: number;
+  otherSales: number;
+  [key: string]: any;
+}
+
+export interface GraphDataPoint {
+  label: string;
+  totalSales: number;
+  totalUnits: number;
+  totalOrders: number;
+  totalAdSpend: number;
+  netProfit: number;
+  [key: string]: any;
+}
+
+export interface ProductDataItem {
+  asin: string;
+  itemName: string;
+  imageUrl: string;
+  totalOrders: number;
+  totalSales: number;
+  totalUnitsSold: number;
+  overallAdSpend: number;
+  netProfit: number;
+  cogs: number;
+  childItems: any[];
+  [key: string]: any;
+}
+
+export interface AggregatedProductData {
+  totalSales: number;
+  totalUnitsSold: number;
+  totalOrders: number;
+  totalReturns: number;
+  totalNetProfit: number;
+  totalCogs: number;
+  [key: string]: any;
+}
+
+export interface OrderDataItem {
+  orderId: string;
+  orderStatus: string;
+  countryCode: string;
+  orderDate: string;
+  sellingPartnerId: string;
+  totalOrderUnits: number;
+  totalPrincipalAmount: number;
+  netProfit: number;
+  items: any[];
+  [key: string]: any;
+}
+
+export interface AggregatedOrderData {
+  totalOrderUnits: number;
+  totalPrincipalAmount: number;
+  totalNetProfit: number;
+  [key: string]: any;
+}
