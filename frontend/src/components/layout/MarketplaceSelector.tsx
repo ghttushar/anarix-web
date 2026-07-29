@@ -1,12 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useMarketplace, Marketplace } from "@/contexts/MarketplaceContext";
-import { useAccounts, type SettingsEntry } from "@/contexts/AccountContext";
+import { useAccounts } from "@/contexts/AccountContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MarketplaceHoverPopup } from "./MarketplaceHoverPopup";
-import { authService } from "@/services/auth.service";
-import type { AccountSettingsEntry } from "@/types/profitability";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 
@@ -118,12 +116,13 @@ export function MarketplaceSelector() {
             if (targetGroup && currentAccountGroup && targetGroup.id !== currentAccountGroup.id) {
               if (targetGroup.accountId) {
                 try {
+                  const { authService } = await import("@/services/auth.service");
                   await authService.switchAccount(targetGroup.accountId);
                   const settingsRes = await authService.getAccountSettings("all");
                   const rawEntries = settingsRes.data || [];
-                  const entries: SettingsEntry[] = rawEntries
-                    .filter((e: AccountSettingsEntry) => e.marketplace === "amazon")
-                    .map((e: AccountSettingsEntry) => ({
+                  const entries = rawEntries
+                    .filter((e: any) => e.marketplace === "amazon")
+                    .map((e: any) => ({
                       marketplace: e.marketplace,
                       accountType: e.accountType,
                       amazonProfileId: e.advertising.amazonProfileId,

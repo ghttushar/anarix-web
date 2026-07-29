@@ -4,9 +4,7 @@ import { Store, Globe, ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FullPageLoader } from "@/components/ui/loader";
-import { useAccounts, type SettingsEntry } from "@/contexts/AccountContext";
-import { authService } from "@/services/auth.service";
-import type { AccountMappingItem, AccountSettingsEntry } from "@/types/profitability";
+import { useAccounts } from "@/contexts/AccountContext";
 
 const WalmartLogo = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -18,16 +16,17 @@ export default function ConnectAccounts() {
   const navigate = useNavigate();
   const { clearAccounts, populateFromSettings, completeOnboarding } = useAccounts();
   const [step, setStep] = useState<"loading" | "accounts" | "marketplace" | "syncing">("loading");
-  const [mappings, setMappings] = useState<AccountMappingItem[]>([]);
-  const [selectedMapping, setSelectedMapping] = useState<AccountMappingItem | null>(null);
-  const [settingsEntries, setSettingsEntries] = useState<SettingsEntry[]>([]);
-  const [selectedEntry, setSelectedEntry] = useState<SettingsEntry | null>(null);
+  const [mappings, setMappings] = useState<any[]>([]);
+  const [selectedMapping, setSelectedMapping] = useState<any | null>(null);
+  const [settingsEntries, setSettingsEntries] = useState<any[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
+        const { authService } = await import("@/services/auth.service");
         const mapRes = await authService.getUserAccountMapping();
         const list = mapRes.data || [];
         if (cancelled) return;
@@ -41,19 +40,20 @@ export default function ConnectAccounts() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleSelectAccount = async (mapping: AccountMappingItem) => {
+  const handleSelectAccount = async (mapping: any) => {
     setSelectedMapping(mapping);
     setStep("syncing");
     try {
+      const { authService } = await import("@/services/auth.service");
       const accountId = mapping.accountId._id;
       await authService.switchAccount(accountId);
 
       const settingsRes = await authService.getAccountSettings("all");
       const rawEntries = settingsRes.data || [];
 
-      const entries: SettingsEntry[] = rawEntries
-        .filter((e: AccountSettingsEntry) => e.marketplace === "amazon")
-        .map((e: AccountSettingsEntry) => ({
+      const entries: any[] = rawEntries
+        .filter((e: any) => e.marketplace === "amazon")
+        .map((e: any) => ({
           marketplace: e.marketplace,
           accountType: e.accountType,
           amazonProfileId: e.advertising.amazonProfileId,
@@ -69,14 +69,14 @@ export default function ConnectAccounts() {
     }
   };
 
-  const handleSelectMarketplace = (entry: SettingsEntry) => {
+  const handleSelectMarketplace = (entry: any) => {
     setSelectedEntry(entry);
     setStep("syncing");
 
     clearAccounts();
     const brandName = selectedMapping?.accountId.brandName || "Account";
     const accountId = selectedMapping?.accountId._id;
-    const region = populateFromSettings(
+    populateFromSettings(
       entry ? [entry] : settingsEntries,
       brandName,
       accountId
