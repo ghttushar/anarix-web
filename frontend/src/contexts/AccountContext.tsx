@@ -208,6 +208,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     }
   }, [currentRegionId]);
 
+  const currentAccount = accounts.find((a) => a.id === currentAccountId) || accounts[0] || null;
+  const currentRegion = accountRegions.find((r) => r.id === currentRegionId) || accountRegions[0] || null;
+  const currentAccountGroup = currentRegion
+    ? accountGroups.find((g) => g.id === currentRegion.groupId) || null
+    : null;
+  const hasAccounts = accounts.length > 0 || accountGroups.length > 0;
+
   useEffect(() => {
     if (currentRegion?.amazonProfileId) {
       localStorage.setItem("anarix_amazon_profile_id", currentRegion.amazonProfileId);
@@ -353,13 +360,6 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
     return firstRegion;
   };
-
-  const currentAccount = accounts.find((a) => a.id === currentAccountId) || accounts[0] || null;
-  const currentRegion = accountRegions.find((r) => r.id === currentRegionId) || accountRegions[0] || null;
-  const currentAccountGroup = currentRegion
-    ? accountGroups.find((g) => g.id === currentRegion.groupId) || null
-    : null;
-  const hasAccounts = accounts.length > 0 || accountGroups.length > 0;
 
   return (
     <AccountContext.Provider

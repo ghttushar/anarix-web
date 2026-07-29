@@ -1,6 +1,6 @@
 import { useState, ReactNode } from "react";
 import { X, Pencil, GripVertical } from "lucide-react";
-import type { WidgetType } from "@/pages/workspace/Dashboard";
+import type { WidgetType } from "@/types/workspace";
 
 const typeLabels: Record<WidgetType, string> = {
   metric: "KPI",

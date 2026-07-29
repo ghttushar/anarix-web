@@ -71,6 +71,9 @@ export default function ProfitabilityDashboard() {
   const [trendDataByPeriod, setTrendDataByPeriod_] = useState<Record<string, TrendDataPoint[]>>({});
   const [loading, setLoading] = useState(true);
 
+  const { currentRegion } = useAccounts();
+  const regionKey = currentRegion?.id || "default";
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -107,10 +110,6 @@ export default function ProfitabilityDashboard() {
   const [activeFilters, setActiveFilters] = useState<any[]>([]);
   const [showDeltas, setShowDeltas] = useState(false);
   const [catalogue, setCatalogue] = useState("all");
-  
-  const { currentRegion } = useAccounts();
-
-  const regionKey = currentRegion?.id || "default";
 
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");

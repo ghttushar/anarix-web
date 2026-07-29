@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import type { Widget } from "@/pages/workspace/Dashboard";
+import type { Widget } from "@/types/workspace";
 import { MetricWidget } from "./MetricWidget";
 import { ChartWidget } from "./ChartWidget";
 import { TableWidget } from "./TableWidget";

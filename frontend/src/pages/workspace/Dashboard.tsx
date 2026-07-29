@@ -6,16 +6,7 @@ import { AddWidgetModal } from "@/components/workspace/AddWidgetModal";
 import { Button } from "@/components/ui/button";
 import { Plus, RotateCcw, Pencil, FilePlus } from "lucide-react";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
-export type WidgetType = "metric" | "chart" | "table" | "annotation" | "task";
-
-export interface Widget {
-  id: string;
-  type: WidgetType;
-  title: string;
-  config: Record<string, unknown>;
-  colSpan: number;
-  rowSpan: number;
-}
+import type { WidgetType, Widget } from "@/types/workspace";
 
 interface SandboxDashboard {
   id: string;

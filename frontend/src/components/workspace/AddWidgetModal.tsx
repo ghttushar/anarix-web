@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BarChart3, Hash, Table2, StickyNote, ListTodo } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { WidgetType } from "@/pages/workspace/Dashboard";
+import type { WidgetType } from "@/types/workspace";
 
 const widgetTypes: { type: WidgetType; label: string; description: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { type: "metric", label: "Metric (KPI)", description: "Single number with delta", icon: Hash },
