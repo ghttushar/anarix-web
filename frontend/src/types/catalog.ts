@@ -1,30 +1,61 @@
 export interface CatalogProduct {
-  id: string;
-  name: string;
-  image: string;
-  itemId: string;
-  sku: string;
-  tags: string[];
-  status: "published" | "unpublished" | "draft";
-  reviewCount: number;
-  rating: number;
-  inventoryCount: number;
-  inventoryValueCogs: number;
-  inventoryValueRetail: number;
-  price: number;
-  cogs: number;
-  totalSales: number;
-  gmv: number;
-  totalUnits: number;
-  refundSales: number;
-  cancelledSales: number;
+  asin: string;
+  itemName: string;
+  sellerSku: string;
+  upcCode: string;
+  imageUrl: string;
+  listPrice: number;
   advertised: boolean;
   adSpend: number;
+  adSales: number;
+  roas: number;
+  acos: number;
+  tacos: number | null;
+  totalSales: number;
+  totalUnits: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  totalOnHandQuantity: number;
+  totalInBoundQuantity: number;
+  totalReservedQuantity: number;
+  fulfilledBy: string;
 }
 
-export interface ColumnGroup {
-  id: string;
-  label: string;
-  columns: string[];
-  isExpanded: boolean;
+export interface AggregatedCatalogData {
+  totalProducts: number;
+  impressions: number;
+  clicks: number;
+  adSpend: number;
+  adSales: number;
+  adUnits: number;
+  adOrders: number;
+  campaigns: number;
+  listPrice: number;
+  totalSales: number;
+  totalUnits: number;
+  ctr: number;
+  cpc: number;
+  cvr: number;
+  roas: number;
+  acos: number;
+  tacos: number | null;
+  totalOnHandQuantity: number;
+  totalInBoundQuantity: number;
+  totalReservedQuantity: number;
+  totalResearchingQuantity: number;
+  totalUnfulfillableQuantity: number;
+  totalFutureSupplyBuyableQuantity: number;
+  totalQuantity: number;
+}
+
+export interface CatalogApiResponse<T> {
+  success: boolean;
+  error: boolean;
+  message: string;
+  data: T;
+  description?: string;
+  total?: number;
+  page?: number;
+  pageSize?: number;
 }

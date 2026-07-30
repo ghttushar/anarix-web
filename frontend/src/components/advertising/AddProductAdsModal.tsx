@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, X } from "lucide-react";
 import { StatusBadge } from "@/components/status/StatusBadge";
-import { getProducts } from "@/services/catalog.service";
+import { getCatalogProducts } from "@/services/catalog.service";
 
 interface AddProductAdsModalProps {
   open: boolean;
@@ -26,28 +26,28 @@ export function AddProductAdsModal({ open, onOpenChange }: AddProductAdsModalPro
   const [stagedProducts, setStagedProducts] = useState<StagedProduct[]>([]);
 
   useEffect(() => {
-    getProducts().then(setCatalogProducts).catch(() => setCatalogProducts([]));
+    getCatalogProducts(1, 200).then((res) => setCatalogProducts(res.data)).catch(() => setCatalogProducts([]));
   }, []);
 
   const filteredProducts = catalogProducts.filter((p: any) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.itemId.toLowerCase().includes(search.toLowerCase())
+    (p.itemName || "").toLowerCase().includes(search.toLowerCase()) ||
+    (p.asin || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const toggleProduct = (product: (typeof catalogProducts)[0]) => {
     const newSelected = new Set(selectedIds);
-    if (newSelected.has(product.id)) {
-      newSelected.delete(product.id);
-      setStagedProducts((prev) => prev.filter((p) => p.id !== product.id));
+    if (newSelected.has(product.asin)) {
+      newSelected.delete(product.asin);
+      setStagedProducts((prev) => prev.filter((p) => p.id !== product.asin));
     } else {
-      newSelected.add(product.id);
+      newSelected.add(product.asin);
       setStagedProducts((prev) => [
         ...prev,
         {
-          id: product.id,
-          name: product.name,
-          image: product.image,
-          itemId: product.itemId,
+          id: product.asin,
+          name: product.itemName,
+          image: product.imageUrl,
+          itemId: product.asin,
         },
       ]);
     }
@@ -100,21 +100,21 @@ export function AddProductAdsModal({ open, onOpenChange }: AddProductAdsModalPro
             <div className="flex-1 overflow-auto p-2 space-y-1">
               {filteredProducts.map((product) => (
                 <label
-                  key={product.id}
+                  key={product.asin}
                   className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
                 >
                   <Checkbox
-                    checked={selectedIds.has(product.id)}
+                    checked={selectedIds.has(product.asin)}
                     onCheckedChange={() => toggleProduct(product)}
                   />
                   <img
-                    src={product.image}
-                    alt={product.name}
+                    src={product.imageUrl}
+                    alt={product.itemName}
                     className="h-8 w-8 rounded object-cover bg-muted"
                   />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm text-foreground truncate">{product.name}</span>
-                    <span className="text-xs text-muted-foreground">{product.itemId}</span>
+                    <span className="text-sm text-foreground truncate">{product.itemName}</span>
+                    <span className="text-xs text-muted-foreground">{product.asin}</span>
                   </div>
                 </label>
               ))}
