@@ -7,7 +7,7 @@ import { ProductTrendsModal } from "@/components/profitability/ProductTrendsModa
 import { ProductDetailPanel } from "@/components/profitability/ProductDetailPanel";
 import { DataTableToolbar } from "@/components/advertising/DataTableToolbar";
 import { TablePagination } from "@/components/tables/TablePagination";
-import { getScatterData, getProducts } from "@/services/profitability.service";
+import { getScatterData, getPnLProducts } from "@/services/profitability.service";
 import { ProfitabilityProduct, ScatterDataPoint } from "@/types/profitability";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,6 +19,7 @@ import { SortableTableHead, usePinning, sortData, getSortHandler } from "@/compo
 import { Info, TrendingUp, ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { cn } from "@/lib/utils";
 
 
 
@@ -59,7 +60,7 @@ export default function ProfitabilityTrends() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [p, s] = await Promise.all([getProducts(), getScatterData()]);
+      const [p, s] = await Promise.all([getPnLProducts(), getScatterData()]);
       if (cancelled) return;
       setProducts(p);
       setScatterData(s);

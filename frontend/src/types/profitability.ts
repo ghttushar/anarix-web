@@ -107,8 +107,39 @@ export interface TrendDataPoint {
   week: string;
   orders: number;
   units: number;
-  totalSales?: number;
-  netProfit?: number;
+  totalSales: number;
+  totalReturnAmount: number;
+  totalReturnedUnits: number;
+  cancelledOrdersCount: number;
+  totalReturns: number;
+  totalReturnCommissionAmount: number;
+  totalReturnReferralAmount: number;
+  totalCogs: number;
+  totalAdSpend: number;
+  spAdSpend: number;
+  sbAdSpend: number;
+  sdAdSpend: number;
+  totalAdSales: number;
+  organicAdSales: number;
+  spAdSales: number;
+  sbAdSales: number;
+  sdAdSales: number;
+  totalAdUnits: number;
+  organicAdUnits: number;
+  spAdUnits: number;
+  sbAdUnits: number;
+  sdAdUnits: number;
+  tacos: number;
+  roas: number;
+  acos: number;
+  fbaFulfillmentFees: number;
+  referralFees: number;
+  netProfit: number;
+  estimatedPayout: number;
+  margin: number;
+  roi: number;
+  refundPercentage: number;
+  settlementDetails?: SettlementDetails;
 }
 
 export interface ScatterDataPoint {
@@ -128,6 +159,26 @@ export interface PnLLineItem {
   isHeader?: boolean;
   isTotal?: boolean;
   indent?: number;
+}
+
+export interface PnLProductItem {
+  asin: string;
+  productName: string;
+  imageUrl: string;
+  sku: string;
+  price: number;
+}
+
+export interface GraphRequestBody {
+  frequency?: string;
+  filters: any[];
+  searchText: string;
+  range: string;
+  sortCriteria: any[];
+  asinSkuGroupBy?: boolean;
+  asinSkuMapping?: Array<{ asin: string; sku: string }>;
+  executionMode?: string;
+  version?: string;
 }
 
 /* ── Raw API response types ── */
@@ -212,13 +263,78 @@ export interface PerformanceDataItem {
   [key: string]: any;
 }
 
+export interface SettlementDetails {
+  refundFees?: {
+    totalRefundCommission: number;
+    totalRefundReferralFee: number;
+    fbaCustomerReturnPerUnitFee: number;
+  };
+  amazonFees?: {
+    fbaFulfillmentFees: number;
+    referralFees: number;
+    promotion: number;
+  };
+  totalFbaFulfillmentFees?: number;
+  totalReferralFees?: number;
+  fbaCustomerReturnPerUnitFee?: number;
+  promotion?: number;
+  valueOfReturnedItems?: number;
+}
+
 export interface GraphDataPoint {
   label: string;
+  asin?: string;
+  sku?: string;
   totalSales: number;
+  totalReturnAmount: number;
   totalUnits: number;
+  totalReturnedUnits: number;
   totalOrders: number;
+  cancelledOrdersCount: number;
+  totalReturns: number;
+  totalReturnCommissionAmount: number;
+  totalReturnReferralAmount: number;
+  totalCogs: number;
   totalAdSpend: number;
+  spAdSpend: number;
+  sbAdSpend: number;
+  sdAdSpend: number;
+  totalAdSales: number;
+  organicAdSales: number;
+  spAdSales: number;
+  sbAdSales: number;
+  sdAdSales: number;
+  totalAdUnits: number;
+  organicAdUnits: number;
+  spAdUnits: number;
+  sbAdUnits: number;
+  sdAdUnits: number;
+  tacos: number;
+  roas: number;
+  acos: number;
+  fbaFulfillmentFees: number;
+  referralFees: number;
   netProfit: number;
+  estimatedPayout: number;
+  margin: number;
+  roi: number;
+  refundPercentage: number;
+  settlementDetails?: SettlementDetails;
+  [key: string]: any;
+}
+
+export interface ChildProductItem {
+  asin: string;
+  sku: string;
+  itemName: string;
+  imageUrl: string;
+  price: number;
+  totalOrders: number;
+  totalSales: number;
+  totalUnitsSold: number;
+  overallAdSpend: number;
+  netProfit: number;
+  cogs: number;
   [key: string]: any;
 }
 
@@ -230,9 +346,81 @@ export interface ProductDataItem {
   totalSales: number;
   totalUnitsSold: number;
   overallAdSpend: number;
+  overallSpAdSpend: number;
+  overallSbAdSpend: number;
+  overallSdAdSpend: number;
+  overallAdSales: number;
+  overallOrganicSales: number;
+  overallSpAdSales: number;
+  overallSbAdSales: number;
+  overallSdAdSales: number;
+  overallAdUnits: number;
+  overallOrganicUnits: number;
+  overallSpAdUnits: number;
+  overallSbAdUnits: number;
+  overallSdAdUnits: number;
+  tacos: number;
+  roas: number;
+  acos: number;
   netProfit: number;
   cogs: number;
-  childItems: any[];
+  fbafullfillment: number;
+  referralFees: number;
+  totalReturns: number;
+  totalReturnSales: number;
+  totalRefundCommission: number;
+  totalRefundReferralFees: number;
+  fbaFees: number;
+  fbaReturnFees: number;
+  valueOfReturnedItems: number;
+  promotion: number;
+  childItemsCount: number;
+  settlementAmount: number;
+  refundPercentage: number;
+  margin: number;
+  estimatedPayout: number;
+  roi: number;
+  totalRefundFees: number;
+  totalAmazonFees: number;
+  childItems: ChildProductItem[];
+  settlementDetails?: {
+    refundFees: {
+      totalRefundCommission: number;
+      totalRefundReferralFee: number;
+      fbaCustomerReturnPerUnitFee: number;
+    };
+    amazonFees: {
+      fbaFulfillmentFees: number;
+      referralFees: number;
+      promotion: number;
+    };
+  };
+  [key: string]: any;
+}
+
+export interface OrderItemData {
+  asin: string;
+  sku: string;
+  itemName: string;
+  imageUrl: string;
+  price: number;
+  quantity: number;
+  totalPrincipalAmount: number;
+  totalOrdersReferralFee: number;
+  totalOrdersFbaFulfillmentFees: number;
+  countryCode: string;
+  settlementDetails?: {
+    refundFees: {
+      totalRefundCommission: number;
+      totalRefundReferralFee: number;
+      fbaCustomerReturnPerUnitFee: number;
+    };
+    amazonFees: {
+      fbaFulfillmentFees: number;
+      referralFees: number;
+      promotion: number;
+    };
+  };
   [key: string]: any;
 }
 
@@ -243,6 +431,12 @@ export interface AggregatedProductData {
   totalReturns: number;
   totalNetProfit: number;
   totalCogs: number;
+  totalAdSpend: number;
+  totalAmazonFees: number;
+  totalRefundFees: number;
+  estimatedPayout: number;
+  margin: number;
+  roi: number;
   [key: string]: any;
 }
 
@@ -254,14 +448,58 @@ export interface OrderDataItem {
   sellingPartnerId: string;
   totalOrderUnits: number;
   totalPrincipalAmount: number;
+  totalOrdersReferralFee: number;
+  totalOrdersFbaFulfillmentFees: number;
+  totalReturnUnits: number;
+  totalReturnPrincipalAmount: number;
+  totalRefundReferralFee: number;
+  totalRefundCommissionFees: number;
+  totalRefundFbaCustomerReturnFees: number;
+  totalCogs: number;
+  valueOfReturnedItems: number;
+  bothOrderAndReturn: number;
+  promotion: number;
   netProfit: number;
-  items: any[];
+  amazonFeeNetProfit: number;
+  refundFeeNetProfit: number;
+  totalAmazonFees: number;
+  totalRefundFees: number;
+  roi: number;
+  margin: number;
+  estimatedPayout: number;
+  items: OrderItemData[];
+  settlementDetails?: {
+    refundFees: {
+      totalRefundCommission: number;
+      totalRefundReferralFee: number;
+      fbaCustomerReturnPerUnitFee: number;
+    };
+    amazonFees: {
+      fbaFulfillmentFees: number;
+      referralFees: number;
+      promotion: number;
+    };
+  };
   [key: string]: any;
 }
 
 export interface AggregatedOrderData {
   totalOrderUnits: number;
   totalPrincipalAmount: number;
-  totalNetProfit: number;
+  totalOrdersReferralFee: number;
+  totalOrdersFbaFulfillmentFees: number;
+  totalReturnUnits: number;
+  totalReturnPrincipalAmount: number;
+  totalRefundReferralFee: number;
+  totalRefundCommissionFees: number;
+  totalRefundFbaCustomerReturnFees: number;
+  totalCogs: number;
+  valueOfReturnedItems: number;
+  totalAmazonFees: number;
+  totalRefundFees: number;
+  netProfit: number;
+  roi: number;
+  margin: number;
+  estimatedPayout: number;
   [key: string]: any;
 }

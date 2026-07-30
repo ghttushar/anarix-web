@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AppTaskbar } from "@/components/layout/AppTaskbar";
@@ -9,9 +9,11 @@ import { RegionalProductTable } from "@/components/tables/RegionalProductTable";
 import { DataTableToolbar } from "@/components/advertising/DataTableToolbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getGeographicalData } from "@/services/profitability.service";
+import { GeographicalData } from "@/types/profitability";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useFilter } from "@/contexts/FilterContext";
 
 const COLUMN_DEFS = [
   { id: "stocks", label: "Stocks", visible: true },
@@ -40,6 +42,8 @@ const breadcrumbItems = [
 ];
 export default function Geographical() {
   const { formatCurrency } = useCurrency();
+  const { dateRange, frequency } = useFilter();
+  const [refreshKey, setRefreshKey] = useState(0);
   const [selectedRegionCode, setSelectedRegionCode] = useState<string>("US");
   const [drillRegionId, setDrillRegionId] = useState<string | null>(null);
   const [viewLevel, setViewLevel] = useState<"state" | "product">("state");
@@ -52,34 +56,41 @@ export default function Geographical() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Data state
-  const [geoData, setGeoData] = useState<any[]>([]);
+  const [geoData, setGeoData] = useState<GeographicalData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const diffDays = Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+  const runRange = diffDays <= 7 ? "LAST_7_DAYS_FROM_TODAY" : diffDays <= 30 ? "LAST_30_DAYS_FROM_TODAY" : "CUSTOM_RANGE";
+  const freq = frequency.toLowerCase() as "daily" | "weekly" | "monthly";
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const g = await getGeographicalData(runRange, dateRange.from.toISOString().split("T")[0], dateRange.to.toISOString().split("T")[0], freq);
+      setGeoData(g);
+    } catch {
+      setGeoData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [runRange, dateRange.from, dateRange.to, freq]);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      const g = await getGeographicalData();
-      if (cancelled) return;
-      setGeoData(g);
-      setLoading(false);
-    }
-    load();
+    const promise = loadData();
+    promise.then(() => { if (cancelled) return; });
     return () => { cancelled = true; };
-  }, []);
+  }, [loadData]);
 
-  const regionLookupLocal: Record<string, any> = useMemo(() => ({
-    US: geoData[0],
-    CA: geoData[0]?.children?.[0] || geoData[0],
-    TX: geoData[0]?.children?.[1] || geoData[0],
-    NY: geoData[0]?.children?.[2] || geoData[0],
-    FL: geoData[0]?.children?.[3] || geoData[0],
-  }), [geoData]);
-
-  const selectedRegion = regionLookupLocal[selectedRegionCode] || geoData[0];
+  const selectedRegion = useMemo(() => {
+    if (geoData.length === 0) return undefined;
+    const found = geoData.find((r) => r.countryCode === selectedRegionCode);
+    return found || geoData[0];
+  }, [geoData, selectedRegionCode]);
 
   const mobileRegions = useMemo(() => {
     if (!drillRegionId) return geoData;
-    const parent = geoData.find((r: any) => r.id === drillRegionId);
+    const parent = geoData.find((r) => r.id === drillRegionId);
     return parent?.children || [];
   }, [drillRegionId, geoData]);
 
@@ -97,7 +108,7 @@ export default function Geographical() {
           title="Geographical Data"
           subtitle="Regional performance breakdown across markets"
         />
-        <AppTaskbar showDateRange showRunButton onRun={() => toast.info("Refreshing data...")} breadcrumbItems={breadcrumbItems} />
+        <AppTaskbar showDateRange showRunButton onRun={() => { setRefreshKey(k => k + 1); toast.success("Refreshing data..."); }} breadcrumbItems={breadcrumbItems} />
 
         {loading ? (
           <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Loading...</div>
@@ -105,10 +116,14 @@ export default function Geographical() {
         <>
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 h-full">
-            <GeographyMap selectedRegion={selectedRegionCode} onRegionSelect={setSelectedRegionCode} />
+            <GeographyMap selectedRegion={selectedRegionCode} onRegionSelect={setSelectedRegionCode} geoData={geoData} />
           </div>
           <div className="h-full">
-            <RegionStatsPanel region={selectedRegion} dateRange="Jan 1 - Jan 30, 2026" />
+            {selectedRegion ? (
+              <RegionStatsPanel region={selectedRegion} dateRange={`${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`} />
+            ) : (
+              <div className="h-full rounded-lg border border-border bg-card p-4 flex items-center justify-center text-muted-foreground text-sm">No data available</div>
+            )}
           </div>
         </div>
 

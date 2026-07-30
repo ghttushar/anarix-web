@@ -5,13 +5,26 @@ import { Button } from "@/components/ui/button";
 interface GeographyMapProps {
   selectedRegion?: string;
   onRegionSelect?: (regionId: string) => void;
+  geoData?: Array<{ countryCode: string; sales: number; orders: number }>;
 }
 
-const activeCountryData: Record<string, { name: string; sales: number; orders: number; opacity: number }> = {
-  USA: { name: "United States", sales: 156789, orders: 12450, opacity: 0.7 },
-  CAN: { name: "Canada", sales: 45678, orders: 3210, opacity: 0.45 },
-  MEX: { name: "Mexico", sales: 23456, orders: 1890, opacity: 0.3 },
-};
+function buildCountryData(geoData?: GeographyMapProps["geoData"]): Record<string, { name: string; sales: number; orders: number; opacity: number }> {
+  const defaults: Record<string, { name: string }> = {
+    US: { name: "United States" },
+    CA: { name: "Canada" },
+    MX: { name: "Mexico" },
+  };
+  const result: Record<string, { name: string; sales: number; orders: number; opacity: number }> = {};
+  for (const [code, info] of Object.entries(defaults)) {
+    const found = geoData?.find((d) => d.countryCode === code);
+    const sales = found?.sales ?? 0;
+    const orders = found?.orders ?? 0;
+    const maxSales = geoData ? Math.max(...geoData.map((d) => d.sales), 1) : 1;
+    const opacity = sales > 0 ? Math.max(0.2, Math.min(sales / maxSales, 1)) : 0.1;
+    result[code] = { name: info.name, sales, orders, opacity };
+  }
+  return result;
+}
 
 // Circle dot-matrix world map
 // Each dot: [col, row, countryCode]
@@ -27,7 +40,7 @@ const dots: Dot[] = [
     [13,6],[14,6],[15,6],[16,6],[17,6],[18,6],[19,6],[20,6],[21,6],[22,6],[23,6],[24,6],
     [13,7],[14,7],[15,7],[16,7],[17,7],[18,7],[19,7],[20,7],[21,7],[22,7],[23,7],
     [14,8],[15,8],[16,8],[17,8],[18,8],[19,8],[20,8],[21,8],[22,8],
-  ].map(([c,r]): Dot => [c, r, "CAN"]),
+  ].map(([c,r]): Dot => [c, r, "CA"]),
 
   // USA
   ...[
@@ -37,7 +50,7 @@ const dots: Dot[] = [
     [14,12],[15,12],[16,12],[17,12],[18,12],[19,12],[20,12],
     [15,13],[16,13],[17,13],[18,13],[19,13],[20,13],
     [16,14],[17,14],[18,14],[19,14],
-  ].map(([c,r]): Dot => [c, r, "USA"]),
+  ].map(([c,r]): Dot => [c, r, "US"]),
 
   // Mexico
   ...[
@@ -45,7 +58,7 @@ const dots: Dot[] = [
     [12,15],[13,15],[14,15],[15,15],[16,15],
     [12,16],[13,16],[14,16],[15,16],
     [13,17],[14,17],
-  ].map(([c,r]): Dot => [c, r, "MEX"]),
+  ].map(([c,r]): Dot => [c, r, "MX"]),
 
   // Central America
   ...[
@@ -144,12 +157,14 @@ const DOT_RADIUS = 2.2;
 const SVG_WIDTH = 520;
 const SVG_HEIGHT = 260;
 
-export function GeographyMap({ selectedRegion, onRegionSelect }: GeographyMapProps) {
+export function GeographyMap({ selectedRegion, onRegionSelect, geoData }: GeographyMapProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+
+  const activeCountryData = buildCountryData(geoData);
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.5));
@@ -244,9 +259,9 @@ export function GeographyMap({ selectedRegion, onRegionSelect }: GeographyMapPro
         {/* Floating callout cards */}
         {Object.entries(activeCountryData).map(([code, data]) => {
           const positions: Record<string, { left: string; top: string }> = {
-            USA: { left: "22%", top: "38%" },
-            CAN: { left: "25%", top: "14%" },
-            MEX: { left: "14%", top: "52%" },
+            US: { left: "22%", top: "38%" },
+            CA: { left: "25%", top: "14%" },
+            MX: { left: "14%", top: "52%" },
           };
           const pos = positions[code];
           if (!pos) return null;
