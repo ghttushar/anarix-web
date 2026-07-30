@@ -55,7 +55,11 @@ export interface CatalogApiResponse<T> {
   message: string;
   data: T;
   description?: string;
-  total?: number;
-  page?: number;
-  pageSize?: number;
+}
+
+export interface CatalogPaginatedData<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
 }

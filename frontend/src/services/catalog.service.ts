@@ -1,5 +1,5 @@
 import { api } from "@/lib/api-client";
-import type { CatalogProduct, AggregatedCatalogData, CatalogApiResponse } from "@/types/catalog";
+import type { CatalogProduct, AggregatedCatalogData, CatalogApiResponse, CatalogPaginatedData } from "@/types/catalog";
 
 function getHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
@@ -34,12 +34,13 @@ export async function getCatalogProducts(
   sortCriteria: Array<{ columnName: string; sortOrder: string }> = []
 ): Promise<{ data: CatalogProduct[]; total: number }> {
   const headers = getHeaders();
-  const res = await api.post<CatalogApiResponse<CatalogProduct[]>>(
+  const res = await api.post<CatalogApiResponse<CatalogPaginatedData<CatalogProduct>>>(
     `/amazon-ads/catalog?page=${page}&pageSize=${pageSize}`,
     catalogBody({ searchText, range, sortCriteria }),
     headers
   );
-  return { data: res.data || [], total: res.total ?? 0 };
+  const paginated = res.data;
+  return { data: paginated?.data || [], total: paginated?.total ?? 0 };
 }
 
 export async function getCatalogAggregated(
@@ -64,12 +65,12 @@ export async function getCatalogProductById(
 ): Promise<CatalogProduct | undefined> {
   const headers = getHeaders();
   try {
-    const res = await api.post<CatalogApiResponse<CatalogProduct[]>>(
+    const res = await api.post<CatalogApiResponse<CatalogPaginatedData<CatalogProduct>>>(
       "/amazon-ads/catalog?page=1&pageSize=1",
       catalogBody({ searchText: id, range }),
       headers
     );
-    return res.data?.[0];
+    return res.data?.data?.[0];
   } catch {
     return undefined;
   }
