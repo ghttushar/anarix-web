@@ -405,12 +405,11 @@ export async function getPnLProducts(): Promise<ProfitabilityProduct[]> {
   }));
 }
 
-export async function getScatterData(): Promise<ScatterDataPoint[]> {
-  const headers = getHeaders();
-  const products = await getPnLProducts();
-  if (products.length === 0) return [];
-
-  const results = await Promise.allSettled(
+async function fetchGraphBatch(
+  products: Array<{ id: string; name: string; itemId: string; sku: string }>,
+  headers: Record<string, string>
+): Promise<Array<{ index: number; data: GraphDataPoint[] } | null>> {
+  return await Promise.allSettled(
     products.map((p) =>
       api.post<ApiResponse<GraphDataPoint[]>>(
         "/advertising/v2/amazon/profitability/graph",
@@ -419,15 +418,34 @@ export async function getScatterData(): Promise<ScatterDataPoint[]> {
           asinSkuGroupBy: false,
         }),
         headers
-      )
+      ).then((res) => ({ index: 0, data: res.data || [] }))
     )
+  ).then((results) =>
+    results.map((r) => (r.status === "fulfilled" ? r.value : null))
   );
+}
+
+export async function getScatterData(): Promise<ScatterDataPoint[]> {
+  const headers = getHeaders();
+  const products = await getPnLProducts();
+  if (products.length === 0) return [];
+
+  const CONCURRENCY = 5;
+  const MAX_PRODUCTS = 20;
+  const limited = products.slice(0, MAX_PRODUCTS);
+
+  const allResults: Array<{ data: GraphDataPoint[] } | null> = [];
+  for (let i = 0; i < limited.length; i += CONCURRENCY) {
+    const batch = limited.slice(i, i + CONCURRENCY);
+    const batchResults = await fetchGraphBatch(batch, headers);
+    allResults.push(...batchResults);
+  }
 
   const scatterPoints: ScatterDataPoint[] = [];
-  for (let i = 0; i < products.length; i++) {
-    const result = results[i];
-    if (result.status !== "fulfilled") continue;
-    const data = result.value.data || [];
+  for (let i = 0; i < limited.length; i++) {
+    const result = allResults[i];
+    if (!result) continue;
+    const data = result.data || [];
     let totalSales = 0;
     let totalAdSpend = 0;
     let totalNetProfit = 0;
@@ -438,8 +456,8 @@ export async function getScatterData(): Promise<ScatterDataPoint[]> {
     }
     const profitMargin = totalSales > 0 ? (totalNetProfit / totalSales) * 100 : 0;
     scatterPoints.push({
-      id: products[i].id,
-      name: products[i].name,
+      id: limited[i].id,
+      name: limited[i].name,
       profitMargin: Math.round(profitMargin * 100) / 100,
       totalSales,
       adSpend: totalAdSpend,
