@@ -16,6 +16,7 @@ import type {
   AggregatedProductData,
   AggregatedOrderData,
   GeographicalData,
+  PnLRow,
 } from "@/types/profitability";
 
 function getHeaders(): Record<string, string> {
@@ -566,7 +567,113 @@ export async function getGeographicalData(
   }
 }
 
+function getISOWeekKey(date: Date): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+const PNL_PARAM_DEFS: Array<{
+  id: string; field: string; parameter: string;
+  isParent?: boolean; children?: Array<{ id: string; field: string; parameter: string }>;
+}> = [
+  { id: "totalSales", field: "totalSales", parameter: "Total Sales" },
+  { id: "totalReturnAmount", field: "totalReturnAmount", parameter: "Return Amount" },
+  { id: "totalOrders", field: "totalOrders", parameter: "Total Orders" },
+  { id: "totalUnits", field: "totalUnits", parameter: "Total Units" },
+  { id: "totalCogs", field: "totalCogs", parameter: "COGS" },
+  { id: "totalAdSpend", field: "totalAdSpend", parameter: "Ad Spend" },
+  {
+    id: "amazonFees", field: "", parameter: "Amazon Fees", isParent: true,
+    children: [
+      { id: "referralFees", field: "referralFees", parameter: "Referral Fees" },
+      { id: "fbaFulfillmentFees", field: "fbaFulfillmentFees", parameter: "FBA Fulfillment Fees" },
+    ],
+  },
+  { id: "netProfit", field: "netProfit", parameter: "Net Profit" },
+  { id: "estimatedPayout", field: "estimatedPayout", parameter: "Estimated Payout" },
+];
+
+export async function getPnLData(): Promise<PnLRow[]> {
+  const headers = getHeaders();
+  try {
+    const res = await api.post<ApiResponse<GraphDataPoint[]>>(
+      "/advertising/v2/amazon/profitability/graph",
+      graphRequestBody("LAST_30_DAYS_FROM_TODAY"),
+      headers
+    );
+    const graphData = res.data || [];
+    if (graphData.length === 0) return [];
+
+    const weekMap = new Map<string, GraphDataPoint[]>();
+    for (const d of graphData) {
+      const date = new Date(d.label);
+      if (isNaN(date.getTime())) continue;
+      const wk = getISOWeekKey(date);
+      if (!weekMap.has(wk)) weekMap.set(wk, []);
+      weekMap.get(wk)!.push(d);
+    }
+
+    const sortedWeeks = Array.from(weekMap.keys()).sort();
+    if (sortedWeeks.length === 0) return [];
+
+    const recentWeeks = sortedWeeks.slice(-4);
+    const pnlWeekKeys = ["Week-05", "Week-04", "Week-02", "Week-01"];
+    const offset = pnlWeekKeys.length - recentWeeks.length;
+    const weekKeyMap: Record<string, string> = {};
+    recentWeeks.forEach((w, i) => { weekKeyMap[w] = pnlWeekKeys[offset + i]; });
+
+    function sumField(days: GraphDataPoint[], field: string): number {
+      return days.reduce((sum, d) => sum + Math.abs((d as any)[field] || 0), 0);
+    }
+
+    const rows: PnLRow[] = [];
+    for (const def of PNL_PARAM_DEFS) {
+      if (def.isParent && def.children) {
+        const children: PnLRow[] = def.children.map((child) => {
+          const weeklyValues: Record<string, number | null> = {};
+          let total = 0;
+          recentWeeks.forEach((w) => {
+            const val = sumField(weekMap.get(w)!, child.field);
+            weeklyValues[weekKeyMap[w]] = val;
+            total += val;
+          });
+          return { id: child.id, parameter: child.parameter, isParent: false, indent: 1, weeklyValues, total };
+        });
+        const parentWeekly: Record<string, number | null> = {};
+        let parentTotal = 0;
+        recentWeeks.forEach((w) => {
+          const val = children.reduce((sum, c) => sum + ((c.weeklyValues[weekKeyMap[w]] as number) || 0), 0);
+          parentWeekly[weekKeyMap[w]] = val;
+          parentTotal += val;
+        });
+        rows.push({
+          id: def.id, parameter: def.parameter, isParent: true, isExpanded: true, indent: 0,
+          weeklyValues: parentWeekly, total: parentTotal, children,
+        });
+      } else {
+        const weeklyValues: Record<string, number | null> = {};
+        let total = 0;
+        recentWeeks.forEach((w) => {
+          const val = sumField(weekMap.get(w)!, def.field);
+          weeklyValues[weekKeyMap[w]] = val;
+          total += val;
+        });
+        rows.push({
+          id: def.id, parameter: def.parameter, isParent: false, indent: 0,
+          weeklyValues, total,
+        });
+      }
+    }
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
 /* Stubs for unused functions — kept to avoid import breakage */
-export async function getPnLData(): Promise<any[]> { return []; }
 export async function getTrendData(): Promise<any[]> { return []; }
 export async function getUnifiedPnL(): Promise<any[]> { return []; }
