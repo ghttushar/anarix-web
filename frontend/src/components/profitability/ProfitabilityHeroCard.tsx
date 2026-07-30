@@ -225,19 +225,43 @@ function ForecastCard({
   formatCurrency,
   isSelected,
   onSelect,
+  trendData,
+  compareSummary,
 }: {
   baseSummary: ProfitabilitySummary;
   formatCurrency: (v: number) => string;
   isSelected?: boolean;
   onSelect?: () => void;
+  trendData?: TrendDataPoint[];
+  compareSummary?: ProfitabilitySummary;
 }) {
-  const projectionMultiplier = 1.67;
+  const { projectionMultiplier, confidence } = useMemo(() => {
+    let growthRate = 0;
+    if (trendData && trendData.length >= 2) {
+      const firstNet = trendData[0]?.netProfit || 0;
+      const lastNet = trendData[trendData.length - 1]?.netProfit || 0;
+      if (firstNet > 0) {
+        growthRate = (lastNet - firstNet) / firstNet;
+      }
+    } else if (compareSummary && compareSummary.netProfit > 0) {
+      growthRate = (baseSummary.netProfit - compareSummary.netProfit) / compareSummary.netProfit;
+    }
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysElapsed = now.getDate();
+    const timeRatio = daysInMonth / Math.max(daysElapsed, 1);
+    const base = Math.max(timeRatio, 1);
+    const growth = Math.min(Math.max(1 + growthRate, 0.5), 3);
+    const multi = base * growth;
+    const conf = Math.round(Math.min(Math.max(50 + growthRate * 100, 30), 95));
+    return { projectionMultiplier: Math.round(multi * 100) / 100, confidence: conf };
+  }, [trendData, compareSummary, baseSummary]);
+
   const estProfit = baseSummary.netProfit * projectionMultiplier;
   const estGMV = baseSummary.gmv * projectionMultiplier;
   const estOrders = Math.round(baseSummary.orders * projectionMultiplier);
   const estUnits = Math.round(baseSummary.units * projectionMultiplier);
   const estPayout = baseSummary.estPayout * projectionMultiplier;
-  const confidence = 78;
 
   const metrics = [
     { label: "Est. GMV", value: formatCurrency(estGMV) },
@@ -510,6 +534,8 @@ export function ProfitabilityHeroCard({
               ))}
               <ForecastCard
                 baseSummary={thisMonthSummary}
+                compareSummary={lastMonthSummary}
+                trendData={thisMonthTrend}
                 formatCurrency={formatCurrency}
                 isSelected={selectedCardIndex === 4}
                 onSelect={() => setSelectedCardIndex(4)}

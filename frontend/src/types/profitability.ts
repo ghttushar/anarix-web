@@ -107,6 +107,8 @@ export interface TrendDataPoint {
   week: string;
   orders: number;
   units: number;
+  totalSales?: number;
+  netProfit?: number;
 }
 
 export interface ScatterDataPoint {

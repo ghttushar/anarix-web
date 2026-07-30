@@ -5,6 +5,7 @@ import { useAccounts } from "@/contexts/AccountContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MarketplaceHoverPopup } from "./MarketplaceHoverPopup";
+import { toast } from "sonner";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
 
@@ -116,6 +117,7 @@ export function MarketplaceSelector() {
             if (targetGroup && currentAccountGroup && targetGroup.id !== currentAccountGroup.id) {
               if (targetGroup.accountId) {
                 try {
+                  toast.loading("Switching account...");
                   const { authService } = await import("@/services/auth.service");
                   await authService.switchAccount(targetGroup.accountId);
                   const settingsRes = await authService.getAccountSettings("all");
@@ -130,13 +132,15 @@ export function MarketplaceSelector() {
                       countryCode: e.advertising.countryCode,
                     }));
                   const newRegion = populateFromSettings(entries, targetGroup.name, targetGroup.accountId);
+                  toast.dismiss();
                   if (newRegion) {
                     setCurrentRegion(newRegion.id);
                   }
                   setPinnedMp(null);
                   return;
                 } catch {
-                  // fall through
+                  toast.dismiss();
+                  toast.error("Failed to switch account");
                 }
               }
             }

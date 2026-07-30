@@ -50,20 +50,11 @@ export function ProductsPnLTable({ products, orders = [], mode = "products", vis
 
   const ALL_COLUMNS = [
     { id: "units", label: "Units", getValue: (p: ProfitabilityProduct) => formatNumber(p.units), isUnit: true },
-    { id: "refundUnits", label: "Refund Units", getValue: (p: ProfitabilityProduct) => formatNumber(p.refundUnits), isUnit: true },
-    { id: "cancelledUnits", label: "Cancelled Units", getValue: (p: ProfitabilityProduct) => formatNumber(p.cancelledUnits), isUnit: true },
     { id: "gmv", label: "GMV", getValue: (p: ProfitabilityProduct) => formatCurrency(p.gmv), isUnit: false },
     { id: "authSales", label: "Auth Sales", getValue: (p: ProfitabilityProduct) => formatCurrency(p.authSales), isUnit: false },
-    { id: "refundSales", label: "Refund Sales", getValue: (p: ProfitabilityProduct) => formatCurrency(p.refundSales), isUnit: false },
-    { id: "cancelledSales", label: "Cancelled Sales", getValue: (p: ProfitabilityProduct) => formatCurrency(p.cancelledSales), isUnit: false },
     { id: "adSpend", label: "Ad Spend", getValue: (p: ProfitabilityProduct) => formatCurrency(p.adSpend), isUnit: false },
-    { id: "commissionProduct", label: "Comm. Product", getValue: (p: ProfitabilityProduct) => formatCurrency(p.commissionProduct), isUnit: false },
-    { id: "commissionShipping", label: "Comm. Shipping", getValue: (p: ProfitabilityProduct) => formatCurrency(p.commissionShipping), isUnit: false },
-    { id: "wfsFulfillmentFee", label: "WFS Fee", getValue: (p: ProfitabilityProduct) => formatCurrency(p.wfsFulfillmentFee), isUnit: false },
-    { id: "shippingFees", label: "Shipping Fees", getValue: (p: ProfitabilityProduct) => formatCurrency(p.shippingFees), isUnit: false },
     { id: "cogs", label: "COGS", getValue: (p: ProfitabilityProduct) => formatCurrency(p.cogs), isUnit: false },
     { id: "netProfit", label: "Net Profit", getValue: (p: ProfitabilityProduct) => formatCurrency(p.netProfit), isUnit: false },
-    { id: "additionalFee", label: "Additional Fee", getValue: (p: ProfitabilityProduct) => formatCurrency(p.additionalFee), isUnit: false },
   ];
 
   const cols = visibleColumns ? ALL_COLUMNS.filter((c) => visibleColumns.includes(c.id)) : ALL_COLUMNS;

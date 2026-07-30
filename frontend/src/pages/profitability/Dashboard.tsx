@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -12,34 +12,24 @@ import { ProductTrendsModal } from "@/components/profitability/ProductTrendsModa
 import { ProductsOrdersToggle } from "@/components/profitability/ProductsOrdersToggle";
 import { PeriodBreakdownPanel } from "@/components/profitability/PeriodBreakdownPanel";
 import { DataTableToolbar } from "@/components/advertising/DataTableToolbar";
-import { getSummaries, getProducts, getOrders, getTrendDataByPeriod, updateCogs as updateCogsService } from "@/services/profitability.service";
+import { getSummaries, getProducts, getOrders, getTrendDataByPeriod, updateCogs as updateCogsService, buildPeriodRange } from "@/services/profitability.service";
 import { ProfitabilityProduct, ProfitabilityOrder, ProfitabilitySummary, TrendDataPoint } from "@/types/profitability";
 import { useAccounts } from "@/contexts/AccountContext";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { useFilter } from "@/contexts/FilterContext";
 import { toast } from "sonner";
 import { useActivePanel } from "@/contexts/ActivePanelContext";
 
 
 const COLUMN_DEFS = [
   { id: "units", label: "Units", visible: true },
-  { id: "refundUnits", label: "Refund Units", visible: true },
-  { id: "cancelledUnits", label: "Cancelled Units", visible: true },
   { id: "gmv", label: "GMV", visible: true },
   { id: "authSales", label: "Auth Sales", visible: true },
-  { id: "refundSales", label: "Refund Sales", visible: true },
-  { id: "cancelledSales", label: "Cancelled Sales", visible: true },
   { id: "adSpend", label: "Ad Spend", visible: true },
-  { id: "commissionProduct", label: "Comm. Product", visible: true },
-  { id: "commissionShipping", label: "Comm. Shipping", visible: true },
-  { id: "wfsFulfillmentFee", label: "WFS Fee", visible: true },
-  { id: "shippingFees", label: "Shipping Fees", visible: true },
   { id: "cogs", label: "COGS", visible: true },
   { id: "netProfit", label: "Net Profit", visible: true },
-  { id: "additionalFee", label: "Additional Fee", visible: true },
 ];
 
-const FILTER_FIELDS = ["Product Name", "Item ID", "SKU", "Net Profit", "Ad Spend", "Units"];
+const FILTER_FIELDS = ["Product Name", "Item ID", "ASIN", "Net Profit", "Ad Spend", "Units"];
 
 const SORTABLE_FIELDS = [
   { id: "name", label: "Product Name" },
@@ -73,32 +63,38 @@ export default function ProfitabilityDashboard() {
 
   const { currentRegion } = useAccounts();
   const regionKey = currentRegion?.id || "default";
+  const { dateRange, frequency } = useFilter();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const runRange = buildPeriodRange(dateRange.from, dateRange.to);
+  const freq = frequency.toLowerCase() as "daily" | "weekly" | "monthly";
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [s, p, o, t] = await Promise.all([
+        getSummaries(runRange.range, runRange.startDate, runRange.endDate, freq).catch(() => [] as ProfitabilitySummary[]),
+        getProducts(1, 50, "", runRange.range, runRange.startDate, runRange.endDate, freq).catch(() => [] as ProfitabilityProduct[]),
+        getOrders(1, 50, "", runRange.range, runRange.startDate, runRange.endDate, freq).catch(() => [] as ProfitabilityOrder[]),
+        getTrendDataByPeriod(runRange.range, runRange.startDate, runRange.endDate, freq).catch(() => ({}) as Record<string, TrendDataPoint[]>),
+      ]);
+      setSummaries(s);
+      setProducts(p);
+      setOrders(o);
+      setTrendDataByPeriod_(t);
+    } catch {
+      // all individual catches should handle this
+    } finally {
+      setLoading(false);
+    }
+  }, [regionKey, refreshKey, runRange.range, runRange.startDate, runRange.endDate, freq]);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    async function load() {
-      try {
-        const [s, p, o, t] = await Promise.all([
-          getSummaries().catch(() => [] as ProfitabilitySummary[]),
-          getProducts().catch(() => [] as ProfitabilityProduct[]),
-          getOrders().catch(() => [] as ProfitabilityOrder[]),
-          getTrendDataByPeriod().catch(() => ({}) as Record<string, TrendDataPoint[]>),
-        ]);
-        if (cancelled) return;
-        setSummaries(s);
-        setProducts(p);
-        setOrders(o);
-        setTrendDataByPeriod_(t);
-      } catch {
-        // all individual catches should handle this
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
+    const promise = loadData();
+    promise.then(() => { if (cancelled) return; });
     return () => { cancelled = true; };
-  }, [regionKey]);
+  }, [loadData]);
 
   useEffect(() => {
     if (routeTab && validTabs.includes(routeTab as any)) {
@@ -198,7 +194,7 @@ export default function ProfitabilityDashboard() {
             title="Profitability Dashboard"
             subtitle="Track your profit metrics and financial performance"
           />
-          <AppTaskbar showDateRange showRunButton onRun={() => toast.info("Refreshing data...")} breadcrumbItems={breadcrumbItems} />
+          <AppTaskbar showDateRange showFrequency showRunButton onRun={() => { setRefreshKey(k => k + 1); toast.success("Refreshing data..."); }} breadcrumbItems={breadcrumbItems} />
 
           {loading ? (
             <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">Loading...</div>

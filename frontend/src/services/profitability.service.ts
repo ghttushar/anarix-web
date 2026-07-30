@@ -36,6 +36,15 @@ function baseBody(range: string, overrides: Partial<ProfitabilityRequestBody> = 
   };
 }
 
+export function buildPeriodRange(from: Date, to: Date): { range: string; startDate?: string; endDate?: string } {
+  const diffDays = Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return { range: "TODAY" };
+  if (diffDays === 1) return { range: "YESTERDAY" };
+  if (diffDays <= 7) return { range: "LAST_7_DAYS", startDate: from.toISOString().split("T")[0], endDate: to.toISOString().split("T")[0] };
+  if (diffDays <= 30) return { range: "LAST_30_DAYS", startDate: from.toISOString().split("T")[0], endDate: to.toISOString().split("T")[0] };
+  return { range: "CUSTOM_RANGE", startDate: from.toISOString().split("T")[0], endDate: to.toISOString().split("T")[0] };
+}
+
 function mapPerformanceToSummary(item: PerformanceDataItem, period: string): ProfitabilitySummary {
   return {
     period: period as any,
@@ -129,12 +138,17 @@ function mapOrder(item: OrderDataItem): ProfitabilityOrder {
 
 const RANGE_PERIODS = ["today", "yesterday", "this_month", "last_month"];
 
-export async function getSummaries(range?: string): Promise<ProfitabilitySummary[]> {
+export async function getSummaries(
+  range?: string,
+  startDate?: string,
+  endDate?: string,
+  frequency?: string
+): Promise<ProfitabilitySummary[]> {
   const r = range || "TODAY/YESTERDAY/THIS_MONTH/LAST_MONTH";
   const headers = getHeaders();
   const res = await api.post<ApiResponse<PerformanceDataItem[]>>(
     "/advertising/v2/amazon/profitability/performance",
-    baseBody(r),
+    baseBody(r, { startDate, endDate, frequency }),
     headers
   );
   const items = res.data || [];
@@ -146,12 +160,17 @@ export async function getSummaries(range?: string): Promise<ProfitabilitySummary
 export async function getProducts(
   page = 1,
   pageSize = 50,
-  searchText = ""
+  searchText = "",
+  range?: string,
+  startDate?: string,
+  endDate?: string,
+  frequency?: string
 ): Promise<ProfitabilityProduct[]> {
   const headers = getHeaders();
+  const r = range || "TODAY/YESTERDAY/THIS_MONTH/LAST_MONTH";
   const res = await api.post<ApiResponse<ApiPaginatedData<ProductDataItem>>>(
     `/advertising/v2/amazon/profitability/products?page=${page}&pageSize=${pageSize}`,
-    baseBody("TODAY/YESTERDAY/THIS_MONTH/LAST_MONTH", { page, pageSize, searchText }),
+    baseBody(r, { page, pageSize, searchText, startDate, endDate, frequency }),
     headers
   );
   const items = res.data?.data || [];
@@ -161,34 +180,47 @@ export async function getProducts(
 export async function getOrders(
   page = 1,
   pageSize = 50,
-  searchText = ""
+  searchText = "",
+  range?: string,
+  startDate?: string,
+  endDate?: string,
+  frequency?: string
 ): Promise<ProfitabilityOrder[]> {
   const headers = getHeaders();
+  const r = range || "TODAY/YESTERDAY/THIS_MONTH/LAST_MONTH";
   const res = await api.post<ApiResponse<ApiPaginatedData<OrderDataItem>>>(
     `/advertising/v2/amazon/profitability/orders?page=${page}&pageSize=${pageSize}`,
-    baseBody("TODAY/YESTERDAY/THIS_MONTH/LAST_MONTH", { page, pageSize, searchText }),
+    baseBody(r, { page, pageSize, searchText, startDate, endDate, frequency }),
     headers
   );
   const items = res.data?.data || [];
   return items.map(mapOrder);
 }
 
-export async function getTrendDataByPeriod(): Promise<Record<string, TrendDataPoint[]>> {
+export async function getTrendDataByPeriod(
+  range?: string,
+  startDate?: string,
+  endDate?: string,
+  frequency?: string
+): Promise<Record<string, TrendDataPoint[]>> {
   const headers = getHeaders();
   const periods = ["TODAY", "YESTERDAY", "THIS_MONTH", "LAST_MONTH"];
   const keys = ["today", "yesterday", "this_month", "last_month"];
+  const r = range || "TODAY/YESTERDAY/THIS_MONTH/LAST_MONTH";
 
   const results = await Promise.all(
     periods.map((p) =>
       api.post<ApiResponse<GraphDataPoint[]>>(
         "/advertising/v2/amazon/profitability/graph",
-        { ...baseBody(p), filters: [] as any[], sortCriteria: [] as any[] },
+        { ...baseBody(p, { startDate, endDate, frequency }), filters: [] as any[], sortCriteria: [] as any[] },
         headers
       ).then((res) => (res.data || []).map((d: GraphDataPoint) => ({
         week: d.label || "",
         orders: d.totalOrders || 0,
         units: d.totalUnits || 0,
-      }))).catch(() => [] as GraphDataPoint[])
+        totalSales: d.totalSales || 0,
+        netProfit: d.netProfit || 0,
+      }))).catch(() => [] as any[])
     )
   );
 
