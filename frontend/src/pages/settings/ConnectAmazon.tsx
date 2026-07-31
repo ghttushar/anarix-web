@@ -1,0 +1,224 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Store, ShoppingCart, Tag, Check, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageBreadcrumb } from "@/components/layout/PageBreadcrumb";
+import { useAccounts, AMAZON_REGIONS } from "@/contexts/AccountContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { toast } from "sonner";
+import logoFull from "@/assets/logo-light-full.svg";
+import logoWhite from "@/assets/logo-dark-full.svg";
+
+const connectionOptions = [
+  {
+    id: "seller",
+    title: "Seller Central",
+    description:
+      "Connect your Amazon Seller Central account to sync orders, inventory, and advertising data.",
+    icon: Store,
+    color: "bg-orange-100 text-orange-600",
+    accountType: "seller" as const,
+  },
+  {
+    id: "ads",
+    title: "Amazon Ads",
+    description:
+      "Connect your Amazon Advertising account to manage Sponsored Products, Brands, and Display campaigns.",
+    icon: Tag,
+    color: "bg-blue-100 text-blue-600",
+    accountType: "ads" as const,
+  },
+  {
+    id: "vendor",
+    title: "Vendor Central",
+    description:
+      "Connect your Amazon Vendor Central account for 1P sellers to sync purchase orders and analytics.",
+    icon: ShoppingCart,
+    color: "bg-purple-100 text-purple-600",
+    accountType: "vendor" as const,
+  },
+];
+
+const breadcrumbItems = [
+  { label: "Settings", href: "/settings/accounts" },
+  { label: "Connect Amazon" },
+];
+
+export default function ConnectAmazon() {
+  const navigate = useNavigate();
+  const { addAccountGroup, addRegionToGroup, isOnboarding } = useAccounts();
+  const { resolvedTheme } = useTheme();
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [merchantName, setMerchantName] = useState("");
+  const [merchantId, setMerchantId] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("US");
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const logoSrc = resolvedTheme === "dark" ? logoWhite : logoFull;
+
+  const handleConnect = async () => {
+    if (!selectedOption || !merchantName || !merchantId) return;
+
+    setIsConnecting(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const option = connectionOptions.find((o) => o.id === selectedOption);
+
+    const group = addAccountGroup({
+      marketplace: "amazon",
+      accountType: option?.accountType || "seller",
+      name: merchantName,
+    });
+
+    addRegionToGroup({
+      groupId: group.id,
+      region: selectedRegion,
+      merchantName: `${merchantName} ${selectedRegion}`,
+      merchantId,
+      status: "connected",
+      lastSync: new Date().toISOString(),
+      bidAutomation: "ai",
+    });
+
+    toast.success("Amazon account connected successfully!");
+
+    if (isOnboarding) {
+      navigate("/onboarding/connect");
+    } else {
+      navigate("/settings/accounts");
+    }
+  };
+
+  const backUrl = isOnboarding ? "/onboarding/connect" : "/settings/accounts";
+
+  const breadcrumbItems = isOnboarding
+    ? [
+        { label: "Onboarding", href: "/onboarding/connect" },
+        { label: "Connect Amazon" },
+      ]
+    : [
+        { label: "Settings", href: "/settings/appearance" },
+        { label: "Accounts", href: "/settings/accounts" },
+        { label: "Connect Amazon" },
+      ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <img src={logoSrc} alt="Anarix" className="h-8 w-auto" />
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto p-6">
+        <PageBreadcrumb items={breadcrumbItems} className="mb-6" />
+
+        <div className="text-center mb-10">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 mb-4">
+            <Store className="h-8 w-8 text-orange-600" />
+          </div>
+          <h1 className="text-3xl font-heading font-semibold text-foreground mb-2">
+            Accelerate Your Growth on Amazon
+          </h1>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Connect your Amazon account to unlock powerful advertising insights and automation.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          {connectionOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setSelectedOption(option.id)}
+              className={cn(
+                "relative rounded-xl border-2 p-5 text-left transition-all duration-200",
+                selectedOption === option.id
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              )}
+            >
+              {selectedOption === option.id && (
+                <div className="absolute top-3 right-3 h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="h-4 w-4 text-primary-foreground" />
+                </div>
+              )}
+              <div
+                className={cn(
+                  "h-12 w-12 rounded-xl flex items-center justify-center mb-4",
+                  option.color
+                )}
+              >
+                <option.icon className="h-6 w-6" />
+              </div>
+              <h3 className="font-medium text-foreground mb-1">{option.title}</h3>
+              <p className="text-xs text-muted-foreground">{option.description}</p>
+            </button>
+          ))}
+        </div>
+
+        {selectedOption && (
+          <div className="max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="space-y-2">
+              <Label htmlFor="merchantName">Account Name</Label>
+              <Input
+                id="merchantName"
+                placeholder="e.g., Demo Account"
+                value={merchantName}
+                onChange={(e) => setMerchantName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="merchantId">Merchant ID</Label>
+              <Input
+                id="merchantId"
+                placeholder="e.g., A1B2C3D4E5F6G7"
+                value={merchantId}
+                onChange={(e) => setMerchantId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Find this in your Amazon Seller Central settings
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="region">Region</Label>
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <SelectTrigger id="region" className="w-full">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {AMAZON_REGIONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label} ({r.value})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Select the Amazon marketplace region for this account
+              </p>
+            </div>
+
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleConnect}
+              disabled={!merchantName || !merchantId || isConnecting}
+            >
+              {isConnecting ? "Connecting..." : "Connect Amazon Account"}
+            </Button>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
