@@ -8,6 +8,8 @@ import { MarketplaceHoverPopup } from "./MarketplaceHoverPopup";
 import { toast } from "sonner";
 import amazonLogo from "@/assets/amazon-logo.png";
 import walmartLogo from "@/assets/walmart-logo.png";
+import { accountStorage, SettingsAccount } from "@/lib/account-storage";
+import { selectAdvertisingAccount } from "@/lib/account-session";
 
 interface MarketplaceOption {
   id: Marketplace;
@@ -25,7 +27,7 @@ const marketplaceOptions: MarketplaceOption[] = [
 
 export function MarketplaceSelector() {
   const { marketplace, setMarketplace } = useMarketplace();
-  const { currentAccount, setCurrentAccount, currentRegion, setCurrentRegion, accountRegions, accountGroups, currentAccountGroup, populateFromSettings } = useAccounts();
+  const { accounts, currentAccount, setCurrentAccount, currentRegion, setCurrentRegion, accountRegions, accountGroups, currentAccountGroup, populateFromSettings } = useAccounts();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
@@ -55,11 +57,134 @@ export function MarketplaceSelector() {
 
   const handleTriggerClick = useCallback((id: Marketplace) => {
     setMarketplace(id);
+    accountStorage.setLastSelectedMarketplace(id);
     if (isTabletView) {
       updateRect(id);
       setPinnedMp((prev) => (prev === id ? null : id));
     }
   }, [isTabletView, setMarketplace, updateRect]);
+
+  const persistAccountForMarketplace = useCallback(
+    (targetMarketplace: string, countryCode?: string, amazonProfileId?: string) => {
+      const available = accountStorage.getAvailableAccounts();
+      const matched =
+        available.find(
+          (acc) =>
+            acc.marketplace === targetMarketplace &&
+            (amazonProfileId
+              ? acc.advertising?.amazonProfileId === amazonProfileId
+              : acc.advertising?.countryCode === countryCode)
+        ) ??
+        available.find(
+          (acc) => acc.marketplace === targetMarketplace && acc.advertising?.countryCode === countryCode
+        ) ??
+        available.find((acc) => acc.marketplace === targetMarketplace && acc.advertising) ??
+        null;
+
+      selectAdvertisingAccount(matched);
+      accountStorage.setAccountCountryCode(countryCode || "US");
+      accountStorage.setMIAccountCountryCode(countryCode || "US");
+
+      const catalogAccount =
+        available.find(
+          (acc) => acc.catalog?.partnerId && acc.marketplace === targetMarketplace
+        ) ??
+        available.find((acc) => acc.catalog?.partnerId) ??
+        matched ??
+        null;
+      if (catalogAccount) {
+        accountStorage.setSelectedCatalogAccount(catalogAccount);
+      }
+      return matched;
+    },
+    []
+  );
+
+  const mapAmazonEntries = useCallback(
+    (rawEntries: SettingsAccount[]) =>
+      rawEntries
+        .filter((e: SettingsAccount) => e.marketplace === "amazon")
+        .map((e: SettingsAccount) => ({
+          marketplace: e.marketplace,
+          accountType: e.accountType,
+          amazonProfileId: e.advertising?.amazonProfileId,
+          sellingPartnerId: e.catalog?.partnerId || e.catalog?.partnerDisplayName,
+          countryCode: e.advertising?.countryCode || e.catalog?.countryCode,
+        })),
+    []
+  );
+
+  const handleAccountPick = useCallback(
+    async (id: string) => {
+      const targetAccount = accounts.find((acc) => acc.id === id);
+      setCurrentAccount(id);
+      setPinnedMp(null);
+      if (targetAccount) {
+        setMarketplace("walmart");
+        accountStorage.setLastSelectedMarketplace("walmart");
+        persistAccountForMarketplace("walmart", targetAccount.region);
+      }
+    },
+    [accounts, persistAccountForMarketplace, setCurrentAccount, setMarketplace]
+  );
+
+  const handleRegionPick = useCallback(
+    async (regionId: string) => {
+      const targetRegion = accountRegions.find((r) => r.id === regionId);
+      const targetGroup = targetRegion
+        ? accountGroups.find((g) => g.id === targetRegion.groupId)
+        : null;
+
+      if (targetRegion) {
+        setMarketplace("amazon");
+        accountStorage.setLastSelectedMarketplace("amazon");
+      }
+
+      if (targetGroup && currentAccountGroup && targetGroup.id !== currentAccountGroup.id) {
+        if (targetGroup.accountId) {
+          try {
+            toast.loading("Switching account...");
+            const { authService } = await import("@/services/auth.service");
+            await authService.switchAccount(targetGroup.accountId);
+            const settingsRes = await authService.getAccountSettings("all");
+            const rawEntries: SettingsAccount[] = settingsRes.data || [];
+            const entries = mapAmazonEntries(rawEntries);
+            const newRegion = populateFromSettings(
+              entries,
+              targetGroup.name,
+              targetGroup.accountId
+            );
+            persistAccountForMarketplace(
+              "amazon",
+              targetRegion.region,
+              targetRegion.amazonProfileId
+            );
+            toast.dismiss();
+            if (newRegion) {
+              setCurrentRegion(newRegion.id);
+            }
+            setPinnedMp(null);
+            return;
+          } catch {
+            toast.dismiss();
+            toast.error("Failed to switch account");
+            return;
+          }
+        }
+      }
+
+      setCurrentRegion(regionId);
+      if (targetRegion) {
+        persistAccountForMarketplace(
+          "amazon",
+          targetRegion.region,
+          targetRegion.amazonProfileId
+        );
+      }
+      setPinnedMp(null);
+    },
+    [accountGroups, accountRegions, currentAccountGroup, mapAmazonEntries, persistAccountForMarketplace, populateFromSettings, setCurrentRegion, setMarketplace]
+  );
 
   // Dismiss pinned popup on outside tap (tablet only).
   useEffect(() => {
@@ -102,51 +227,6 @@ export function MarketplaceSelector() {
         {marketplaceOptions.map((opt) => {
           const isSelected = marketplace === opt.id;
           const popupOpen = hoveredMp === opt.id || pinnedMp === opt.id;
-
-          const handleAccountPick = (id: string) => {
-            setCurrentAccount(id);
-            setPinnedMp(null);
-          };
-
-          const handleRegionPick = async (regionId: string) => {
-            const targetRegion = accountRegions.find((r) => r.id === regionId);
-            const targetGroup = targetRegion
-              ? accountGroups.find((g) => g.id === targetRegion.groupId)
-              : null;
-
-            if (targetGroup && currentAccountGroup && targetGroup.id !== currentAccountGroup.id) {
-              if (targetGroup.accountId) {
-                try {
-                  toast.loading("Switching account...");
-                  const { authService } = await import("@/services/auth.service");
-                  await authService.switchAccount(targetGroup.accountId);
-                  const settingsRes = await authService.getAccountSettings("all");
-                  const rawEntries = settingsRes.data || [];
-                  const entries = rawEntries
-                    .filter((e: any) => e.marketplace === "amazon")
-                    .map((e: any) => ({
-                      marketplace: e.marketplace,
-                      accountType: e.accountType,
-                      amazonProfileId: e.advertising.amazonProfileId,
-                      sellingPartnerId: e.catalog.partnerDisplayName,
-                      countryCode: e.advertising.countryCode,
-                    }));
-                  const newRegion = populateFromSettings(entries, targetGroup.name, targetGroup.accountId);
-                  toast.dismiss();
-                  if (newRegion) {
-                    setCurrentRegion(newRegion.id);
-                  }
-                  setPinnedMp(null);
-                  return;
-                } catch {
-                  toast.dismiss();
-                  toast.error("Failed to switch account");
-                }
-              }
-            }
-            setCurrentRegion(regionId);
-            setPinnedMp(null);
-          };
 
           if (collapsed) {
             return (

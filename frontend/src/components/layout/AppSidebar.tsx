@@ -5,8 +5,8 @@ import {
   MousePointerClick, Package, Database, Search, BarChart3, Clock,
   CalendarClock, History, ListTodo, Settings, Users, ChevronDown,
   ChevronRight, Layers, Image, FlaskConical, PackageCheck,
-  Send, Sun, Moon, User, LogOut, PanelLeft,
-  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug, Globe, CreditCard
+  Send, Sun, Moon, LogOut, PanelLeft,
+  Gauge, Wheat, Bell, Activity, Link, Wrench, LayoutDashboard, Palette, ShieldCheck, Plug, Globe, CreditCard, ArrowLeftRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +22,7 @@ import { MarketplaceSelector } from "./MarketplaceSelector";
 import { AanGlyph } from "@/components/aan/AanGlyph";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useFeatureToggle } from "@/contexts/FeatureToggleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -128,6 +129,11 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
+  const { user, mappedAccounts, logout, switchAccount } = useAuth();
+  const userInitials = `${user?.firstName?.[0] || ""}${user?.lastName?.[0] || ""}`.toUpperCase() || "AN";
+  const userName = user ? `${user.firstName} ${user.lastName}`.trim() : "John Doe";
+  const userEmail = user?.email || "user@anarix.com";
+  const canSwitchAccount = mappedAccounts.length > 1;
   // (Ask Aan navigates to /aan via react-router)
   // theme toggle moved to Floating Action Island
   const { newFeaturesVisible } = useFeatureToggle();
@@ -332,59 +338,15 @@ export function AppSidebar() {
                 <DropdownMenuTrigger asChild>
                   <button className="flex flex-1 items-center gap-2 rounded-md px-1.5 py-1.5 text-sm hover:bg-sidebar-accent transition-colors min-w-0">
                     <Avatar className="h-7 w-7 shrink-0">
-                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">JD</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">{userInitials}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium text-foreground truncate">John Doe</span>
+                    <span className="text-sm font-medium text-foreground truncate">{userName}</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-[220px]">
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/appearance")}>
-                    <Settings className="h-4 w-4" /><span>Preferences</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/accounts")}>
-                    <Link className="h-4 w-4" /><span>Accounts</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/integrations")}>
-                    <Plug className="h-4 w-4" /><span>Integrations</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/team")}>
-                    <Users className="h-4 w-4" /><span>Team</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/system")}>
-                    <Wrench className="h-4 w-4" /><span>System</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/aan-triggers")}>
-                    <Wrench className="h-4 w-4" /><span>Aan Triggers</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/billing")}>
-                    <CreditCard className="h-4 w-4" /><span>Billing</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                    <User className="h-4 w-4" /><span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-destructive">
-                    <LogOut className="h-4 w-4" /><span>Logout</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center justify-center rounded-md p-1.5 hover:bg-sidebar-accent transition-colors">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">JD</AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="end" className="w-[220px]">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">John Doe</p>
-                    <p className="text-xs text-muted-foreground">john@anarix.com</p>
+                    <p className="text-sm font-medium truncate">{userName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/appearance")}>
@@ -409,11 +371,67 @@ export function AppSidebar() {
                     <CreditCard className="h-4 w-4" /><span>Billing</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                    <User className="h-4 w-4" /><span>Profile</span>
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    disabled={!canSwitchAccount}
+                    onClick={() => switchAccount()}
+                  >
+                    <ArrowLeftRight className="h-4 w-4" /><span>Switch Account</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-destructive">
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-destructive" onClick={() => logout()}>
+                    <LogOut className="h-4 w-4" /><span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center justify-center rounded-md p-1.5 hover:bg-sidebar-accent transition-colors">
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">{userInitials}</AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="end" className="w-[220px]">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium truncate">{userName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/appearance")}>
+                    <Settings className="h-4 w-4" /><span>Preferences</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/accounts")}>
+                    <Link className="h-4 w-4" /><span>Accounts</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/integrations")}>
+                    <Plug className="h-4 w-4" /><span>Integrations</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/team")}>
+                    <Users className="h-4 w-4" /><span>Team</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/system")}>
+                    <Wrench className="h-4 w-4" /><span>System</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/aan-triggers")}>
+                    <Wrench className="h-4 w-4" /><span>Aan Triggers</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/settings/billing")}>
+                    <CreditCard className="h-4 w-4" /><span>Billing</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    disabled={!canSwitchAccount}
+                    onClick={() => switchAccount()}
+                  >
+                    <ArrowLeftRight className="h-4 w-4" /><span>Switch Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-destructive" onClick={() => logout()}>
                     <LogOut className="h-4 w-4" /><span>Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

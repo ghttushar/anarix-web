@@ -129,10 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async (navigateToLogin = true) => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error("Error during logout:", error);
+    if (navigateToLogin) {
+      try {
+        await authService.logout();
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
     }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
