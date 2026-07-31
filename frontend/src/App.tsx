@@ -29,6 +29,7 @@ import SignalsPage from "./pages/SignalsPage";
 
 // Auth & Onboarding
 import Login from "./pages/auth/Login";
+import SelectAccount from "./pages/auth/SelectAccount";
 import ConnectAccounts from "./pages/onboarding/ConnectAccounts";
 
 // Advertising
@@ -167,6 +168,7 @@ function AppRoutes() {
 
       {/* Auth & Onboarding */}
       <Route path="/login" element={<Login />} />
+      <Route path="/select-account" element={<SelectAccount />} />
       <Route path="/onboarding/connect" element={<ConnectAccounts />} />
 
       {/* Sandbox */}

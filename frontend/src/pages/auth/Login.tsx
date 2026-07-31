@@ -29,10 +29,14 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await authLogin(email, password);
-      navigate("/onboarding/connect", { replace: true });
-    } catch (err: any) {
-      setError(err.message || "Login failed. Please check your credentials.");
+      const loginData = await authLogin(email, password);
+      if (loginData.requiresAccountSelection === false) {
+        navigate("/profitability/dashboard", { replace: true });
+      } else {
+        navigate("/select-account", { replace: true });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }

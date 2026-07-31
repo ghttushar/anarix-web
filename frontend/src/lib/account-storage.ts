@@ -43,6 +43,44 @@ export interface SelectedDSPAccount {
   currency?: string;
 }
 
+export interface SettingsAccount {
+  marketplace: "amazon" | "walmart" | string;
+  accountType: string;
+  advertising?: {
+    accountId?: string;
+    brandName?: string;
+    marketplaceId?: string;
+    amazonProfileId?: string;
+    walmartAdvertiserId?: string;
+    bidderStatus?: string;
+    bidderJobId?: string | null;
+    bidderNextTriggerAt?: string | null;
+    bidderType?: string;
+    lastBidderTypeChange?: string;
+    bidderTypeLockUntil?: string | null;
+    lastSyncTimeAdvertising?: string;
+    accountType?: string;
+    countryCode?: string;
+    currencyCode?: string;
+  };
+  catalog?: {
+    partnerId?: string;
+    partnerDisplayName?: string;
+    partnerStoreId?: string;
+    countryCode?: string;
+  };
+  dspAccount?: {
+    accountId?: string;
+    agencyProfileId?: string;
+    advertiserId?: string;
+    name?: string;
+    country?: string;
+    currency?: string;
+    timezone?: string;
+    isRegional?: boolean;
+  };
+}
+
 export const accountStorage = {
   getAuthToken: (): string => {
     return localStorage.getItem("authToken") || "";
@@ -120,13 +158,22 @@ export const accountStorage = {
     localStorage.setItem("selectedDSPAccount", JSON.stringify(account));
   },
 
-  getAvailableAccounts: (): SelectedAdvertisingAccount[] => {
-    return safeParse<SelectedAdvertisingAccount[]>(
+  getAvailableAccounts: (): SettingsAccount[] => {
+    return safeParse<SettingsAccount[]>(
       localStorage.getItem("availableAccounts")
     ) ?? [];
   },
-  setAvailableAccounts: (accounts: SelectedAdvertisingAccount[]) => {
+  setAvailableAccounts: (accounts: SettingsAccount[]) => {
     localStorage.setItem("availableAccounts", JSON.stringify(accounts));
+  },
+
+  getAvailableDSPAccounts: (): SelectedDSPAccount[] => {
+    return safeParse<SelectedDSPAccount[]>(
+      localStorage.getItem("availableDSPAccounts")
+    ) ?? [];
+  },
+  setAvailableDSPAccounts: (accounts: SelectedDSPAccount[]) => {
+    localStorage.setItem("availableDSPAccounts", JSON.stringify(accounts));
   },
 
   getLastSelectedAmazonAccount: (): SelectedAdvertisingAccount | null => {
@@ -162,10 +209,20 @@ export const accountStorage = {
     localStorage.setItem("lastSelectedMarketplace", marketplace);
   },
 
+  getSelectedUserAccountMapping: <T extends object>(mapping?: T): T | null => {
+    return safeParse<T>(localStorage.getItem("selectedUserAccountMapping"));
+  },
+  setSelectedUserAccountMapping: (mapping: object | null) => {
+    if (!mapping) {
+      localStorage.removeItem("selectedUserAccountMapping");
+      return;
+    }
+    localStorage.setItem("selectedUserAccountMapping", JSON.stringify(mapping));
+  },
+
   getAccountCountryCode: (): string => {
     return localStorage.getItem("accountCountryCode") || "US";
-  },
-  setAccountCountryCode: (countryCode: string) => {
+  },  setAccountCountryCode: (countryCode: string) => {
     localStorage.setItem("accountCountryCode", countryCode);
   },
 
@@ -183,6 +240,7 @@ export const accountStorage = {
       "selectedInstance",
       "selectedDSPAccount",
       "availableAccounts",
+      "availableDSPAccounts",
       "lastSelectedAmzAccount",
       "lastSelectedWmtAccount",
       "lastSelectedMarketplace",
@@ -195,6 +253,7 @@ export const accountStorage = {
       "anarix_account_groups",
       "anarix_account_regions",
       "anarix_current_region",
+      "selectedUserAccountMapping",
     ];
     keys.forEach((key) => localStorage.removeItem(key));
   },

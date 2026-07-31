@@ -225,7 +225,20 @@ function injectBody(path: string, body: unknown): unknown {
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
   extraHeaders?: ExtraHeaders;
+  params?: Record<string, string | number | boolean | null | undefined>;
 };
+
+function buildUrl(path: string, params?: RequestOptions["params"]): string {
+  if (!params) return `${BASE_URL}${path}`;
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      search.set(key, String(value));
+    }
+  });
+  const query = search.toString();
+  return `${BASE_URL}${path}${query ? `?${query}` : ""}`;
+}
 
 async function request<T>(path: string, options?: RequestOptions): Promise<T> {
   const token =
@@ -240,7 +253,7 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
 
   const body = injectBody(path, options?.body);
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(buildUrl(path, options?.params), {
     ...options,
     headers,
     body: body as BodyInit | undefined,
@@ -282,14 +295,14 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
 }
 
 export const api = {
-  get: <T>(path: string, extraHeaders?: ExtraHeaders) =>
-    request<T>(path, { method: "GET", extraHeaders }),
-  post: <T>(path: string, body?: BodyInit | Record<string, unknown> | null, extraHeaders?: ExtraHeaders) =>
-    request<T>(path, { method: "POST", body, extraHeaders }),
-  put: <T>(path: string, body?: BodyInit | Record<string, unknown> | null, extraHeaders?: ExtraHeaders) =>
-    request<T>(path, { method: "PUT", body, extraHeaders }),
-  delete: <T>(path: string, extraHeaders?: ExtraHeaders) =>
-    request<T>(path, { method: "DELETE", extraHeaders }),
+  get: <T>(path: string, extraHeaders?: ExtraHeaders, params?: RequestOptions["params"]) =>
+    request<T>(path, { method: "GET", extraHeaders, params }),
+  post: <T>(path: string, body?: BodyInit | Record<string, unknown> | null, extraHeaders?: ExtraHeaders, params?: RequestOptions["params"]) =>
+    request<T>(path, { method: "POST", body, extraHeaders, params }),
+  put: <T>(path: string, body?: BodyInit | Record<string, unknown> | null, extraHeaders?: ExtraHeaders, params?: RequestOptions["params"]) =>
+    request<T>(path, { method: "PUT", body, extraHeaders, params }),
+  delete: <T>(path: string, extraHeaders?: ExtraHeaders, params?: RequestOptions["params"]) =>
+    request<T>(path, { method: "DELETE", extraHeaders, params }),
 };
 
 export { BASE_URL, LOGIN_URL, SELECT_ACCOUNT_URL };
