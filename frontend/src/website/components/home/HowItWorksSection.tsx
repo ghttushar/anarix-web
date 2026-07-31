@@ -83,7 +83,7 @@ const HowItWorksSection = () => (
         className="text-center mt-12"
       >
         <Link
-          to="/website/platform"
+          to="/platform"
           className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors group"
         >
           See how the platform works <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

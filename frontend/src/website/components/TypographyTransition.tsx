@@ -215,7 +215,7 @@ const TypographyTransition = () => {
     };
 
     const onTouchStart = (e: TouchEvent) => {
-      (section as any)._touchY = e.touches[0].clientY;
+      (section as HTMLElement & { _touchY?: number })._touchY = e.touches[0].clientY;
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -227,9 +227,9 @@ const TypographyTransition = () => {
       if (inView && !hasCompletedRef.current) {
         e.preventDefault();
         const touchY = e.touches[0].clientY;
-        const prevTouchY = (section as any)._touchY || touchY;
+        const prevTouchY = (section as HTMLElement & { _touchY?: number })._touchY || touchY;
         const deltaY = prevTouchY - touchY;
-        (section as any)._touchY = touchY;
+        (section as HTMLElement & { _touchY?: number })._touchY = touchY;
 
         if (!isLockedRef.current) lock();
 

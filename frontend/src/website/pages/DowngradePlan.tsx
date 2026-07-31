@@ -29,7 +29,7 @@ const DowngradePlanInner = () => {
       <div className="max-w-4xl mx-auto px-6">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <button
-            onClick={() => navigate("/website/cancel-plan?from=app")}
+            onClick={() => navigate("/cancel-plan?from=app")}
             className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-6"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back

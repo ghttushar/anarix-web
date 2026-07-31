@@ -129,7 +129,7 @@ const Careers = () => {
 
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Don't see your role? We're always looking for great people.</p>
-          <Link to="/website/company/contact"><Button className="rounded-pill bg-primary text-primary-foreground btn-shine">Send Open Application</Button></Link>
+          <Link to="/company/contact"><Button className="rounded-pill bg-primary text-primary-foreground btn-shine">Send Open Application</Button></Link>
         </div>
       </div>
     </PageLayout>

@@ -53,11 +53,13 @@ The website uses the same Tailwind config as the app. Extracted standalone, copy
 
 ## Routing
 
-All routes are mounted under `/website` in `src/App.tsx`:
+This repo is website-only. Routes are mounted at the root in `src/App.tsx`,
+wrapped in `WebsiteLayout`:
 
 ```tsx
-<Route path="/website" element={<WebsiteLayout />}>
+<Route path="/" element={<WebsiteLayout />}>
   <Route index element={<Home />} />
+  <Route path="product" element={<Product />} />
   <Route path="pricing" element={<Pricing />} />
   ...
   <Route path="cancel-plan" element={<CancelPlan />} />       // hidden
@@ -65,10 +67,12 @@ All routes are mounted under `/website` in `src/App.tsx`:
 </Route>
 ```
 
+Old `/website/*` URLs redirect to their root equivalents via `LegacyWebsiteRedirect`.
+
 The hidden routes use `HiddenRouteGuard` which checks for either a
-`?from=app` query param or a `sessionStorage["anarix-cancel-from-app"]=1` flag
-(set by `Billing.tsx` before navigating). Direct URL access falls back to
-`/website`. They are also disallowed in `public/robots.txt`.
+`?from=app` query param or a `sessionStorage["anarix-cancel-from-app"]=1` flag.
+Direct URL access falls back to `/`. They are also disallowed in
+`public/robots.txt`.
 
 ## Status of extraction
 

@@ -317,7 +317,7 @@ const SignalsPage = () => {
                 Join the Waitlist
               </Button>
             </a>
-            <Link to="/website/product">
+            <Link to="/product">
               <Button size="lg" variant="outline" className="rounded-pill px-8 h-12 text-base border-border hover:border-primary/40 transition-all duration-200">
                 Explore the Platform
               </Button>

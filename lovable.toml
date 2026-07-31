@@ -1,4 +1,0 @@
-[run]
-dev = "bash -c 'cd frontend && bun run dev'"
-build = "bash -c 'cd frontend && bun run build'"
-"build:dev" = "bash -c 'cd frontend && bun run build:dev'"

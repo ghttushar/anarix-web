@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Rocket, Plug, BarChart3, Megaphone, Zap, Bot, Code2, GitBranch, ChevronRight } from "lucide-react";
+import { BookOpen, Rocket, Plug, BarChart3, Megaphone, Zap, Bot, Code2, GitBranch, ChevronRight, type LucideIcon } from "lucide-react";
 import PageLayout from "@/website/components/PageLayout";
 import WebsiteAanChat from "@/website/components/WebsiteAanChat";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ type Article = {
   body: { h?: string; p?: string; code?: string; list?: string[] }[];
 };
 
-const sections: { icon: any; title: string; articles: Article[] }[] = [
+const sections: { icon: LucideIcon; title: string; articles: Article[] }[] = [
   {
     icon: Rocket,
     title: "Getting Started",

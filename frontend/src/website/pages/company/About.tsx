@@ -100,7 +100,7 @@ const About = () => (
         <p className="text-muted-foreground max-w-lg mx-auto mb-6">
           Engineers, strategists, designers, and account managers - united by a mission to make e-commerce advertising work.
         </p>
-        <Link to="/website/company/career">
+        <Link to="/company/career">
           <Button className="rounded-pill px-6 bg-primary text-primary-foreground btn-shine">
             Join Our Team <ArrowRight className="w-4 h-4 ml-1" />
           </Button>

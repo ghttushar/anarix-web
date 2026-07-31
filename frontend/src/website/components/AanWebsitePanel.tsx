@@ -24,14 +24,14 @@ const SUGGESTED = [
 ];
 
 const PAGE_LABELS: Record<string, string> = {
-  "/website": "Home",
-  "/website/product": "Anarix Insight Engine",
-  "/website/pricing": "Pricing",
-  "/website/about": "About",
-  "/website/contact": "Contact",
-  "/website/career": "Careers",
-  "/website/demo": "Book a demo",
-  "/website/documentation": "Documentation",
+  "/": "Home",
+  "/product": "Anarix Insight Engine",
+  "/pricing": "Pricing",
+  "/company/about": "About",
+  "/company/contact": "Contact",
+  "/company/career": "Careers",
+  "/demo": "Book a demo",
+  "/documentation": "Documentation",
 };
 
 /**

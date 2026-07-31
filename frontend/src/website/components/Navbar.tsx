@@ -16,10 +16,10 @@ interface NavItem {
   megaMenu?: MegaMenuColumn[];
 }
 
-const productHref = "/website/product";
-const aanHref = "/website/aan-ai";
-const mcpHref = "/website/mcp";
-const signalsHref = "/website/signals";
+const productHref = "/product";
+const aanHref = "/aan-ai";
+const mcpHref = "/mcp";
+const signalsHref = "/signals";
 
 const navItems: NavItem[] = [
   {
@@ -74,15 +74,15 @@ const navItems: NavItem[] = [
       },
     ],
   },
-  { label: "Pricing", href: "/website/pricing" },
+  { label: "Pricing", href: "/pricing" },
   {
     label: "Company",
     dropdown: [
-      { label: "About", href: "/website/company/about" },
-      { label: "Careers", href: "/website/company/career" },
+      { label: "About", href: "/company/about" },
+      { label: "Careers", href: "/company/career" },
     ],
   },
-  { label: "Contact Us", href: "/website/company/contact" },
+  { label: "Contact Us", href: "/company/contact" },
 ];
 
 const Navbar = () => {
@@ -125,7 +125,7 @@ const Navbar = () => {
         }`}
       >
         {/* Logo */}
-        <Link to="/website" className="text-xl font-bold text-foreground tracking-tight whitespace-nowrap">
+        <Link to="/" className="text-xl font-bold text-foreground tracking-tight whitespace-nowrap">
           Anarix<span className="text-primary">.ai</span>
         </Link>
 

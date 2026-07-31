@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
-const productHref = "/website/product";
-const aanHref = "/website/aan-ai";
-const mcpHref = "/website/mcp";
-const signalsHref = "/website/signals";
+const productHref = "/product";
+const aanHref = "/aan-ai";
+const mcpHref = "/mcp";
+const signalsHref = "/signals";
 
 const footerLinks: Record<string, { label: string; href: string; external?: boolean }[]> = {
   Product: [
@@ -16,13 +16,13 @@ const footerLinks: Record<string, { label: string; href: string; external?: bool
     { label: "MCP", href: mcpHref },
   ],
   Resources: [
-    { label: "Pricing", href: "/website/pricing" },
-    { label: "Documentation", href: "/website/documentation" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Documentation", href: "/documentation" },
   ],
   Company: [
-    { label: "About", href: "/website/company/about" },
-    { label: "Careers", href: "/website/company/career" },
-    { label: "Contact", href: "/website/company/contact" },
+    { label: "About", href: "/company/about" },
+    { label: "Careers", href: "/company/career" },
+    { label: "Contact", href: "/company/contact" },
   ],
   Account: [
     { label: "Sign In", href: "/login" },
@@ -36,7 +36,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto bg-card rounded-3xl border border-border shadow-soft p-10 sm:p-14">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <Link to="/website" className="text-2xl font-display font-semibold text-foreground tracking-tight">
+            <Link to="/" className="text-2xl font-display font-semibold text-foreground tracking-tight">
               Anarix<span className="text-primary">.</span>ai
             </Link>
             <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
@@ -79,10 +79,10 @@ const Footer = () => {
             &copy; {new Date().getFullYear()} Anarix. All rights reserved.
           </p>
           <div className="flex gap-4">
-            <Link to="/website/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">
+            <Link to="/privacy-policy" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">
               Privacy
             </Link>
-            <Link to="/website/terms-and-conditions" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">
+            <Link to="/terms-and-conditions" className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-300">
               Terms
             </Link>
           </div>

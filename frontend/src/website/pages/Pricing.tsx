@@ -77,7 +77,7 @@ const Pricing = () => {
               <p className="text-sm font-medium text-foreground">Need a custom plan for your agency?</p>
               <p className="text-xs text-muted-foreground">Volume discounts and white-label available.</p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => navigate("/website/company/contact")}>
+            <Button size="sm" variant="outline" onClick={() => navigate("/company/contact")}>
               Contact Us
             </Button>
           </div>

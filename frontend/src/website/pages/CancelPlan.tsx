@@ -20,7 +20,7 @@ const CancelPlanInner = () => {
     navigate("/profitability/dashboard");
   };
 
-  const handleDowngrade = () => navigate("/website/downgrade-plan?from=app");
+  const handleDowngrade = () => navigate("/downgrade-plan?from=app");
 
   return (
     <PageLayout>
@@ -64,7 +64,7 @@ const CancelPlanInner = () => {
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">Didn't find what you were looking for?</p>
               <p className="text-sm text-muted-foreground mb-3">Need a custom solution? We'll build a plan around your team.</p>
-              <Button size="sm" variant="outline" onClick={() => navigate("/website/company/contact")}>
+              <Button size="sm" variant="outline" onClick={() => navigate("/company/contact")}>
                 Contact us
               </Button>
             </div>
